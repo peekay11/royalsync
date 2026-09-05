@@ -10,9 +10,6 @@ import { PartnerPortal } from './portals/PartnerPortal';
 
 const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
   const navigate = useNavigate();
-  const [loginMethod, setLoginMethod] = useState<'email' | 'id'>('id');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -42,22 +39,14 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!otpSent) return;
     setLoading(true);
     setError('');
     try {
-      let result;
-      if (loginMethod === 'email') {
-        result = await apiRequest<{ token: string; user: any }>('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password })
-        });
-      } else {
-        if (!otpSent) return;
-        result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
-          method: 'POST',
-          body: JSON.stringify({ idNumber, code: otp })
-        });
-      }
+      const result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
+        method: 'POST',
+        body: JSON.stringify({ idNumber, code: otp })
+      });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
       navigate(`/${defaultRole.toLowerCase().replace('_', '-')}`);
@@ -74,34 +63,22 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
         <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
         <p className="text-center text-gray-500 text-sm mb-4">Sign in to continue</p>
         
-        <div className="flex border-b border-gray-200 mb-4">
-          <button type="button" onClick={() => { setLoginMethod('id'); setError(''); setSuccessMsg(''); }} className={`flex-1 py-2 font-medium ${loginMethod === 'id' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500'}`}>ID & OTP</button>
-          <button type="button" onClick={() => { setLoginMethod('email'); setError(''); setSuccessMsg(''); }} className={`flex-1 py-2 font-medium ${loginMethod === 'email' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500'}`}>Email Login</button>
-        </div>
-
-        {loginMethod === 'email' ? (
-          <>
-            <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full border rounded-lg p-3" />
-            <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full border rounded-lg p-3" />
-          </>
-        ) : (
-          <>
-            <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
-            {otpSent && (
-              <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="OTP Code (Hint: 123456)" className="w-full border rounded-lg p-3" />
-            )}
-            {!otpSent && (
-              <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 hover:bg-red-50 disabled:opacity-50">
-                {loading ? 'Sending...' : 'Send OTP via SMS'}
-              </button>
-            )}
-          </>
+        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
+        
+        {otpSent && (
+          <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="OTP Code (Hint: 123456)" className="w-full border rounded-lg p-3" />
+        )}
+        
+        {!otpSent && (
+          <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 hover:bg-red-50 disabled:opacity-50">
+            {loading ? 'Sending...' : 'Send OTP via SMS'}
+          </button>
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {successMsg && <p className="text-sm text-green-600">{successMsg}</p>}
         
-        {(loginMethod === 'email' || otpSent) && (
+        {otpSent && (
           <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign in'}</button>
         )}
 
