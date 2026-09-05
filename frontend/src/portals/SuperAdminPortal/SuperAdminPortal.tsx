@@ -16,6 +16,7 @@ import { SuperConfig } from './pages/SuperConfig';
 import { SuperAi } from './pages/SuperAi';
 import { SuperIntegration } from './pages/SuperIntegration';
 import { SuperAudit } from './pages/SuperAudit';
+import { Settings } from '../../pages/Settings';
 
 export const SuperAdminPortal = () => {
   const links = [
@@ -46,6 +47,7 @@ export const SuperAdminPortal = () => {
         <Route path="/ai" element={<SuperAi />} />
         <Route path="/integration" element={<SuperIntegration />} />
         <Route path="/audit" element={<SuperAudit />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </PortalLayout>
   );

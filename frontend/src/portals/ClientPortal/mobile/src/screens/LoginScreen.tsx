@@ -498,18 +498,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
         </Text>
       </View>
 
-      {/* Senior Help Quick Link */}
-      <TouchableOpacity
-        style={[styles.seniorLoginHelpBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-        onPress={() => setSeniorHelpVisible(true)}
-        activeOpacity={0.8}
-      >
-        <PhoneIcon color={colors.primary} size={16} />
-        <Text style={[styles.seniorLoginHelpText, { color: colors.textSecondary, fontSize: scaleFont(12) }]}>
-          Need Assistance Signing In? <Text style={{ color: colors.primary, fontWeight: '700' }}>Tap for Advisor Help</Text>
-        </Text>
-      </TouchableOpacity>
-
       {/* Footer Register Link */}
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: colors.textMuted, fontSize: scaleFont(13) }]}>Don't have an account? </Text>

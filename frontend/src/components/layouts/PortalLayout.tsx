@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { FiSettings } from 'react-icons/fi';
 
 interface SidebarItem {
   name: string;
@@ -14,6 +15,9 @@ interface PortalLayoutProps {
 }
 
 export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
+  const location = useLocation();
+  const portalRoot = `/${location.pathname.split('/')[1]}`;
+
   return (
     <div className="flex min-h-screen bg-white text-gray-800 font-sans">
       {/* Sidebar */}
@@ -47,6 +51,14 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
         {/* Top Header */}
         <header className="h-16 flex items-center px-8 border-b border-gray-200 bg-white">
           <div className="ml-auto flex items-center gap-4">
+            <Link
+              to={`${portalRoot}/settings`}
+              aria-label="Open settings"
+              title="Settings"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
+            >
+              <FiSettings className="text-lg" />
+            </Link>
             <button onClick={() => { localStorage.removeItem('royalsync_token'); localStorage.removeItem('royalsync_user'); window.location.href = '/login'; }} className="text-sm text-gray-600 hover:text-red-600">Log out</button>
             <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-sm font-bold">
               U

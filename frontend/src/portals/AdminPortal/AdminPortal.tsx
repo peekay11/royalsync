@@ -16,6 +16,7 @@ import { AdminTemplates } from './pages/AdminTemplates';
 import { AdminNotifications } from './pages/AdminNotifications';
 import { AdminReports } from './pages/AdminReports';
 import { AdminCommissions } from './pages/AdminCommissions';
+import { Settings } from '../../pages/Settings';
 
 export const AdminPortal = () => {
   const links = [
@@ -46,6 +47,7 @@ export const AdminPortal = () => {
         <Route path="/notifications" element={<AdminNotifications />} />
         <Route path="/reports" element={<AdminReports />} />
         <Route path="/commissions" element={<AdminCommissions />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </PortalLayout>
   );

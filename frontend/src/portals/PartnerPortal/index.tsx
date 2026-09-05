@@ -5,6 +5,7 @@ import { PartnerDashboard } from './pages/Dashboard';
 import { PartnerSetup } from './pages/Setup';
 import { PartnerMessages } from './pages/Messages';
 import { PartnerInbox } from './pages/PartnerInbox';
+import { Settings } from '../../pages/Settings';
 
 export const PartnerPortal = () => {
   const links = [
@@ -21,6 +22,7 @@ export const PartnerPortal = () => {
         <Route path="/inbox" element={<PartnerInbox />} />
         <Route path="/messages" element={<PartnerMessages />} />
         <Route path="/setup" element={<PartnerSetup />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/partner" replace />} />
       </Routes>
     </PortalLayout>

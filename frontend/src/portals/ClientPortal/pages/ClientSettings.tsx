@@ -31,8 +31,8 @@ export const ClientSettings = () => {
 
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h2 className="text-lg font-medium text-gray-800 mb-4">Security</h2>
-        <button className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors mr-3">Change Password</button>
-        <button className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Enable MFA</button>
+        <button type="button" className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors mr-3">Change Password</button>
+        <button type="button" className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Enable MFA</button>
       </div>
     </div>
   );
