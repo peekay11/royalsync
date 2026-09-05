@@ -18,12 +18,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onDone }) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 6,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
 
@@ -32,7 +32,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onDone }) => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start(() => onDone());
     }, 2400);
 

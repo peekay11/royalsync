@@ -36,7 +36,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       // Slide down
       Animated.spring(slideAnim, {
         toValue: 0,
-        useNativeDriver: true,
+        useNativeDriver: false,
         bounciness: 6,
       }).start();
 
@@ -55,7 +55,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
     Animated.timing(slideAnim, {
       toValue: -120,
       duration: 250,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start(() => {
       onDismiss();
     });

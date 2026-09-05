@@ -19,7 +19,7 @@ export const ClientDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-normal text-gray-800">Good morning, Client</h1>
+      <h1 className="text-2xl font-normal text-gray-800">Good morning, {JSON.parse(localStorage.getItem('royalsync_user') || '{}')?.firstName || 'Client'}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="border border-gray-200 rounded-xl p-6 flex flex-col justify-between h-32 hover:border-red-200 transition-colors bg-white">

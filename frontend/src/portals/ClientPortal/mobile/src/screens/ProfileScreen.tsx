@@ -76,10 +76,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
       {/* Policyholder Avatar & Title */}
       <View style={styles.avatarSection}>
         <View style={[styles.avatarBadge, { backgroundColor: colors.primary }]}>
-          <Text style={styles.avatarInitials}>{profile?.initials || 'SD'}</Text>
+          <Text style={styles.avatarInitials}>{profile?.initials || ''}</Text>
         </View>
 
-        <Text style={[styles.clientName, { color: colors.text }]}>{profile?.name || 'Client'}</Text>
+        <Text style={[styles.clientName, { color: colors.text }]}>{profile?.name || ''}</Text>
         {profile?.idNumber && <Text style={[styles.clientIdNum, { color: colors.textSecondary }]}>SA ID: {profile.idNumber}</Text>}
 
         <View
@@ -108,7 +108,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
             },
           ]}
         >
-          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.totalNetWorthFormatted || 'R 2.84M'}</Text>
+          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.totalNetWorthFormatted || 'R 0.00'}</Text>
           <Text style={[styles.statLbl, { color: colors.textMuted }]}>Net Worth</Text>
         </View>
         <View
@@ -120,7 +120,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
             },
           ]}
         >
-          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.activePoliciesCount || 4}</Text>
+          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.activePoliciesCount || 0}</Text>
           <Text style={[styles.statLbl, { color: colors.textMuted }]}>Policies</Text>
         </View>
         <View
@@ -132,7 +132,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
             },
           ]}
         >
-          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.goalCompletionRate || 63}%</Text>
+          <Text style={[styles.statVal, { color: colors.gold }]}>{profile?.goalCompletionRate || 0}%</Text>
           <Text style={[styles.statLbl, { color: colors.textMuted }]}>Goals Met</Text>
         </View>
       </View>
@@ -152,12 +152,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
       >
         <View style={styles.advisorTopRow}>
           <View style={[styles.advisorAvatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.advisorAvatarText}>{profile?.assignedAdvisor?.initials || 'QN'}</Text>
+            <Text style={styles.advisorAvatarText}>{profile?.assignedAdvisor?.initials || 'N/A'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.advisorName, { color: colors.text }]}>{profile?.assignedAdvisor?.name || 'Qiniso T. Ntuli'}</Text>
-            <Text style={[styles.advisorTitle, { color: colors.textSecondary }]}>{profile?.assignedAdvisor?.title || 'Certified Financial Planner'}</Text>
-            <Text style={[styles.advisorFsp, { color: colors.gold }]}>{profile?.assignedAdvisor?.fspNumber || 'FSP 49291'}</Text>
+            <Text style={[styles.advisorName, { color: colors.text }]}>{profile?.assignedAdvisor?.name || 'Unassigned Advisor'}</Text>
+            <Text style={[styles.advisorTitle, { color: colors.textSecondary }]}>{profile?.assignedAdvisor?.title || 'Financial Planner'}</Text>
+            <Text style={[styles.advisorFsp, { color: colors.gold }]}>{profile?.assignedAdvisor?.fspNumber || 'FSP Pending'}</Text>
           </View>
         </View>
 

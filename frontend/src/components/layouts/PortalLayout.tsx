@@ -61,7 +61,7 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
             </Link>
             <button onClick={() => { localStorage.removeItem('royalsync_token'); localStorage.removeItem('royalsync_user'); window.location.href = '/login'; }} className="text-sm text-gray-600 hover:text-red-600">Log out</button>
             <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-sm font-bold">
-              U
+              {JSON.parse(localStorage.getItem('royalsync_user') || '{}')?.firstName?.charAt(0) || 'U'}
             </div>
           </div>
         </header>

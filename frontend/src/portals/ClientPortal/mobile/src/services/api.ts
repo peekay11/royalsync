@@ -2,7 +2,7 @@ import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User 
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8787/api';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://royalsync-api.pasekamabitsela22.workers.dev/api';
 
 let authToken: string | null = null;
 let tokenLoaded = false;
