@@ -1,16 +1,17 @@
-<<<<<<< HEAD
 name = "royalsync-api"
 main = "worker/index.ts"
 compatibility_date = "2026-09-05"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-CORS_ORIGINS = "http://localhost:5173,http://localhost:8084"
+CORS_ORIGINS = "*"
+AUTH_SECRET = "supersecretjwtkey"
+BOOTSTRAP_TOKEN = "bootstrap123"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "royalsync"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "1cd61de7-cdc0-475d-8754-5d16bc020e09"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
@@ -21,28 +22,14 @@ bucket_name = "royalsync-documents"
 name = "royalsync-api-production"
 
 [env.production.vars]
-CORS_ORIGINS = "https://app.example.com,https://admin.example.com,https://superadmin.example.com"
+CORS_ORIGINS = "*"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "royalsync"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "1cd61de7-cdc0-475d-8754-5d16bc020e09"
 migrations_dir = "migrations"
 
 [[env.production.r2_buckets]]
 binding = "DOCS"
 bucket_name = "royalsync-documents"
-=======
-name = "royalsync-backend"
-main = "src/index.ts"
-compatibility_date = "2024-03-20"
-node_compat = true
-
-[build]
-command = "npm run build"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "royalsync-d1"
-database_id = "00000000-0000-0000-0000-000000000000"
->>>>>>> ae49398c ( push)

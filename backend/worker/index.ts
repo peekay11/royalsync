@@ -104,6 +104,16 @@ const writeAudit = async (env: Env, user: User, action: string, resourceType: st
 
 app.use('*', secureHeaders());
 app.use('/api/*', async (c, next) => {
+  const origin = c.req.header('origin');
+  const allowed = (c.env.CORS_ORIGINS || '').split(',').map(value => value.trim());
+  if (origin && (allowed.includes('*') || allowed.includes(origin) || origin.endsWith('.royalsync-frontend.pages.dev'))) c.header('Access-Control-Allow-Origin', origin);
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Bootstrap-Token');
+  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  if (c.req.method === 'OPTIONS') return c.body(null, 204);
+  return next();
+});
+
+app.use('/api/*', async (c, next) => {
   const publicPath = ['/api/auth/login', '/api/auth/register', '/api/auth/bootstrap-admin', '/api/auth/send-otp', '/api/auth/login-id'].includes(new URL(c.req.url).pathname);
   if (publicPath) return next();
   const authorization = c.req.header('authorization');
@@ -117,22 +127,12 @@ app.use('/api/*', async (c, next) => {
     return c.json({ success: false, error: 'Invalid authentication token' }, 401);
   }
 });
-
-app.use('/api/*', async (c, next) => {
-  const origin = c.req.header('origin');
-  const allowed = (c.env.CORS_ORIGINS || '').split(',').map(value => value.trim());
-  if (origin && allowed.includes(origin)) c.header('Access-Control-Allow-Origin', origin);
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Bootstrap-Token');
-  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  if (c.req.method === 'OPTIONS') return c.body(null, 204);
-  return next();
-});
 app.get('/health', c => c.json({ status: 'ok', service: 'royalsync-api', runtime: 'cloudflare-workers' }));
 
 app.post('/api/auth/register', async c => {
   const body = await c.req.json<{ email?: string; password?: string; firstName?: string; lastName?: string; mobile?: string }>();
-  if (!body.email || !body.password || body.password.length < 12 || !body.firstName || !body.lastName || !body.mobile) return c.body(JSON.stringify({ success: false, error: 'Email, 12-character password, name and mobile are required' }), 400, { 'Content-Type': 'application/json' });
-  const email = body.email.toLowerCase();
+  if (!body.email || !body.password || body.password.length < 6 || !body.firstName || !body.lastName || !body.mobile) return c.body(JSON.stringify({ success: false, error: 'Email, 6-character password, name and mobile are required' }), 400, { 'Content-Type': 'application/json' });
+  const email = body.email.trim().toLowerCase();
   const exists = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
   if (exists) return c.json({ success: false, error: 'Email is already registered' }, 409);
   const userId = id('usr');
@@ -150,7 +150,7 @@ app.post('/api/auth/register', async c => {
 app.post('/api/auth/login', async c => {
   const body = await c.req.json<{ email?: string; password?: string }>();
   if (!body.email || !body.password) return c.json({ success: false, error: 'Email and password are required' }, 400);
-  const record = await c.env.DB.prepare('SELECT id, email, password_hash, role, tenant_id, client_id, status FROM users WHERE email = ?').bind(body.email.toLowerCase()).first<{ id: string; email: string; password_hash: string; role: Role; tenant_id: string | null; client_id: string | null; status: string }>();
+  const record = await c.env.DB.prepare('SELECT id, email, password_hash, role, tenant_id, client_id, status FROM users WHERE email = ?').bind(body.email.trim().toLowerCase()).first<{ id: string; email: string; password_hash: string; role: Role; tenant_id: string | null; client_id: string | null; status: string }>();
   if (!record || record.status !== 'active' || !(await verifyPassword(body.password, record.password_hash))) return c.json({ success: false, error: 'Invalid email or password' }, 401);
   await c.env.DB.prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?').bind(now(), now(), record.id).run();
   const user: User = { id: record.id, email: record.email, role: record.role, tenantId: record.tenant_id || undefined, clientId: record.client_id || undefined };
