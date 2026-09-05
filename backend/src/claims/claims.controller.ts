@@ -63,6 +63,10 @@ export async function advanceClaim(c: Context<AppEnv>) {
   const id = c.req.param('id');
   const user = c.get('user');
 
+  if (!id) {
+    return c.json({ error: 'Claim ID is required' }, 400);
+  }
+
   const claim = await prisma.claim.findUnique({ where: { id } });
   if (!claim) return c.json({ error: 'Not found' }, 404);
 

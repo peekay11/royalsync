@@ -1,10 +1,10 @@
-const crypto = globalThis.crypto;
+const webCrypto = globalThis.crypto;
 
 const bytesToBase64Url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 const derivePassword = async (password: string, salt: Uint8Array) => {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt.buffer, iterations: 100000, hash: 'SHA-256' }, key, 256);
+  const key = await webCrypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await webCrypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt as unknown as BufferSource, iterations: 100000, hash: 'SHA-256' }, key, 256);
   return new Uint8Array(bits);
 };
 

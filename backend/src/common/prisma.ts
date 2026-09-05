@@ -12,7 +12,9 @@ export function getTenantPrisma(tenantId: string) {
 
           // Models that have tenantId
           if (['User'].includes(m)) {
-            args.where = { ...args.where, tenantId };
+            const currentArgs = (args || {}) as any;
+            currentArgs.where = { ...currentArgs.where, tenantId };
+            return query(currentArgs);
           }
           return query(args);
         },
