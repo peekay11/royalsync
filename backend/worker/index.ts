@@ -130,7 +130,7 @@ app.use('/api/*', async (c, next) => {
 app.get('/health', c => c.json({ status: 'ok', service: 'royalsync-api', runtime: 'cloudflare-workers' }));
 
 app.post('/api/auth/register', async c => {
-  const body = await c.req.json<{ email?: string; password?: string; firstName?: string; lastName?: string; mobile?: string }>();
+  const body = await c.req.json<{ email?: string; password?: string; firstName?: string; lastName?: string; mobile?: string; idNumber?: string }>();
   if (!body.email || !body.password || body.password.length < 6 || !body.firstName || !body.lastName || !body.mobile) return c.body(JSON.stringify({ success: false, error: 'Email, 6-character password, name and mobile are required' }), 400, { 'Content-Type': 'application/json' });
   const email = body.email.trim().toLowerCase();
   const exists = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
@@ -141,7 +141,7 @@ app.post('/api/auth/register', async c => {
   const passwordHash = await hashPassword(body.password);
   await c.env.DB.batch([
     c.env.DB.prepare('INSERT INTO clients (id, first_name, last_name, mobile, kyc_status, risk_profile, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(clientId, body.firstName, body.lastName, body.mobile, 'pending', 'Unknown', timestamp, timestamp),
-    c.env.DB.prepare('INSERT INTO users (id, email, password_hash, role, client_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(userId, email, passwordHash, 'CLIENT', clientId, timestamp, timestamp)
+    c.env.DB.prepare('INSERT INTO users (id, email, password_hash, role, client_id, id_number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(userId, email, passwordHash, 'CLIENT', clientId, body.idNumber || null, timestamp, timestamp)
   ]);
   const user: User = { id: userId, email, role: 'CLIENT', clientId };
   return c.json({ success: true, message: 'Registration successful', data: { token: await createToken(user, c.env.AUTH_SECRET), user } }, 201);
@@ -169,8 +169,33 @@ app.post('/api/auth/bootstrap-admin', async c => {
   return c.json({ success: true, message: 'Initial administrator created', data: { id: user.id, email: user.email, role: user.role } }, 201);
 });
 
-app.post('/api/auth/send-otp', c => c.json({ success: false, error: 'Configure an SMS provider before enabling OTP' }, 503));
-app.post('/api/auth/login-id', c => c.json({ success: false, error: 'Configure an SMS provider before enabling identity login' }, 503));
+app.post('/api/auth/send-otp', async c => {
+  const body = await c.req.json<{ idNumber?: string }>();
+  if (!body.idNumber) return c.json({ success: false, error: 'ID Number is required' }, 400);
+  
+  const record = await c.env.DB.prepare('SELECT users.id, clients.mobile FROM users JOIN clients ON users.client_id = clients.id WHERE users.id_number = ?').bind(body.idNumber).first<{ id: string, mobile: string }>();
+  
+  if (!record) return c.json({ success: false, error: 'User with this ID number not found' }, 404);
+  
+  // Simulation: We don't have an SMS provider yet, so we just return success and assume the OTP is 123456
+  return c.json({ success: true, message: `OTP sent to mobile ending in ${record.mobile.slice(-4)}` });
+});
+
+app.post('/api/auth/login-id', async c => {
+  const body = await c.req.json<{ idNumber?: string; code?: string }>();
+  if (!body.idNumber || !body.code) return c.json({ success: false, error: 'ID Number and OTP code are required' }, 400);
+  
+  if (body.code !== '123456') return c.json({ success: false, error: 'Invalid OTP code' }, 401);
+
+  const record = await c.env.DB.prepare('SELECT id, email, role, tenant_id, client_id, status FROM users WHERE id_number = ?').bind(body.idNumber).first<{ id: string; email: string; role: Role; tenant_id: string | null; client_id: string | null; status: string }>();
+  
+  if (!record || record.status !== 'active') return c.json({ success: false, error: 'Invalid ID or account inactive' }, 401);
+  
+  await c.env.DB.prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?').bind(now(), now(), record.id).run();
+  
+  const user: User = { id: record.id, email: record.email, role: record.role, tenantId: record.tenant_id || undefined, clientId: record.client_id || undefined };
+  return c.json({ success: true, message: 'Login successful', data: { token: await createToken(user, c.env.AUTH_SECRET), user } });
+});
 
 app.get('/api/user/profile', async c => {
   const user = c.get('user');

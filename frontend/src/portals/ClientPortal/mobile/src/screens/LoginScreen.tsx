@@ -12,28 +12,71 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister }) => {
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark } = useTheme();
+  
+  const [loginMethod, setLoginMethod] = useState<'email' | 'id'>('email');
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  const [idNumber, setIdNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSignIn = async () => {
-    if (!email || !password) {
-      setError('Please enter your email and password.');
+    if (loginMethod === 'email') {
+      if (!email || !password) {
+        setError('Please enter your email and password.');
+        return;
+      }
+      setError('');
+      setLoading(true);
+      try {
+        await ApiService.login(email.trim(), password);
+        setLoading(false);
+        onLogin();
+      } catch (err: any) {
+        setLoading(false);
+        setError(err.message || 'Authentication failed. Please check your credentials.');
+      }
+    } else {
+      if (!idNumber || !otp) {
+        setError('Please enter your ID Number and OTP code.');
+        return;
+      }
+      setError('');
+      setLoading(true);
+      try {
+        await ApiService.loginWithId({ idType: 'rsa_id', idNumber, authMethod: 'otp', code: otp });
+        setLoading(false);
+        onLogin();
+      } catch (err: any) {
+        setLoading(false);
+        setError(err.message || 'Authentication failed. Please check your OTP.');
+      }
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!idNumber) {
+      setError('Please enter your ID Number first.');
       return;
     }
     setError('');
+    setSuccessMsg('');
     setLoading(true);
-
     try {
-      await ApiService.login(email.trim(), password);
-      setLoading(false);
-      onLogin();
+      const res = await ApiService.sendOtp(idNumber);
+      setOtpSent(true);
+      setSuccessMsg(res.message || 'OTP sent successfully!');
     } catch (err: any) {
+      setError(err.message || 'Failed to send OTP.');
+    } finally {
       setLoading(false);
-      setError(err.message || 'Authentication failed. Please check your credentials.');
     }
   };
 
@@ -44,28 +87,78 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
           <RoyalSquareLogo size={62} />
         </View>
         <Text style={[styles.title, { color: colors.text }]}>Policyholder Sign In</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter your email and password to access your portfolio</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter your credentials to access your portfolio</Text>
+      </View>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, loginMethod === 'email' ? { borderBottomColor: colors.primary, borderBottomWidth: 2 } : null]} 
+          onPress={() => { setLoginMethod('email'); setError(''); setSuccessMsg(''); }}
+        >
+          <Text style={[styles.tabText, { color: loginMethod === 'email' ? colors.primary : colors.textMuted }]}>Email Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, loginMethod === 'id' ? { borderBottomColor: colors.primary, borderBottomWidth: 2 } : null]} 
+          onPress={() => { setLoginMethod('id'); setError(''); setSuccessMsg(''); }}
+        >
+          <Text style={[styles.tabText, { color: loginMethod === 'id' ? colors.primary : colors.textMuted }]}>ID & OTP</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formArea}>
-        <CustomInput
-          label="Email Address"
-          placeholder="you@example.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          icon={<MailIcon color={colors.primary} size={18} />}
-        />
+        {loginMethod === 'email' ? (
+          <>
+            <CustomInput
+              label="Email Address"
+              placeholder="you@example.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon={<MailIcon color={colors.primary} size={18} />}
+            />
+            <CustomInput
+              label="Password"
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              icon={<LockIcon color={colors.primary} size={18} />}
+            />
+          </>
+        ) : (
+          <>
+            <CustomInput
+              label="RSA ID Number"
+              placeholder="Enter your 13-digit ID"
+              value={idNumber}
+              onChangeText={setIdNumber}
+              keyboardType="numeric"
+              icon={<LockIcon color={colors.primary} size={18} />}
+            />
+            
+            {otpSent && (
+              <CustomInput
+                label="OTP Code (Hint: 123456)"
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="numeric"
+                icon={<ShieldIcon color={colors.primary} size={18} />}
+              />
+            )}
 
-        <CustomInput
-          label="Password"
-          placeholder="Enter your password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          icon={<LockIcon color={colors.primary} size={18} />}
-        />
+            {!otpSent && (
+              <TouchableOpacity
+                style={[styles.secondaryButton, { borderColor: colors.primary }]}
+                onPress={handleSendOtp}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color={colors.primary} /> : <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>Send OTP via SMS</Text>}
+              </TouchableOpacity>
+            )}
+          </>
+        )}
 
         {error ? (
           <View style={[styles.errorBox, { backgroundColor: colors.primaryAlpha, borderColor: colors.primaryBorder }]}>
@@ -74,18 +167,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
           </View>
         ) : null}
 
-        <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
-          onPress={handleSignIn}
-          disabled={loading}
-          activeOpacity={0.88}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
+        {successMsg ? (
+          <View style={[styles.errorBox, { backgroundColor: '#e6f4ea', borderColor: '#34a853' }]}>
+            <ShieldIcon color="#34a853" size={16} />
+            <Text style={[styles.errorText, { color: '#34a853' }]}>{successMsg}</Text>
+          </View>
+        ) : null}
+
+        {(loginMethod === 'email' || otpSent) && (
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
+            onPress={handleSignIn}
+            disabled={loading}
+            activeOpacity={0.88}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.securityNoticeRow}>
@@ -105,16 +207,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
 
 const styles = StyleSheet.create({
   scrollContainer: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 60, paddingBottom: 24, justifyContent: 'space-between' },
-  header: { alignItems: 'center', marginBottom: 40 },
+  header: { alignItems: 'center', marginBottom: 20 },
   logoWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   title: { fontSize: 22, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
+  tabContainer: { flexDirection: 'row', marginBottom: 20 },
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  tabText: { fontSize: 15, fontWeight: '700' },
   formArea: { flex: 1 },
   errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, padding: 12, marginBottom: 14, borderWidth: 1 },
   errorText: { flex: 1, fontSize: 13, fontWeight: '600' },
   submitButton: { borderRadius: 16, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 14 },
   submitButtonDisabled: { opacity: 0.7 },
   submitButtonText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  secondaryButton: { borderRadius: 16, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 14, borderWidth: 1 },
+  secondaryButtonText: { fontSize: 15, fontWeight: '700' },
   securityNoticeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginVertical: 14 },
   securityNoticeText: { fontSize: 11, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 8 },

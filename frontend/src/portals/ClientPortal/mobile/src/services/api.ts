@@ -62,6 +62,21 @@ export const ApiService = {
     }
   },
 
+  async sendOtp(idNumber: string): Promise<{ message: string }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify({ idNumber }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to send OTP');
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async loginWithId(params: {
     idType: 'rsa_id' | 'passport';
     idNumber: string;
