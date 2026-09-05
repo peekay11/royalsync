@@ -15,7 +15,7 @@ import rateLimit from 'express-rate-limit';
 
 export const createApp = () => {
   const app = express();
-  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173').split(',').map(value => value.trim());
+  const allowedOrigins = (process.env.CORS_ORIGINS || '*').split(',').map(value => value.trim());
   app.use(helmet());
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }));
   app.use(cors({ origin: allowedOrigins }));
