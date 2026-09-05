@@ -37,7 +37,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         style={[
           styles.inputWrapper,
           {
-            backgroundColor: focused ? colors.hoverBackground : colors.inputBackground,
+            backgroundColor: 'transparent',
             borderColor: focused ? colors.hoverBorder : colors.inputBorder,
           },
         ]}
