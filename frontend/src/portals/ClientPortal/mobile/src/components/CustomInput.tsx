@@ -44,9 +44,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({
       >
         {icon ? <View style={styles.iconContainer}>{icon}</View> : null}
         <TextInput
-          style={[styles.input, { color: colors.text }]}
+          style={[styles.input, { backgroundColor: 'transparent', color: colors.text }]}
           placeholder={placeholder}
-          placeholderTextColor={colors.textSubtle}
+          placeholderTextColor={colors.textSecondary}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !showPassword}
