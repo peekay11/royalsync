@@ -47,6 +47,7 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
         {/* Top Header */}
         <header className="h-16 flex items-center px-8 border-b border-gray-200 bg-white">
           <div className="ml-auto flex items-center gap-4">
+            <button onClick={() => { localStorage.removeItem('royalsync_token'); localStorage.removeItem('royalsync_user'); window.location.href = '/login'; }} className="text-sm text-gray-600 hover:text-red-600">Log out</button>
             <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-sm font-bold">
               U
             </div>

@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "nodemon --exec tsx src/index.ts"
+    "dev": "nodemon --exec tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts"
   },
   "keywords": [],
   "author": "",

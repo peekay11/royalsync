@@ -2,7 +2,8 @@ import { useApi } from '../../../hooks/useApi';
 import { FiPlus } from 'react-icons/fi';
 
 export const ClientGoals = () => {
-  const { data: goals, loading } = useApi<any[]>('/finance/goals');
+  const { data, loading } = useApi<{ goals: any[] }>('/goals');
+  const goals = data?.goals;
 
   if (loading) return <div className="p-8 text-gray-500">Loading goals...</div>;
 

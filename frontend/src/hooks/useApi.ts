@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_BASE = 'http://localhost:5000/api';
+import { apiRequest } from '../lib/api';
 
 export function useApi<T>(endpoint: string) {
   const [data, setData] = useState<T | null>(null);
@@ -8,15 +7,10 @@ export function useApi<T>(endpoint: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}${endpoint}`)
-      .then(res => res.json())
-      .then(json => {
-        if (json.success) {
-          setData(json.data);
-        } else {
-          setError(json.error || 'Failed to fetch');
-        }
-      })
+    setLoading(true);
+    setError(null);
+    apiRequest<T>(endpoint)
+      .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [endpoint]);

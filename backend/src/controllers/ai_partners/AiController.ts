@@ -3,10 +3,6 @@ import { BaseController } from '../BaseController';
 
 export class AiController extends BaseController {
   public askQuestion = (req: Request, res: Response) => {
-    const mockResponse = {
-      answer: 'Your net worth is R1,200,000.',
-      citations: ['ClientFinancials']
-    };
-    this.sendSuccess(res, mockResponse, 'AI response generated');
+    return this.sendError(res, 'AI provider is not configured', 503);
   };
 }

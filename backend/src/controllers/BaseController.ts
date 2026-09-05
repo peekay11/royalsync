@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 
 export class BaseController {
-  protected sendSuccess(res: Response, data: any, message: string = 'Success') {
-    return res.status(200).json({
+  protected sendSuccess(res: Response, data: unknown, message: string = 'Success', code: number = 200) {
+    return res.status(code).json({
       success: true,
       message,
       data

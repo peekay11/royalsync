@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BaseController } from '../BaseController';
-import { db } from '../../db';
+import { db, saveDb } from '../../db';
 
 export class ClientController extends BaseController {
   public getClients = (req: Request, res: Response) => {
@@ -11,12 +11,18 @@ export class ClientController extends BaseController {
   };
 
   public createClient = (req: Request, res: Response) => {
-    const newClient = {
+      const { firstName, lastName, mobile, riskProfile } = req.body as Record<string, string | undefined>;
+      if (!firstName || !lastName || !mobile) return this.sendError(res, 'First name, last name and mobile are required');
+      const newClient = {
       id: `cli_${Date.now()}`,
-      ...req.body,
+      firstName,
+      lastName,
+      mobile,
+      riskProfile: riskProfile || 'Unknown',
       kycStatus: 'pending'
     };
     db.clients.unshift(newClient);
+    saveDb();
     setTimeout(() => {
       this.sendSuccess(res, newClient, 'Client created successfully');
     }, 600);

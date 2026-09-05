@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BaseController } from '../BaseController';
-import { db } from '../../db';
+import { db, saveDb } from '../../db';
 
 export class TaskController extends BaseController {
   public getTasks = (req: Request, res: Response) => {
@@ -14,6 +14,7 @@ export class TaskController extends BaseController {
     const task = db.tasks.find(t => t.id === id);
     if(task) {
       task.status = task.status === 'open' ? 'completed' : 'open';
+      saveDb();
       setTimeout(() => this.sendSuccess(res, task, 'Task updated'), 300);
     } else {
       this.sendError(res, 'Not found', 404);

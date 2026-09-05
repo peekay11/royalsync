@@ -4,7 +4,7 @@ import { FiShield, FiFileText, FiTarget } from 'react-icons/fi';
 export const ClientDashboard = () => {
   const { data: policies, loading: pLoad } = useApi<any[]>('/policies');
   const { data: claims, loading: cLoad } = useApi<any[]>('/claims');
-  const { data: goals, loading: gLoad } = useApi<any[]>('/finance/goals');
+  const { data: goals, loading: gLoad } = useApi<any>('/goals');
 
   if (pLoad || cLoad || gLoad) return <div className="p-8 text-gray-500 animate-pulse">Loading dashboard data...</div>;
 
@@ -35,7 +35,7 @@ export const ClientDashboard = () => {
             <FiTarget className="text-gray-400 text-xl" />
           </div>
           <div className="text-2xl font-light text-gray-900 mt-2 truncate">
-            {goals?.[0]?.title || 'No goals set'}
+            {goals?.goals?.[0]?.title || 'No goals set'}
           </div>
         </div>
       </div>

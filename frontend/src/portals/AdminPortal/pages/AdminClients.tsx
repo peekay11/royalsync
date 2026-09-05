@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'sonner';
 import { FiPlus } from 'react-icons/fi';
+import { apiRequest } from '../../../lib/api';
 
 export const AdminClients = () => {
   const [clients, setClients] = useState<any[]>([]);
@@ -9,24 +10,21 @@ export const AdminClients = () => {
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/crm/clients')
-      .then(r => r.json())
-      .then(d => { setClients(d.data); setLoading(false); });
+    apiRequest<any[]>('/crm/clients')
+      .then(setClients)
+      .catch(() => toast.error('Failed to load clients'))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleAdd = async () => {
     setIsAdding(true);
     try {
-      const res = await fetch('http://localhost:5000/api/crm/clients', {
+      const client = await apiRequest<any>('/crm/clients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: 'New', lastName: 'Client', mobile: '000 000 0000', riskProfile: 'Low' })
       });
-      const data = await res.json();
-      if(data.success) {
-        setClients([data.data, ...clients]);
-        toast.success('Client added successfully');
-      }
+      setClients(current => [client, ...current]);
+      toast.success('Client added successfully');
     } catch(e) {
       toast.error('Failed to add client');
     } finally {
@@ -42,7 +40,7 @@ export const AdminClients = () => {
         <h1 className="text-2xl font-normal text-gray-800">Clients</h1>
         <button onClick={handleAdd} disabled={isAdding} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50">
           {isAdding ? <ClipLoader size={14} color="#fff" /> : <FiPlus />}
-          Quick Add Mock Client
+          Add Client
         </button>
       </div>
 

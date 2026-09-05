@@ -2,18 +2,13 @@ import { useState } from 'react';
 import { FiSend } from 'react-icons/fi';
 
 export const ClientAiInsights = () => {
-  const [messages, setMessages] = useState([
-    { id: 1, role: 'ai', text: 'Hello! I am your AI assistant. I can answer questions about your policies, net worth, or help you find documents.' }
-  ]);
+  const [messages, setMessages] = useState<{ id: number; role: string; text: string }[]>([]);
   const [input, setInput] = useState('');
 
   const handleSend = () => {
     if(!input) return;
     setMessages([...messages, { id: Date.now(), role: 'user', text: input }]);
     setInput('');
-    setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now(), role: 'ai', text: 'I am a mock AI response. In the future, I will render structured JSON with citations.' }]);
-    }, 1000);
   };
 
   return (

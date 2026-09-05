@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'sonner';
+import { apiRequest } from '../../../lib/api';
 
 export const AdminTasks = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/workflow/tasks')
-      .then(r => r.json())
-      .then(d => { setTasks(d.data); setLoading(false); });
+    apiRequest<any[]>('/workflow/tasks')
+      .then(setTasks)
+      .catch(() => toast.error('Failed to load tasks'))
+      .finally(() => setLoading(false));
   }, []);
 
   const toggleTask = async (id: string) => {
@@ -18,13 +20,8 @@ export const AdminTasks = () => {
     setTasks(tasks.map(t => t.id === id ? { ...t, status: t.status === 'open' ? 'completed' : 'open' } : t));
     
     try {
-      const res = await fetch(`http://localhost:5000/api/workflow/tasks/${id}/toggle`, { method: 'PUT' });
-      const data = await res.json();
-      if(data.success) {
-        toast.success(`Task marked as ${data.data.status}`);
-      } else {
-        throw new Error();
-      }
+      const task = await apiRequest<any>(`/workflow/tasks/${id}/toggle`, { method: 'PUT' });
+      toast.success(`Task marked as ${task.status}`);
     } catch(e) {
       setTasks(original);
       toast.error('Failed to update task');
