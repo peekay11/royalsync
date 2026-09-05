@@ -10,20 +10,54 @@ import { PartnerPortal } from './portals/PartnerPortal';
 
 const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
   const navigate = useNavigate();
+  const [loginMethod, setLoginMethod] = useState<'email' | 'id'>('id');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleSendOtp = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!idNumber) return setError('Please enter your ID Number');
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+    try {
+      const res = await apiRequest<{ message: string }>('/auth/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ idNumber })
+      });
+      setOtpSent(true);
+      setSuccessMsg(res.message || 'OTP sent successfully!');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const result = await apiRequest<{ token: string; user: any }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      });
+      let result;
+      if (loginMethod === 'email') {
+        result = await apiRequest<{ token: string; user: any }>('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+      } else {
+        if (!otpSent) return;
+        result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
+          method: 'POST',
+          body: JSON.stringify({ idNumber, code: otp })
+        });
+      }
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
       navigate(`/${defaultRole.toLowerCase().replace('_', '-')}`);
@@ -39,10 +73,38 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
       <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full space-y-4">
         <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
         <p className="text-center text-gray-500 text-sm mb-4">Sign in to continue</p>
-        <input required type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Email" className="w-full border rounded-lg p-3" />
-        <input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Password" className="w-full border rounded-lg p-3" />
+        
+        <div className="flex border-b border-gray-200 mb-4">
+          <button type="button" onClick={() => { setLoginMethod('id'); setError(''); setSuccessMsg(''); }} className={`flex-1 py-2 font-medium ${loginMethod === 'id' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500'}`}>ID & OTP</button>
+          <button type="button" onClick={() => { setLoginMethod('email'); setError(''); setSuccessMsg(''); }} className={`flex-1 py-2 font-medium ${loginMethod === 'email' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-500'}`}>Email Login</button>
+        </div>
+
+        {loginMethod === 'email' ? (
+          <>
+            <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full border rounded-lg p-3" />
+            <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full border rounded-lg p-3" />
+          </>
+        ) : (
+          <>
+            <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
+            {otpSent && (
+              <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="OTP Code (Hint: 123456)" className="w-full border rounded-lg p-3" />
+            )}
+            {!otpSent && (
+              <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 hover:bg-red-50 disabled:opacity-50">
+                {loading ? 'Sending...' : 'Send OTP via SMS'}
+              </button>
+            )}
+          </>
+        )}
+
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign in'}</button>
+        {successMsg && <p className="text-sm text-green-600">{successMsg}</p>}
+        
+        {(loginMethod === 'email' || otpSent) && (
+          <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign in'}</button>
+        )}
+
         {allowRegister && (
           <p className="text-center text-sm mt-4">
             Don't have an account? <Link to={`/${defaultRole.toLowerCase().replace('_', '-')}/register`} className="text-red-600 hover:underline">Register here</Link>
@@ -55,11 +117,10 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
 
 const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: string }) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
+  const [idNumber, setIdNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -70,7 +131,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
     try {
       const result = await apiRequest<{ token: string; user: any }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, firstName, lastName, mobile, role: defaultRole })
+        body: JSON.stringify({ firstName, lastName, mobile, idNumber, role: defaultRole })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
@@ -91,9 +152,8 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
           <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full border rounded-lg p-3" />
           <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full border rounded-lg p-3" />
         </div>
+        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
         <input required type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile Number" className="w-full border rounded-lg p-3" />
-        <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full border rounded-lg p-3" />
-        <input required minLength={6} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 6 chars)" className="w-full border rounded-lg p-3" />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Registering...' : 'Register'}</button>
         <p className="text-center text-sm mt-4">

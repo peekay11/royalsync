@@ -131,18 +131,31 @@ app.get('/health', c => c.json({ status: 'ok', service: 'royalsync-api', runtime
 
 app.post('/api/auth/register', async c => {
   const body = await c.req.json<{ email?: string; password?: string; firstName?: string; lastName?: string; mobile?: string; idNumber?: string }>();
-  if (!body.email || !body.password || body.password.length < 6 || !body.firstName || !body.lastName || !body.mobile) return c.body(JSON.stringify({ success: false, error: 'Email, 6-character password, name and mobile are required' }), 400, { 'Content-Type': 'application/json' });
-  const email = body.email.trim().toLowerCase();
+  
+  if (!body.firstName || !body.lastName || !body.mobile || !body.idNumber) {
+    return c.json({ success: false, error: 'First name, last name, mobile and ID Number are required' }, 400);
+  }
+  
+  const idNumber = body.idNumber.trim();
+  const existingId = await c.env.DB.prepare('SELECT id FROM users WHERE id_number = ?').bind(idNumber).first();
+  if (existingId) return c.json({ success: false, error: 'ID Number is already registered' }, 409);
+
+  const email = (body.email || `${idNumber}@royalsync.local`).trim().toLowerCase();
+  const password = body.password || crypto.randomUUID();
+  
   const exists = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
   if (exists) return c.json({ success: false, error: 'Email is already registered' }, 409);
+  
   const userId = id('usr');
   const clientId = id('cli');
   const timestamp = now();
-  const passwordHash = await hashPassword(body.password);
+  const passwordHash = await hashPassword(password);
+  
   await c.env.DB.batch([
     c.env.DB.prepare('INSERT INTO clients (id, first_name, last_name, mobile, kyc_status, risk_profile, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(clientId, body.firstName, body.lastName, body.mobile, 'pending', 'Unknown', timestamp, timestamp),
-    c.env.DB.prepare('INSERT INTO users (id, email, password_hash, role, client_id, id_number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(userId, email, passwordHash, 'CLIENT', clientId, body.idNumber || null, timestamp, timestamp)
+    c.env.DB.prepare('INSERT INTO users (id, email, password_hash, role, client_id, id_number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(userId, email, passwordHash, 'CLIENT', clientId, idNumber, timestamp, timestamp)
   ]);
+  
   const user: User = { id: userId, email, role: 'CLIENT', clientId };
   return c.json({ success: true, message: 'Registration successful', data: { token: await createToken(user, c.env.AUTH_SECRET), user } }, 201);
 });

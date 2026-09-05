@@ -38,80 +38,49 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
     confirm: '',
     role: 'Client',
   });
-  const [agreed, setAgreed] = useState(false);
+  const [agreed, setAgreed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const updateField = (k: keyof typeof form, v: string) => {
-    setForm(prev => ({ ...prev, [k]: v }));
-  };
-
-  const handleNextStep = () => {
-    if (!form.firstName || !form.lastName || !form.idNumber || !form.phone) {
-      setError('Please fill in all personal details.');
-      return;
-    }
-    setError('');
-    setStep(2);
+  const updateField = (field: keyof typeof form, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
   const handleRegister = async () => {
-    if (!form.email || !form.password || !agreed) {
-      setError('Please provide email, password and agree to the terms.');
+    if (!form.firstName || !form.lastName || !form.idNumber || !form.phone) {
+      setError('Please fill in all your personal details.');
       return;
     }
-    if (form.password !== form.confirm) {
-      setError('Passwords do not match.');
-      return;
-    }
-
     setError('');
     setLoading(true);
 
     try {
-      await ApiService.register({ ...form, mobile: form.phone });
+      await ApiService.register({
+        ...form,
+        mobile: form.phone
+      });
       setLoading(false);
-      onDone();
+      onLogin(); // Auto-login handles redirect inside App.tsx usually, or they login with OTP next
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || 'Registration failed.');
+      setError(err.message || 'Registration failed. Please try again.');
     }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background }]}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
       {/* Top Header */}
       <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-          onPress={step === 2 ? () => setStep(1) : onLogin}
-        >
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]} onPress={onLogin} activeOpacity={0.8}>
           <Text style={[styles.backText, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
-
         <View style={styles.progressArea}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Create Account</Text>
-          <View style={[styles.progressBarTrack, { backgroundColor: isDark ? '#252525' : '#e0e4e8' }]}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: step === 1 ? '50%' : '100%',
-                  backgroundColor: colors.primary,
-                },
-              ]}
-            />
-          </View>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Register Profile</Text>
         </View>
       </View>
 
-      {/* Step 1: Personal Profile */}
-      {step === 1 && (
-        <View style={styles.formContent}>
-          <Text style={[styles.stepSubtitle, { color: colors.textMuted }]}>Personal information</Text>
+      <View style={styles.formContent}>
+        <Text style={[styles.stepSubtitle, { color: colors.textMuted }]}>Personal details</Text>
 
           <View style={styles.rowInputs}>
             <View style={{ flex: 1 }}>
@@ -175,94 +144,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
           ) : null}
 
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
-            onPress={handleNextStep}
-            activeOpacity={0.88}
-          >
-            <Text style={styles.primaryBtnText}>Continue →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Step 2: Credentials */}
-      {step === 2 && (
-        <View style={styles.formContent}>
-          <Text style={[styles.stepSubtitle, { color: colors.textMuted }]}>Account credentials</Text>
-
-          <CustomInput
-            label="Email Address"
-            placeholder="you@example.com"
-            value={form.email}
-            onChangeText={v => updateField('email', v)}
-            keyboardType="email-address"
-            icon={<MailIcon color={colors.textMuted} size={18} />}
-          />
-
-          <CustomInput
-            label="Password"
-            placeholder="Create password"
-            value={form.password}
-            onChangeText={v => updateField('password', v)}
-            secureTextEntry
-            icon={<LockIcon color={colors.textMuted} size={18} />}
-          />
-
-          <CustomInput
-            label="Confirm Password"
-            placeholder="Repeat password"
-            value={form.confirm}
-            onChangeText={v => updateField('confirm', v)}
-            secureTextEntry
-            icon={<ShieldIcon color={colors.textMuted} size={18} />}
-          />
-
-          {/* Terms checkbox */}
-          <TouchableOpacity
-            style={styles.termsRow}
-            onPress={() => setAgreed(!agreed)}
-            activeOpacity={0.8}
-          >
-            <View
-              style={[
-                styles.termsCheckBox,
-                {
-                  borderColor: agreed ? colors.primary : colors.inputBorder,
-                  backgroundColor: agreed ? colors.primary : 'transparent',
-                },
-              ]}
-            >
-              {agreed ? <CheckmarkIcon color="#ffffff" size={12} strokeWidth={3} /> : null}
-            </View>
-            <Text style={[styles.termsText, { color: colors.textSecondary }]}>
-              I agree to the <Text style={{ color: colors.primary }}>Terms of Service</Text> and{' '}
-              <Text style={{ color: colors.primary }}>Privacy Policy</Text> of Royal Square Financial.
-            </Text>
-          </TouchableOpacity>
-
-          {error ? (
-            <View style={[styles.errorBox, { backgroundColor: colors.primaryAlpha, borderColor: colors.primaryBorder }]}>
-              <Text style={[styles.errorText, { color: colors.primary }]}>{error}</Text>
-            </View>
-          ) : null}
-
-          <TouchableOpacity
-            style={[
-              styles.primaryBtn,
-              { backgroundColor: colors.primary },
-              (!agreed || loading) && styles.primaryBtnDisabled,
-            ]}
+            style={[styles.primaryBtn, { backgroundColor: colors.primary }, loading && styles.primaryBtnDisabled]}
             onPress={handleRegister}
-            disabled={!agreed || loading}
+            disabled={loading}
             activeOpacity={0.88}
           >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.primaryBtnText}>Create Account</Text>
-            )}
+            {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryBtnText}>Create Account</Text>}
           </TouchableOpacity>
         </View>
-      )}
 
       {/* Footer */}
       <View style={styles.footer}>
