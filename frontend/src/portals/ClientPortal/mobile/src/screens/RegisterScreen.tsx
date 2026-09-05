@@ -17,7 +17,6 @@ import {
   LockIcon,
   ShieldIcon,
   UserIcon,
-  BriefcaseIcon,
   CheckmarkIcon,
 } from '../components/GrommetIcons';
 
@@ -37,7 +36,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
     email: '',
     password: '',
     confirm: '',
-    role: 'Adviser',
+    role: 'Client',
   });
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -153,38 +152,20 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
 
           <Text style={[styles.roleLabel, { color: colors.textMuted }]}>I AM A</Text>
           <View style={styles.roleGrid}>
-            {(['Client', 'Adviser'] as const).map(r => (
-              <TouchableOpacity
-                key={r}
-                style={[
-                  styles.roleCard,
-                  {
-                    backgroundColor: form.role === r ? colors.primaryAlpha : colors.card,
-                    borderColor: form.role === r ? colors.primary : colors.cardBorder,
-                  },
-                ]}
-                onPress={() => updateField('role', r)}
-              >
-                <View style={styles.roleIconBox}>
-                  {r === 'Client' ? (
-                    <UserIcon color={form.role === r ? colors.primary : colors.textMuted} size={20} />
-                  ) : (
-                    <BriefcaseIcon color={form.role === r ? colors.primary : colors.textMuted} size={20} />
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.roleCardText,
-                    {
-                      color: form.role === r ? colors.primary : colors.textSecondary,
-                      fontWeight: form.role === r ? '800' : '500',
-                    },
-                  ]}
-                >
-                  {r}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <View
+              style={[
+                styles.roleCard,
+                {
+                  backgroundColor: colors.primaryAlpha,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <View style={styles.roleIconBox}>
+                <UserIcon color={colors.primary} size={20} />
+              </View>
+              <Text style={[styles.roleCardText, { color: colors.primary, fontWeight: '800' }]}>Client</Text>
+            </View>
           </View>
 
           {error ? (
