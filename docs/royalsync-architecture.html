@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal Square Financial — Platform Architecture & Planning</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #0F2A4A;
+    --navy-light: #1E3A5F;
+    --gold: #C9962A;
+    --gold-light: #F0B429;
+    --slate: #475569;
+    --slate-light: #94A3B8;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --green: #16A34A;
+    --red: #DC2626;
+    --amber: #D97706;
+    --blue: #2563EB;
+    --purple: #7C3AED;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10pt;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--white);
+  }
+
+  /* ─── COVER PAGE ─── */
+  .cover {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 60%, #2D5A8E 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+
+  .cover-logo {
+    width: 80px;
+    height: 80px;
+    background: var(--gold);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--navy);
+  }
+
+  .cover h1 {
+    font-size: 38pt;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .cover h2 {
+    font-size: 16pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 48px;
+    letter-spacing: 0.5px;
+  }
+
+  .cover-divider {
+    width: 80px;
+    height: 3px;
+    background: var(--gold);
+    margin: 0 auto 48px;
+    border-radius: 2px;
+  }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    max-width: 600px;
+    margin-bottom: 60px;
+  }
+
+  .cover-meta-item {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+
+  .cover-meta-item .label {
+    font-size: 8pt;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-item .value {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .cover-version {
+    font-size: 8pt;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+
+  /* ─── TOC PAGE ─── */
+  .toc-page {
+    padding: 60px 60px;
+    page-break-after: always;
+  }
+
+  .toc-page h2 {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  .toc-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    font-size: 10pt;
+  }
+
+  .toc-section { margin-bottom: 28px; }
+
+  .toc-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .toc-num {
+    width: 28px;
+    height: 28px;
+    background: var(--navy);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9pt;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .toc-section-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .toc-items {
+    margin-left: 38px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .toc-item {
+    font-size: 9pt;
+    color: var(--text-muted);
+    padding: 3px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+
+  /* ─── CONTENT PAGES ─── */
+  .page {
+    padding: 50px 60px;
+    page-break-after: always;
+    position: relative;
+  }
+
+  .page:last-child { page-break-after: auto; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 14px;
+    margin-bottom: 32px;
+  }
+
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-badge {
+    background: var(--navy);
+    color: white;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .page-title {
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.5px;
+  }
+
+  .page-header-right {
+    font-size: 8pt;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  /* ─── CONTENT ELEMENTS ─── */
+  h3 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h4 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--navy-light);
+    margin: 20px 0 8px;
+  }
+
+  p { margin-bottom: 12px; color: var(--text); }
+
+  /* ─── CALLOUT BOXES ─── */
+  .callout {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+
+  .callout-navy {
+    background: #EFF6FF;
+    border-color: var(--navy);
+  }
+
+  .callout-gold {
+    background: #FFFBEB;
+    border-color: var(--gold);
+  }
+
+  .callout-green {
+    background: #F0FDF4;
+    border-color: var(--green);
+  }
+
+  .callout-red {
+    background: #FEF2F2;
+    border-color: var(--red);
+  }
+
+  .callout-title {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    color: var(--navy);
+  }
+
+  .callout p { margin: 0; font-size: 9.5pt; }
+
+  /* ─── CODE BLOCKS ─── */
+  pre, code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 8pt;
+  }
+
+  pre {
+    background: #0F172A;
+    color: #E2E8F0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    overflow-x: auto;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  code {
+    background: #F1F5F9;
+    color: var(--navy);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ─── TABLES ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9pt;
+  }
+
+  th {
+    background: var(--navy);
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8.5pt;
+  }
+
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: var(--bg); }
+
+  /* ─── GRID CARDS ─── */
+  .card-grid {
+    display: grid;
+    gap: 14px;
+    margin: 16px 0;
+  }
+
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .card-accent {
+    border-top: 3px solid var(--navy);
+  }
+
+  .card-gold {
+    border-top: 3px solid var(--gold);
+  }
+
+  .card h4 {
+    margin: 0 0 8px;
+    font-size: 10pt;
+    color: var(--navy);
+  }
+
+  .card p {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .card ul {
+    margin: 6px 0 0;
+    padding-left: 16px;
+    font-size: 8.5pt;
+    color: var(--text-muted);
+  }
+
+  .card ul li { margin-bottom: 3px; }
+
+  /* ─── PORTAL CARDS ─── */
+  .portal-card {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .portal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .portal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .portal-name {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .portal-url {
+    font-size: 8pt;
+    color: var(--text-muted);
+    font-family: monospace;
+  }
+
+  /* ─── PILL TAGS ─── */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 7.5pt;
+    font-weight: 600;
+    margin: 2px;
+  }
+
+  .pill-navy { background: #DBEAFE; color: var(--navy); }
+  .pill-gold { background: #FEF3C7; color: #92400E; }
+  .pill-green { background: #DCFCE7; color: #166534; }
+  .pill-red { background: #FEE2E2; color: #991B1B; }
+  .pill-purple { background: #EDE9FE; color: #5B21B6; }
+  .pill-slate { background: #F1F5F9; color: var(--slate); }
+
+  /* ─── FLOW DIAGRAM ─── */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+    font-size: 8.5pt;
+  }
+
+  .flow-step {
+    background: var(--navy);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .flow-step-alt {
+    background: var(--gold);
+    color: var(--navy);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--slate-light);
+    font-size: 14px;
+  }
+
+  /* ─── ARCHITECTURE DIAGRAM ─── */
+  .arch-diagram {
+    background: #0F172A;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    color: #E2E8F0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    line-height: 1.8;
+    white-space: pre;
+  }
+
+  /* ─── LISTS ─── */
+  ul, ol {
+    padding-left: 20px;
+    margin: 8px 0 12px;
+  }
+
+  li { margin-bottom: 4px; font-size: 9.5pt; }
+
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li::before { content: "✓ "; color: var(--green); font-weight: 700; }
+
+  /* ─── STAT BLOCKS ─── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .stat-box {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    color: white;
+  }
+
+  .stat-number {
+    font-size: 22pt;
+    font-weight: 800;
+    color: var(--gold-light);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 8pt;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── SCHEMA TABLE ─── */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 8pt;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .schema-table th {
+    background: #1E293B;
+    color: #94A3B8;
+    padding: 6px 10px;
+    font-size: 7.5pt;
+  }
+
+  .schema-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #1E293B;
+    background: #0F172A;
+    color: #E2E8F0;
+  }
+
+  .schema-table tr:nth-child(even) td { background: #111827; }
+
+  .col-type { color: #60A5FA; }
+  .col-pk { color: #F59E0B; font-weight: 700; }
+  .col-fk { color: #A78BFA; }
+  .col-note { color: #6B7280; font-style: italic; font-family: 'Inter', sans-serif; font-size: 7.5pt; }
+
+  /* ─── PAGE FOOTER ─── */
+  .page-footer {
+    position: fixed;
+    bottom: 20px;
+    left: 60px;
+    right: 60px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5pt;
+    color: var(--slate-light);
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  /* ─── SECTION DIVIDER ─── */
+  .section-divider {
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--navy), var(--gold), transparent);
+    border-radius: 2px;
+    margin: 24px 0;
+  }
+
+  /* ─── PRINT STYLES ─── */
+  @media print {
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page-footer { display: none; }
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8pt;
+    font-weight: 500;
+    color: var(--slate);
+    margin: 2px;
+  }
+
+  .highlight-row {
+    background: #FFFBEB;
+    border-left: 3px solid var(--gold);
+  }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- COVER PAGE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">RS</div>
+  <h1>Royal Square<br>Financial</h1>
+  <h2>Platform Architecture &amp; Technical Planning Document</h2>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Document Type</div>
+      <div class="value">Architecture Spec</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">1.0 — 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Classification</div>
+      <div class="value">Confidential</div>
+    </div>
+  </div>
+  <div class="cover-version">ROYAL SQUARE FINANCIAL (PTY) LTD &nbsp;·&nbsp; FSP PLATFORM &nbsp;·&nbsp; SOUTH AFRICA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="toc-page">
+  <h2>Table of Contents</h2>
+  <p class="toc-subtitle">Complete platform architecture and planning reference</p>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">1</div>
+      <div class="toc-section-title">Executive Summary &amp; Vision</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Business Context &amp; Problem Statement</div>
+      <div class="toc-item">Platform Vision</div>
+      <div class="toc-item">Key Platform Statistics</div>
+      <div class="toc-item">Regulatory Context</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">2</div>
+      <div class="toc-section-title">Multi-Tenant Architecture</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Tenant Isolation Model</div>
+      <div class="toc-item">Row-Level Security (RLS)</div>
+      <div class="toc-item">Plug-and-Play Module System</div>
+      <div class="toc-item">Tenant Onboarding Flow</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">3</div>
+      <div class="toc-section-title">The Four Portals</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Client Portal</div>
+      <div class="toc-item">Admin Portal (Advisers &amp; Staff)</div>
+      <div class="toc-item">Super Admin Portal</div>
+      <div class="toc-item">Insurer Onboarding Portal</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">4</div>
+      <div class="toc-section-title">Complete User Flows</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Guest Lead Capture &amp; Magic Link</div>
+      <div class="toc-item">Client Onboarding Wizard</div>
+      <div class="toc-item">Application → Quote → Inception</div>
+      <div class="toc-item">Claims Flow</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">5</div>
+      <div class="toc-section-title">Identity &amp; Access Management (IAM)</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Permission Matrix</div>
+      <div class="toc-item">Groups &amp; Individual Overrides</div>
+      <div class="toc-item">Security Policies</div>
+      <div class="toc-item">Delegation Rules</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">6</div>
+      <div class="toc-section-title">Database Schema</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Core Tenant &amp; IAM Tables</div>
+      <div class="toc-item">Client CRM Tables</div>
+      <div class="toc-item">Policy &amp; Claims Tables</div>
+      <div class="toc-item">Compliance &amp; Audit Tables</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">7</div>
+      <div class="toc-section-title">AI Systems</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Recommendation Engine</div>
+      <div class="toc-item">RAG Architecture</div>
+      <div class="toc-item">Client AI Assistant</div>
+      <div class="toc-item">JSON Styling System</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">8</div>
+      <div class="toc-section-title">Integration Gateway</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Multi-Insurer Abstraction Layer</div>
+      <div class="toc-item">Supported Providers</div>
+      <div class="toc-item">Message Queue &amp; Retry Logic</div>
+      <div class="toc-item">Canonical Data Model</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">9</div>
+      <div class="toc-section-title">Notifications, Search &amp; Accessibility</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">Notification Channels</div>
+      <div class="toc-item">In-App Search Engine</div>
+      <div class="toc-item">Accessibility &amp; Language System</div>
+      <div class="toc-item">Colour Blind &amp; Screen Reader Support</div>
+    </div>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-header">
+      <div class="toc-num">10</div>
+      <div class="toc-section-title">Infrastructure &amp; Compliance</div>
+    </div>
+    <div class="toc-items">
+      <div class="toc-item">AWS af-south-1 Architecture</div>
+      <div class="toc-item">POPIA / FAIS / FICA Compliance</div>
+      <div class="toc-item">Technology Stack</div>
+      <div class="toc-item">Implementation Roadmap</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 1: EXECUTIVE SUMMARY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 1</span>
+      <span class="page-title">Executive Summary &amp; Vision</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <div class="callout callout-navy">
+    <div class="callout-title">The Core Problem Being Solved</div>
+    <p>Royal Square Financial currently operates as a traditional independent insurance broker — managing client portfolios, insurer relationships, compliance obligations, and policy administration largely through manual processes: paper files, spreadsheets, email threads, and telephone follow-ups. This creates risk (missed renewals, compliance gaps, lost documents), limits scale (adviser capacity is capped by manual workload), and delivers a poor client experience (no real-time visibility into their own financial position).</p>
+  </div>
+
+  <h3>Platform Vision</h3>
+  <p>RoyalSync is a <strong>multi-tenant SaaS platform</strong> that digitises and automates the complete lifecycle of independent insurance brokerage operations. Royal Square Financial is Tenant #1 — the platform is architected from day one to be licensed to other independent brokers across South Africa and, ultimately, across Africa and globally.</p>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-number">4</div>
+      <div class="stat-label">Separate Portals</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Bounded Domains</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">13</div>
+      <div class="stat-label">Languages Supported</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">Tenant Isolated</div>
+    </div>
+  </div>
+
+  <h3>What the Platform Eliminates</h3>
+  <div class="two-col">
+    <div>
+      <h4>Manual Operations Removed</h4>
+      <ul>
+        <li>Paper-based client files and KYC folders</li>
+        <li>Email-based quote requests to insurers</li>
+        <li>Spreadsheet tracking of policy renewals</li>
+        <li>Manual commission reconciliation</li>
+        <li>PDF forms for every client interaction</li>
+        <li>Phone-based claim status follow-ups</li>
+        <li>Manual reminder calendars for KYC renewals</li>
+        <li>Ad-hoc document distribution</li>
+      </ul>
+    </div>
+    <div>
+      <h4>What Replaces It</h4>
+      <ul>
+        <li>Digital client profiles with full audit history</li>
+        <li>Integration gateway auto-routing to insurers</li>
+        <li>Automated renewal alerts with SLA tracking</li>
+        <li>Real-time commission ledger</li>
+        <li>Guided wizard flows with digital signatures</li>
+        <li>Real-time claim tracking in the client app</li>
+        <li>Automated KYC expiry management</li>
+        <li>Template-driven document workflows</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Regulatory Framework</h3>
+  <div class="card-grid card-grid-3">
+    <div class="card card-accent">
+      <h4>POPIA</h4>
+      <p>Protection of Personal Information Act — governs all personal data. Requires consent management, right to erasure (pseudonymisation), data breach notification within 72 hours, and data residency in South Africa.</p>
+    </div>
+    <div class="card card-accent">
+      <h4>FAIS</h4>
+      <p>Financial Advisory &amp; Intermediary Services Act — governs advice and intermediary services. Requires Record of Advice (ROA), commission disclosure, FNA (Financial Needs Analysis), 5-year document retention.</p>
+    </div>
+    <div class="card card-accent">
+      <h4>FICA</h4>
+      <p>Financial Intelligence Centre Act — anti-money laundering and KYC obligations. Requires identity verification, PEP/sanctions screening, risk scoring, and suspicious activity reporting.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-gold">
+    <div class="callout-title">Platform Differentiation</div>
+    <p>Most broker management systems in South Africa are legacy desktop applications (e.g. Flexi, BrokerPoint) that were not designed for modern web, mobile, or multi-tenancy. RoyalSync is cloud-native, mobile-first, AI-assisted, and built to be licensed — giving Royal Square Financial a second revenue stream as the platform grows.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 2: MULTI-TENANT ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 2</span>
+      <span class="page-title">Multi-Tenant Architecture</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Tenant Isolation Model</h3>
+  <p>The platform uses a <strong>shared schema, row-level security</strong> model. All tenants share the same PostgreSQL database infrastructure, but every table has a <code>tenant_id</code> column and Row-Level Security policies enforce that no query can ever return rows from another tenant — at the database engine level, not the application layer.</p>
+
+  <div class="arch-diagram">┌─────────────────────────────────────────────────────────────┐
+│                    ROYALSYNC PLATFORM                       │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │  Royal Square│  │  Broker B    │  │  Broker C    │     │
+│  │  Financial   │  │  Cape Town   │  │  JHB North   │     │
+│  │  tenant_id=1 │  │  tenant_id=2 │  │  tenant_id=3 │     │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
+│         │                 │                 │              │
+│         └─────────────────┴─────────────────┘             │
+│                           │                                │
+│              ┌────────────▼────────────┐                   │
+│              │   PostgreSQL + RLS       │                   │
+│              │   SET app.tenant_id = X  │                   │
+│              │   Enforced at DB engine  │                   │
+│              └─────────────────────────┘                   │
+└─────────────────────────────────────────────────────────────┘</div>
+
+  <h3>Row-Level Security Implementation</h3>
+  <pre>-- On every table:
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON clients
+  USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+-- Set at the start of every request:
+SET app.current_tenant_id = '&lt;tenant_uuid&gt;';
+-- This is set by the API middleware from the JWT token.
+-- No application code can bypass this — it is enforced at DB level.</pre>
+
+  <h3>Plug-and-Play Module System</h3>
+  <p>Each tenant can enable or disable platform modules independently. Modules are rows in the <code>tenant_modules</code> table. When a module is disabled for a tenant, its navigation items disappear, its API endpoints return 403, and its data is excluded from all queries.</p>
+
+  <table>
+    <thead>
+      <tr><th>Module</th><th>Description</th><th>Default</th><th>Config Options</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>core_crm</strong></td><td>Client management, profiles, documents</td><td>Always on</td><td>—</td></tr>
+      <tr><td><strong>policy_management</strong></td><td>Policies, schedules, endorsements</td><td>Always on</td><td>—</td></tr>
+      <tr><td><strong>claims</strong></td><td>Claims tracking, third parties, updates</td><td>Enabled</td><td>Auto-assignment rules</td></tr>
+      <tr><td><strong>goals</strong></td><td>Financial goals, projections, contributions</td><td>Enabled</td><td>Goal types, projection model</td></tr>
+      <tr><td><strong>kyc</strong></td><td>KYC/AML screening, PEP checks</td><td>Enabled</td><td>Screening provider, risk threshold</td></tr>
+      <tr><td><strong>financial_planning</strong></td><td>Assets, liabilities, net worth, FNA</td><td>Enabled</td><td>—</td></tr>
+      <tr><td><strong>ai_assistant</strong></td><td>Client-facing AI assistant (RAG)</td><td>Enabled</td><td>AI provider, document sources</td></tr>
+      <tr><td><strong>referrals</strong></td><td>Referral tracking, rewards</td><td>Disabled</td><td>Reward structure, max reward</td></tr>
+      <tr><td><strong>whatsapp</strong></td><td>WhatsApp Business API notifications</td><td>Enabled</td><td>WABA ID, phone number ID</td></tr>
+      <tr><td><strong>debicheck</strong></td><td>DebiCheck/NAEDO mandate management</td><td>Enabled</td><td>Sponsoring bank, collection day</td></tr>
+      <tr><td><strong>market_benchmarks</strong></td><td>Premium benchmarking against market</td><td>Disabled</td><td>Update frequency, data source</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tenant Branding</h3>
+  <p>Each tenant has a branding configuration stored in <code>tenant_branding</code>. The client portal, email templates, PDF documents, and SMS messages all render with the tenant's own logo, colours, and contact details — clients never see "RoyalSync".</p>
+
+  <div class="card-grid card-grid-3">
+    <div class="card">
+      <h4>Visual Identity</h4>
+      <ul>
+        <li>Logo (SVG + PNG variants)</li>
+        <li>Primary &amp; secondary brand colours</li>
+        <li>Font family selection</li>
+        <li>Favicon</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Communication</h4>
+      <ul>
+        <li>Email from-name &amp; reply-to</li>
+        <li>SMS sender name</li>
+        <li>WhatsApp display name</li>
+        <li>Custom domain (app.broker.co.za)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Legal &amp; Compliance</h4>
+      <ul>
+        <li>FSP licence number</li>
+        <li>FAIS representative number</li>
+        <li>Privacy policy URL</li>
+        <li>Terms &amp; conditions URL</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 3: THE FOUR PORTALS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 3</span>
+      <span class="page-title">The Four Portals</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <div class="callout callout-navy">
+    <div class="callout-title">Portal Separation Principle</div>
+    <p>Each portal is a completely separate authentication boundary with its own URL, its own JWT audience claim, its own session store, and its own permission context. A user authenticated in one portal cannot access another portal — even with the same email address — without a separate authentication event.</p>
+  </div>
+
+  <div class="portal-card" style="background:#F0F9FF; border-color:#BFDBFE;">
+    <div class="portal-header">
+      <div class="portal-icon" style="background:#DBEAFE;">👤</div>
+      <div>
+        <div class="portal-name">Client Portal</div>
+        <div class="portal-url">app.royalsquare.co.za</div>
+      </div>
+      <div style="margin-left:auto"><span class="pill pill-navy">Progressive Web App</span> <span class="pill pill-green">Offline-capable</span></div>
+    </div>
+    <p style="font-size:9pt;color:#475569;margin-bottom:10px;">The client-facing experience. Every insured client gets access. Mobile-first PWA with service worker caching for offline use.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:8.5pt;">
+      <div><strong>Dashboard</strong> — Net worth, cover summary, upcoming payments, alerts</div>
+      <div><strong>Insurance</strong> — All active policies, schedules, endorsements, OUTbonus</div>
+      <div><strong>Claims</strong> — Real-time status, documents, third parties, updates</div>
+      <div><strong>Goals</strong> — Financial goals, progress, projections, contributions</div>
+      <div><strong>Documents</strong> — All documents, download, share, upload</div>
+      <div><strong>AI Insights</strong> — RAG-powered assistant for financial questions</div>
+      <div><strong>Profile</strong> — Personal details, bank accounts, dependants</div>
+      <div><strong>Payments</strong> — Payment history, DebiCheck mandates, outstanding</div>
+      <div><strong>Settings</strong> — Language, accessibility, notifications, security</div>
+    </div>
+  </div>
+
+  <div class="portal-card" style="background:#F0FDF4; border-color:#BBF7D0;">
+    <div class="portal-header">
+      <div class="portal-icon" style="background:#DCFCE7;">🏢</div>
+      <div>
+        <div class="portal-name">Admin Portal — Advisers &amp; Staff</div>
+        <div class="portal-url">admin.royalsquare.co.za</div>
+      </div>
+      <div style="margin-left:auto"><span class="pill pill-green">Internal Staff Only</span></div>
+    </div>
+    <p style="font-size:9pt;color:#475569;margin-bottom:10px;">Used by advisers, case managers, admin staff, and team leads. Permission-gated — each user only sees what their group allows.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:8.5pt;">
+      <div><strong>Dashboard</strong> — My clients, SLA breaches, today's tasks, alerts</div>
+      <div><strong>Clients</strong> — Full CRM, search, profile management, KYC</div>
+      <div><strong>Applications</strong> — Pipeline view, quote management, inception</div>
+      <div><strong>Policies</strong> — Portfolio view, renewals, endorsements, schedules</div>
+      <div><strong>Claims</strong> — Case management, insurer liaison, client updates</div>
+      <div><strong>Tasks</strong> — Assigned tasks, templates, SLA tracking</div>
+      <div><strong>Templates</strong> — Quote requests, letters, document templates</div>
+      <div><strong>Notifications</strong> — Send WhatsApp, email, SMS to clients</div>
+      <div><strong>Reports</strong> — Portfolio, commission, KYC, SLA reports</div>
+    </div>
+  </div>
+
+  <div class="portal-card" style="background:#FFF7ED; border-color:#FED7AA;">
+    <div class="portal-header">
+      <div class="portal-icon" style="background:#FFEDD5;">👑</div>
+      <div>
+        <div class="portal-name">Super Admin Portal — Leadership</div>
+        <div class="portal-url">superadmin.royalsquare.co.za</div>
+      </div>
+      <div style="margin-left:auto"><span class="pill pill-gold">Royal Square Leadership</span> <span class="pill pill-red">Two-person sign-off</span></div>
+    </div>
+    <p style="font-size:9pt;color:#475569;margin-bottom:10px;">Platform command centre. Full IAM, all tenants (if platform grows), system configuration, compliance oversight, AI management.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:8.5pt;">
+      <div><strong>IAM</strong> — Users, groups, permissions, security policies</div>
+      <div><strong>Compliance</strong> — ROA status, KYC gaps, POPIA, FICA oversight</div>
+      <div><strong>Analytics</strong> — Revenue, portfolio health, adviser performance</div>
+      <div><strong>Tenants</strong> — Manage broker tenants, modules, branding</div>
+      <div><strong>Insurers</strong> — Approved insurer list, integration status</div>
+      <div><strong>System Config</strong> — Templates, notification settings, AI config</div>
+      <div><strong>Audit Log</strong> — Immutable full-platform audit trail</div>
+      <div><strong>AI Management</strong> — Document corpus, model config, conversation logs</div>
+      <div><strong>Integration Health</strong> — Gateway status, dead-letter queue, retry stats</div>
+    </div>
+  </div>
+
+  <div class="portal-card" style="background:#FAF5FF; border-color:#E9D5FF;">
+    <div class="portal-header">
+      <div class="portal-icon" style="background:#EDE9FE;">🔗</div>
+      <div>
+        <div class="portal-name">Insurer Onboarding Portal</div>
+        <div class="portal-url">partners.royalsquare.co.za</div>
+      </div>
+      <div style="margin-left:auto"><span class="pill pill-purple">External Partners</span></div>
+    </div>
+    <p style="font-size:9pt;color:#475569;margin-bottom:10px;">Insurers use this portal to self-onboard onto the platform, maintain their profile, manage their product library, and receive integration requirements.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:8.5pt;">
+      <div><strong>Company Profile</strong> — FSP details, contact persons, compliance docs</div>
+      <div><strong>Products</strong> — Product catalogue, cover types, terms, pricing guides</div>
+      <div><strong>Document Requirements</strong> — What docs to request from clients per product</div>
+      <div><strong>Integration Setup</strong> — API keys, SFTP config, email routing</div>
+      <div><strong>Inbox</strong> — New quote requests from Royal Square</div>
+      <div><strong>Response Centre</strong> — Submit quotes, decline reasons, counter-offers</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 4: COMPLETE USER FLOWS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 4</span>
+      <span class="page-title">Complete User Flows</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Flow 1 — Guest Lead Capture &amp; Magic Link</h3>
+  <p>A prospect arrives on the Royal Square sales page. They have not registered. All data they enter is preserved server-side so they can resume on any device.</p>
+
+  <div class="flow">
+    <div class="flow-step">1. Sales Page Visit</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">2. Lead Capture Form</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">3. Guest UUID Issued</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">4. Wizard (Auto-saved)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">5. Email Captured</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">6. Magic Link Sent</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">7. Click Link</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">8. Set Real Password</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">9. Account Active</div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h4>Guest Session (pre-email)</h4>
+      <ul>
+        <li>UUID guest token in browser storage</li>
+        <li>All form data saved server-side every 3 seconds</li>
+        <li>Guest can close browser and return — data is there</li>
+        <li>No account exists yet — just a guest session record</li>
+        <li>Guest token expires after 30 days of inactivity</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Magic Link Security</h4>
+      <ul>
+        <li>One-time UUID token — invalidated on first click</li>
+        <li>7-day expiry from time of issue</li>
+        <li>Second click → redirect to login page with message</li>
+        <li>Expired link → form to request a new magic link</li>
+        <li>Guest wizard data pre-loaded into new account on activation</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Flow 2 — Application → Quote → Inception</h3>
+
+  <div class="flow" style="flex-direction:column;align-items:flex-start;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;">CLIENT: Submit application</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Selects insurance type, fills needs analysis wizard, uploads supporting documents, e-signs consent</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;background:#16A34A;">ADMIN: Receives alert</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Dashboard shows new application. Adviser reviews, validates KYC status, selects appropriate template</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;">ADMIN: Send to insurers</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Super Admin-created templates auto-populate with client data. Integration gateway routes to selected insurers (REST/SOAP/SFTP/email)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;background:#7C3AED;">INSURER: Receives &amp; responds</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Via their integration method. Response normalised by gateway into canonical format. Admin notified of each quote received</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;background:#C9962A;color:#0F2A4A;">ADMIN: Compile recommendations</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Scoring engine ranks options across 6 dimensions. Adviser reviews, annotates "Why recommended" panel, sends to client</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;">CLIENT: Reviews &amp; selects</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Sees comparison table with recommendation. Can open AI chat for questions about a specific insurer. Selects preferred option</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;">CLIENT: Signs &amp; pays</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">E-signs ROA and terms. Provides bank details for DebiCheck mandate. Selects inception date</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="flow-step" style="min-width:180px;background:#16A34A;">ADMIN: Inceptions policy</div>
+      <div class="flow-arrow">→</div>
+      <span style="font-size:8.5pt;color:#64748B;">Confirms inception with insurer. Policy schedule received and stored. Client notified. Policy goes live in client portal</span>
+    </div>
+  </div>
+
+  <h3>Flow 3 — Claims</h3>
+  <div class="flow">
+    <div class="flow-step">Client: Reports incident</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Photos &amp; details uploaded</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Admin: Claim opened</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Insurer notified</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">Assessor assigned</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Updates pushed to client</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Settlement / repair</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">Claim closed</div>
+  </div>
+
+  <div class="callout callout-gold">
+    <div class="callout-title">Offline &amp; Network Resilience</div>
+    <p>All wizard flows auto-save every 3 seconds to the server. Uploaded files use chunked upload with resume capability — if the network drops mid-upload, the client selects nothing on return; the upload resumes from the last successful chunk. The client portal is a PWA with a service worker — clients can view their policies, documents, and claim status even when fully offline using cached data. Any actions taken offline (e.g. typing a message) are queued and submitted when connectivity returns.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 5: IAM SYSTEM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 5</span>
+      <span class="page-title">Identity &amp; Access Management</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Permission Matrix — Resource × Action × Scope</h3>
+  <p>Every permission is the intersection of three dimensions. No permission exists outside this model.</p>
+
+  <table>
+    <thead>
+      <tr><th>Resource</th><th>Actions</th><th>Scopes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>clients</strong></td><td>view, create, edit, delete, export</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>policies</strong></td><td>view, create, edit, delete, inception, endorse</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>claims</strong></td><td>view, create, edit, close, reopen</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>documents</strong></td><td>view, upload, download, delete</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>tasks</strong></td><td>view, create, assign, complete, delete</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>users</strong></td><td>view, create, edit, deactivate, impersonate</td><td>branch · tenant · global</td></tr>
+      <tr><td><strong>reports</strong></td><td>view, export</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>templates</strong></td><td>view, create, edit, delete, publish</td><td>branch · tenant · global</td></tr>
+      <tr><td><strong>iam</strong></td><td>view, create_group, edit_group, assign_permissions</td><td>tenant · global</td></tr>
+      <tr><td><strong>audit_log</strong></td><td>view, export</td><td>branch · tenant · global</td></tr>
+      <tr><td><strong>financial_data</strong></td><td>view, edit</td><td>own · branch · tenant · global</td></tr>
+      <tr><td><strong>commissions</strong></td><td>view, reconcile, export</td><td>own · branch · tenant · global</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Groups (Roles) — Pre-defined for Royal Square</h3>
+  <div class="card-grid card-grid-3">
+    <div class="card card-accent">
+      <h4>Sales Agent</h4>
+      <ul>
+        <li>Create &amp; view clients (own scope)</li>
+        <li>Create applications</li>
+        <li>View own task list</li>
+        <li>Send templated messages</li>
+        <li>Cannot view other agents' clients</li>
+        <li>Cannot view financial data</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Adviser</h4>
+      <ul>
+        <li>Full client management (own scope)</li>
+        <li>Policy inception &amp; endorsement</li>
+        <li>Claims management</li>
+        <li>Financial needs analysis</li>
+        <li>ROA creation</li>
+        <li>Commission view (own)</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Case Manager</h4>
+      <ul>
+        <li>Claims management (branch scope)</li>
+        <li>View all client files (branch)</li>
+        <li>Task assignment</li>
+        <li>Insurer communication</li>
+        <li>Cannot create policies</li>
+        <li>Cannot edit financial data</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Branch Manager</h4>
+      <ul>
+        <li>All of the above (branch scope)</li>
+        <li>View all commission reports (branch)</li>
+        <li>Assign advisers to clients</li>
+        <li>Performance reports</li>
+        <li>Cannot manage IAM</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Compliance Officer</h4>
+      <ul>
+        <li>View all client files (tenant scope)</li>
+        <li>View ROA &amp; FNA status (all)</li>
+        <li>View KYC status (all)</li>
+        <li>View audit log</li>
+        <li>Cannot edit any client data</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Super Admin</h4>
+      <ul>
+        <li>All resources, all actions</li>
+        <li>IAM management</li>
+        <li>System configuration</li>
+        <li>Sensitive actions require two-person sign-off</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Two-Person Sign-Off for Sensitive Operations</h3>
+  <div class="callout callout-red">
+    <div class="callout-title">Critical Permission — Requires Two Super Admins</div>
+    <p>The following actions require a second super admin to approve before executing: delete or archive a client record, bulk export of client PII, modify another super admin's permissions, deactivate a user with active policies, reset MFA for any user, change bank mandate details without client consent flow, access audit log for a specific user (privacy protection). The first super admin initiates — the system sends an approval request to the second super admin. The action is held pending for 24 hours. Either super admin can cancel.</p>
+  </div>
+
+  <h3>Individual Permission Overrides</h3>
+  <p>On top of group-level permissions, a super admin can grant or revoke specific permissions for an individual user. Individual overrides are shown as checkboxes alongside each permission in the user's profile. An override does not change the group — it creates a delta record that is merged at permission resolution time.</p>
+
+  <h3>Security Policies</h3>
+  <table>
+    <thead><tr><th>Policy</th><th>Default</th><th>Configurable per tenant</th></tr></thead>
+    <tbody>
+      <tr><td>MFA requirement</td><td>Required for all admin/super admin</td><td>Yes — can require for clients too</td></tr>
+      <tr><td>Session duration</td><td>8 hours (admin), 30 days (client remember-me)</td><td>Yes</td></tr>
+      <tr><td>Password policy</td><td>Min 12 chars, 1 upper, 1 symbol, no common words</td><td>Yes — can strengthen, not weaken</td></tr>
+      <tr><td>IP allowlist</td><td>Off</td><td>Yes — can restrict admin portal to office IPs</td></tr>
+      <tr><td>Login attempt lockout</td><td>5 attempts → 15 min lockout</td><td>Yes</td></tr>
+      <tr><td>Concurrent sessions</td><td>3 max per user</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 6: DATABASE SCHEMA -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 6</span>
+      <span class="page-title">Database Schema</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <div class="callout callout-navy">
+    <div class="callout-title">Design Principles</div>
+    <p>PostgreSQL 16 with Row-Level Security. Every table has: <code>tenant_id UUID NOT NULL</code>, <code>created_at TIMESTAMPTZ DEFAULT NOW()</code>, <code>updated_at TIMESTAMPTZ</code>, <code>deleted_at TIMESTAMPTZ</code> (soft delete — never hard delete due to FAIS retention). Audit log is INSERT-only, enforced by a PostgreSQL trigger that raises an exception on UPDATE or DELETE.</p>
+  </div>
+
+  <h3>Tenant Management</h3>
+  <table class="schema-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="col-pk">id</td><td class="col-type">UUID PK</td><td class="col-note">gen_random_uuid()</td></tr>
+      <tr><td>name</td><td class="col-type">VARCHAR(255)</td><td class="col-note">Broker display name</td></tr>
+      <tr><td>slug</td><td class="col-type">VARCHAR(100) UNIQUE</td><td class="col-note">URL prefix — e.g. "royalsquare"</td></tr>
+      <tr><td>fsp_number</td><td class="col-type">VARCHAR(50)</td><td class="col-note">FSCA FSP licence number</td></tr>
+      <tr><td>subscription_tier</td><td class="col-type">ENUM</td><td class="col-note">starter / professional / enterprise</td></tr>
+      <tr><td>data_region</td><td class="col-type">VARCHAR(30)</td><td class="col-note">aws:af-south-1 (POPIA) / aws:eu-west-1</td></tr>
+      <tr><td>settings</td><td class="col-type">JSONB</td><td class="col-note">Per-tenant configuration overrides</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Users &amp; IAM</h3>
+  <table class="schema-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="col-pk">id</td><td class="col-type">UUID PK</td><td class="col-note"></td></tr>
+      <tr><td class="col-fk">tenant_id</td><td class="col-type">UUID FK</td><td class="col-note">→ tenants.id</td></tr>
+      <tr><td>email</td><td class="col-type">VARCHAR(320)</td><td class="col-note">Unique within tenant</td></tr>
+      <tr><td>password_hash</td><td class="col-type">TEXT</td><td class="col-note">bcrypt, cost factor 12</td></tr>
+      <tr><td>user_type</td><td class="col-type">ENUM</td><td class="col-note">client / staff / super_admin</td></tr>
+      <tr><td>mfa_secret</td><td class="col-type">TEXT ENCRYPTED</td><td class="col-note">TOTP secret, AES-256 at rest</td></tr>
+      <tr><td>last_login_at</td><td class="col-type">TIMESTAMPTZ</td><td class="col-note"></td></tr>
+      <tr><td>accessibility_prefs</td><td class="col-type">JSONB</td><td class="col-note">language, colour_mode, text_size, motion, font</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Client CRM</h3>
+  <table class="schema-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="col-pk">id</td><td class="col-type">UUID PK</td><td class="col-note"></td></tr>
+      <tr><td class="col-fk">tenant_id</td><td class="col-type">UUID FK</td><td class="col-note">RLS enforced</td></tr>
+      <tr><td class="col-fk">user_id</td><td class="col-type">UUID FK</td><td class="col-note">→ users.id (the login account)</td></tr>
+      <tr><td>id_number</td><td class="col-type">VARCHAR(20) ENCRYPTED</td><td class="col-note">SA ID or passport — AES-256</td></tr>
+      <tr><td>first_name, last_name</td><td class="col-type">VARCHAR(100)</td><td class="col-note"></td></tr>
+      <tr><td>date_of_birth</td><td class="col-type">DATE</td><td class="col-note"></td></tr>
+      <tr><td>mobile</td><td class="col-type">VARCHAR(20)</td><td class="col-note">E.164 format</td></tr>
+      <tr><td>risk_profile</td><td class="col-type">ENUM</td><td class="col-note">low / medium / high</td></tr>
+      <tr><td>kyc_status</td><td class="col-type">ENUM</td><td class="col-note">pending / verified / expired / rejected</td></tr>
+      <tr><td>kyc_verified_at</td><td class="col-type">TIMESTAMPTZ</td><td class="col-note">KYC expires 3 years after this</td></tr>
+      <tr><td>referral_code</td><td class="col-type">VARCHAR(20) UNIQUE</td><td class="col-note">Their shareable referral code</td></tr>
+      <tr><td class="col-fk">referred_by</td><td class="col-type">UUID FK</td><td class="col-note">→ clients.id (NULL if not referred)</td></tr>
+      <tr><td class="col-fk">assigned_adviser_id</td><td class="col-type">UUID FK</td><td class="col-note">→ users.id</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Policies</h3>
+  <table class="schema-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="col-pk">id</td><td class="col-type">UUID PK</td><td class="col-note"></td></tr>
+      <tr><td class="col-fk">tenant_id</td><td class="col-type">UUID FK</td><td class="col-note"></td></tr>
+      <tr><td class="col-fk">client_id</td><td class="col-type">UUID FK</td><td class="col-note">→ clients.id</td></tr>
+      <tr><td class="col-fk">provider_id</td><td class="col-type">UUID FK</td><td class="col-note">→ product_providers.id</td></tr>
+      <tr><td>policy_number</td><td class="col-type">VARCHAR(100)</td><td class="col-note">Insurer's policy number</td></tr>
+      <tr><td>product_type</td><td class="col-type">ENUM</td><td class="col-note">motor / home_building / home_contents / life / medical / business / travel / funeral / gap / income_protection</td></tr>
+      <tr><td>status</td><td class="col-type">ENUM</td><td class="col-note">active / lapsed / cancelled / not_taken_up / expired</td></tr>
+      <tr><td>premium_amount</td><td class="col-type">NUMERIC(12,2)</td><td class="col-note">Current monthly premium</td></tr>
+      <tr><td>premium_model</td><td class="col-type">ENUM</td><td class="col-note">fixed / annual_escalation / decreasing / pay_per_km / behaviour_based</td></tr>
+      <tr><td>inception_date</td><td class="col-type">DATE</td><td class="col-note"></td></tr>
+      <tr><td>renewal_date</td><td class="col-type">DATE</td><td class="col-note">Triggers renewal alert 60 days before</td></tr>
+      <tr><td>outbonus_streak_years</td><td class="col-type">INTEGER DEFAULT 0</td><td class="col-note">OUTsurance claim-free streak</td></tr>
+      <tr><td>commission_rate</td><td class="col-type">NUMERIC(5,4)</td><td class="col-note">FAIS disclosed commission %</td></tr>
+      <tr><td>schedule</td><td class="col-type">JSONB</td><td class="col-note">Structured policy schedule data</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Audit Log (INSERT-only, Partitioned by Month)</h3>
+  <table class="schema-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="col-pk">id</td><td class="col-type">UUID PK</td><td class="col-note">gen_random_uuid()</td></tr>
+      <tr><td class="col-fk">tenant_id</td><td class="col-type">UUID</td><td class="col-note"></td></tr>
+      <tr><td class="col-fk">actor_id</td><td class="col-type">UUID</td><td class="col-note">The user who performed the action</td></tr>
+      <tr><td>actor_type</td><td class="col-type">ENUM</td><td class="col-note">user / system / integration / ai</td></tr>
+      <tr><td>action</td><td class="col-type">VARCHAR(100)</td><td class="col-note">e.g. client.update, policy.inception, claim.create</td></tr>
+      <tr><td>resource_type</td><td class="col-type">VARCHAR(50)</td><td class="col-note">Table name of the affected record</td></tr>
+      <tr><td class="col-fk">resource_id</td><td class="col-type">UUID</td><td class="col-note">PK of the affected record</td></tr>
+      <tr><td>before_state</td><td class="col-type">JSONB</td><td class="col-note">Snapshot before change</td></tr>
+      <tr><td>after_state</td><td class="col-type">JSONB</td><td class="col-note">Snapshot after change</td></tr>
+      <tr><td>ip_address</td><td class="col-type">INET</td><td class="col-note"></td></tr>
+      <tr><td>created_at</td><td class="col-type">TIMESTAMPTZ</td><td class="col-note">Partition key — RANGE partitioned by month</td></tr>
+    </tbody>
+  </table>
+
+  <pre>-- No UPDATE or DELETE permitted on audit_log:
+CREATE OR REPLACE FUNCTION prevent_audit_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'Audit log is immutable. TG_OP=% is not permitted.', TG_OP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER audit_immutable
+  BEFORE UPDATE OR DELETE ON audit_log
+  FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 7: AI SYSTEMS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 7</span>
+      <span class="page-title">AI Systems</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Two Independent AI Systems</h3>
+  <div class="card-grid card-grid-2">
+    <div class="card card-gold">
+      <h4>System A — Recommendation RAG</h4>
+      <p><strong>Where:</strong> Admin Portal — quote recommendation screen</p>
+      <p style="margin-top:6px;"><strong>Who triggers it:</strong> Client presses "I have a question" on a specific recommended insurer</p>
+      <p style="margin-top:6px;"><strong>Data source:</strong> Insurer's product document corpus (policy wording, benefits guide, claims guide)</p>
+      <p style="margin-top:6px;"><strong>Context:</strong> Scoped to one insurer. No cross-insurer mixing in one chat session.</p>
+    </div>
+    <div class="card card-gold">
+      <h4>System B — Client AI Assistant</h4>
+      <p><strong>Where:</strong> Client Portal — Insights tab + contextual inline triggers</p>
+      <p style="margin-top:6px;"><strong>Who triggers it:</strong> Client asks any question in their own app</p>
+      <p style="margin-top:6px;"><strong>Data source:</strong> Their own structured data (policies, claims, financials) + insurer documents</p>
+      <p style="margin-top:6px;"><strong>Context:</strong> Full client financial context. Cross-policy. Natural language.</p>
+    </div>
+  </div>
+
+  <h3>RAG Architecture — Two-Stage Retrieval</h3>
+  <pre>USER QUESTION: "How much am I paying for Nomsa's cover?"
+
+STAGE 1 — QUESTION ROUTING:
+  Classifier identifies question type:
+  → "financial_data"  — needs structured DB query
+  → "policy_question" — needs vector search in documents
+  → "hybrid"          — needs both
+
+STAGE 2A — DB QUERY (for financial_data or hybrid):
+  Backend extracts intent → generates parameterised SQL
+  Example: SELECT SUM(premium_amount) FROM policies
+           WHERE client_id = ? AND dependant_id = ? (Nomsa)
+  Result: R 184/month — fully structured, no hallucination possible
+
+STAGE 2B — VECTOR SEARCH (for policy_question or hybrid):
+  Query embedded → search Pinecone / pgvector index
+  Returns top-K chunks from relevant policy documents
+  Each chunk tagged with: document_id, section, page, score
+
+CONTEXT ASSEMBLY:
+  Anonymised client context + DB results + retrieved chunks
+  → Sent to LLM for response generation
+  → LLM returns JSON response (not raw text)
+  → Backend stores full conversation with chunk citations
+
+PII PROTECTION:
+  Never sent to LLM: full name, ID number, bank account,
+  full address, policy number, beneficiary details
+  The LLM receives: [CLIENT], [SPOUSE], [POLICY_A], [POLICY_B]
+  The backend maps these placeholders back to real values
+  before displaying to the client</pre>
+
+  <h3>JSON Styling System — AI Response Format</h3>
+  <p>The AI never returns plain text. Every response is structured JSON that the UI renderer interprets to build a visual card with appropriate icon, colour, and components. This ensures every response looks consistent, accessible, and branded — regardless of what the AI says.</p>
+
+  <pre style="font-size:7.5pt;">{
+  "response_type": "gap_detected | confirmed | not_covered | partial | warning | process |
+                    definition | comparison | escalate | checklist | financial_summary |
+                    goal_progress | payment_history | action_needed | insight | cover_summary",
+  "tone": "reassuring | cautionary | urgent | informational | friendly | honest",
+  "icon": "shield-check | shield-x | shield-alert | alert-triangle | bar-chart-2 |
+           trending-up | trending-down | target | banknote | piggy-bank | activity",
+  "color_scheme": "green | red | amber | blue | purple | neutral | slate",
+  "emphasis_level": "low | medium | high | critical",
+  "header": "Your Santam Motor policy covers this incident",
+  "components": [
+    { "type": "paragraph", "content": "..." },
+    { "type": "callout", "content": "...", "style": "warning", "icon": "alert-triangle" },
+    { "type": "metric", "label": "Monthly premium", "value": "R 1,365", "icon": "banknote" },
+    { "type": "table", "headers": ["Cover type", "Limit", "Excess"],
+      "rows": [["Comprehensive", "Market value", "R 5,000"]] },
+    { "type": "progress_bar", "label": "Emma University Fund", "value": 36, "max": 100 },
+    { "type": "badge_row", "items": [{"label": "In force", "style": "green"}] }
+  ],
+  "source_citations": [
+    { "document_name": "Santam Policy Wording 2024",
+      "section": "Section 4.2 — Accidental damage",
+      "chunk_id": "chunk_abc123", "relevance_score": 0.94, "display": true }
+  ],
+  "actions": [
+    { "type": "contact_adviser", "label": "Speak to my adviser", "style": "primary" },
+    { "type": "open_chat", "label": "Ask another question", "style": "secondary" }
+  ],
+  "escalate_to_adviser": false,
+  "adviser_alert": {
+    "trigger": "client_asked_about_gap",
+    "message": "Client is asking about credit shortfall — check if they have financing",
+    "priority": "medium"
+  }
+}</pre>
+
+  <h3>Conversation State Machine</h3>
+  <div class="flow" style="flex-wrap:wrap;">
+    <div class="flow-step">created</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">questioning</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">idle_short</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">idle_long</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">closed_by_client</div>
+  </div>
+  <div class="flow" style="flex-wrap:wrap;margin-top:6px;">
+    <div class="flow-step">questioning</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">escalated</div>
+    <span style="font-size:8pt;color:#64748B;margin-left:8px;">(adviser_alert.priority = critical)</span>
+  </div>
+  <div class="flow" style="flex-wrap:wrap;margin-top:6px;">
+    <div class="flow-step">questioning</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step-alt">closed_by_select</div>
+    <span style="font-size:8pt;color:#64748B;margin-left:8px;">(client selected an insurer during conversation)</span>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-title">Regulatory Compliance of AI Conversations</div>
+    <p>Every AI conversation is stored permanently with: full message history, source chunks cited per response, LLM model version and temperature used, conversation state at each turn, and client/adviser identifiers. This record is retrievable for FAIS regulatory audit. The AI is explicitly prohibited from giving advice — it answers questions about what a policy says or what data shows. Advice decisions remain with the human adviser.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 8: INTEGRATION GATEWAY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 8</span>
+      <span class="page-title">Integration Gateway</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>The Problem It Solves</h3>
+  <p>Each insurer has a different integration method — some have REST APIs, some use SOAP/XML, some accept SFTP file drops, some still work via email. The Integration Gateway creates one internal abstraction so that the rest of the platform never knows or cares what protocol an insurer uses. Adding a new insurer means writing one provider adapter — nothing else changes.</p>
+
+  <div class="arch-diagram">                    ┌─────────────────────────────────┐
+                    │      ROYALSYNC PLATFORM         │
+                    │                                 │
+     Admin sends ──►│  INTEGRATION GATEWAY            │
+     quote request  │  ┌─────────────────────────┐   │
+                    │  │ 1. Canonical Data Model  │   │
+                    │  │ 2. Route to provider(s)  │   │
+                    │  │ 3. Message Queue (SQS)   │   │
+                    │  │ 4. Retry with backoff    │   │
+                    │  │ 5. Dead-letter queue     │   │
+                    │  │ 6. Normalise response    │   │
+                    │  │ 7. Store in audit log    │   │
+                    │  └──────────┬──────────────┘   │
+                    └─────────────┼───────────────────┘
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
+   ┌──────▼──────┐    ┌───────────▼──┐    ┌──────────────▼──┐
+   │  REST/JSON  │    │  SOAP/XML    │    │  SFTP / Email   │
+   │  Santam API │    │  Old Mutual  │    │  Smaller        │
+   │  Discovery  │    │  SOAP        │    │  providers      │
+   │  OUTsurance │    │              │    │                 │
+   └─────────────┘    └──────────────┘    └─────────────────┘</div>
+
+  <h3>Supported Insurers — Initial Integration List</h3>
+  <table>
+    <thead><tr><th>Insurer</th><th>Integration Method</th><th>Products</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Santam</strong></td><td>REST API</td><td>Motor, Home, Business</td><td><span class="pill pill-green">Priority 1</span></td></tr>
+      <tr><td><strong>Old Mutual Insure</strong></td><td>SOAP/XML</td><td>Motor, Home, Life</td><td><span class="pill pill-green">Priority 1</span></td></tr>
+      <tr><td><strong>Discovery Insure</strong></td><td>REST API</td><td>Motor (Vitality Drive), Home</td><td><span class="pill pill-green">Priority 1</span></td></tr>
+      <tr><td><strong>OUTsurance</strong></td><td>REST API</td><td>Motor, Home, Life (OUTbonus)</td><td><span class="pill pill-green">Priority 1</span></td></tr>
+      <tr><td><strong>Hollard</strong></td><td>REST API</td><td>Motor, Funeral, Business</td><td><span class="pill pill-navy">Priority 2</span></td></tr>
+      <tr><td><strong>Sanlam</strong></td><td>SFTP + REST</td><td>Life, Funeral, Investments</td><td><span class="pill pill-navy">Priority 2</span></td></tr>
+      <tr><td><strong>Momentum</strong></td><td>REST API</td><td>Life, Health, Motor</td><td><span class="pill pill-navy">Priority 2</span></td></tr>
+      <tr><td><strong>Allan Gray</strong></td><td>REST API</td><td>Investments, Retirement</td><td><span class="pill pill-slate">Priority 3</span></td></tr>
+      <tr><td><strong>King Price</strong></td><td>REST API</td><td>Motor (decreasing premium)</td><td><span class="pill pill-slate">Priority 3</span></td></tr>
+      <tr><td><strong>Clientele</strong></td><td>SFTP / Email</td><td>Funeral, Life</td><td><span class="pill pill-slate">Priority 3</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Message Reliability — Queue &amp; Retry</h3>
+  <div class="two-col">
+    <div>
+      <h4>Happy Path</h4>
+      <ol>
+        <li>Request placed in SQS queue</li>
+        <li>Worker picks up &amp; sends to insurer</li>
+        <li>200 OK received</li>
+        <li>Response normalised &amp; stored</li>
+        <li>Admin notified — quote arrived</li>
+        <li>Integration audit log entry created</li>
+      </ol>
+    </div>
+    <div>
+      <h4>Failure Path</h4>
+      <ol>
+        <li>Request placed in SQS queue</li>
+        <li>Worker picks up &amp; sends to insurer</li>
+        <li>Error or timeout received</li>
+        <li>Exponential backoff retry (1m, 5m, 30m)</li>
+        <li>After 3 failures → dead-letter queue</li>
+        <li>Super admin alerted. Manual intervention flow opens.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>Canonical Data Model — Quote Request</h3>
+  <pre style="font-size:7.5pt;">{
+  "request_id": "uuid",
+  "tenant_id": "uuid",
+  "client_id": "uuid",
+  "application_id": "uuid",
+  "product_type": "motor",
+  "insured_items": [
+    {
+      "type": "vehicle",
+      "make": "Toyota", "model": "Corolla Quest", "year": 2022,
+      "registration": "GP 123-456", "vin": "...",
+      "cover_type": "comprehensive",
+      "regular_driver": { "age": 34, "licence_years": 10 },
+      "address": { "suburb": "Sandton", "province": "Gauteng", "postal_code": "2196" }
+    }
+  ],
+  "client_profile": {
+    "age": 34, "gender": "male", "marital_status": "married",
+    "claims_last_3_years": 0, "risk_profile": "low"
+  },
+  "requested_cover": {
+    "excess": 5000, "sum_insured": "market_value",
+    "endorsements": ["car_hire", "key_replacement"]
+  },
+  "metadata": { "requested_at": "2026-09-05T10:30:00Z", "adviser_id": "uuid" }
+}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 9: NOTIFICATIONS, SEARCH & ACCESSIBILITY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 9</span>
+      <span class="page-title">Notifications, Search &amp; Accessibility</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Notification Channels</h3>
+  <table>
+    <thead><tr><th>Channel</th><th>Primary Use</th><th>Trigger</th></tr></thead>
+    <tbody>
+      <tr><td><strong>WhatsApp Business API</strong></td><td>Client status updates, urgent alerts</td><td>Policy inception, claim update, renewal due, payment failed</td></tr>
+      <tr><td><strong>Email</strong></td><td>Documents, detailed updates, ROA delivery</td><td>Welcome, quote ready, policy schedule, claim settlement</td></tr>
+      <tr><td><strong>SMS</strong></td><td>One-time codes, critical alerts</td><td>MFA OTP, payment failure, claim approved</td></tr>
+      <tr><td><strong>In-App Push</strong></td><td>Real-time notifications in client portal</td><td>All events while client is logged in</td></tr>
+      <tr><td><strong>In-App Dashboard</strong></td><td>Persistent action board for staff</td><td>SLA breaches, overdue tasks, integration health alerts</td></tr>
+    </tbody>
+  </table>
+
+  <h3>In-App Search Engine</h3>
+  <p>Universal search is available from every screen via <strong>Cmd+K / Ctrl+K</strong> or the search icon in the top bar. Results are categorised into three types:</p>
+
+  <div class="card-grid card-grid-3">
+    <div class="card">
+      <h4>Navigation Results</h4>
+      <p>Take the user to any screen or section of the app. Indexed locally — returns in under 50ms. No server call needed.</p>
+      <p style="margin-top:6px;"><em>e.g. typing "claims" → shows Claims section link</em></p>
+    </div>
+    <div class="card">
+      <h4>Data Results</h4>
+      <p>Find specific records — policies, clients (admin), claims, documents, goals. Fuzzy matched. Handles typos and partial IDs.</p>
+      <p style="margin-top:6px;"><em>e.g. admin types "dlamni" → finds "Dlamini"</em></p>
+    </div>
+    <div class="card">
+      <h4>Action Results</h4>
+      <p>Trigger actions directly from search without navigating. e.g. "report accident", "upload document", "contact adviser".</p>
+      <p style="margin-top:6px;"><em>e.g. typing "bank" → shows "Update bank details" action</em></p>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Search Target</th><th>Speed Target</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Navigation &amp; quick actions</td><td>&lt; 50ms</td><td>Local index (never hits server)</td></tr>
+      <tr><td>Own data (client portal)</td><td>&lt; 200ms</td><td>Local cache + DB</td></tr>
+      <tr><td>Admin cross-client search</td><td>&lt; 500ms</td><td>Server full-text search (pg_trgm)</td></tr>
+      <tr><td>Super admin global search</td><td>&lt; 800ms</td><td>Server search across all branches</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Accessibility System</h3>
+  <p>Accessibility settings are stored server-side per user account and sync across all devices on login. The application is built WCAG 2.1 AA compliant as a baseline — settings are adjustments, not patches.</p>
+
+  <div class="card-grid card-grid-2">
+    <div class="card card-accent">
+      <h4>Language Support — 13 Languages</h4>
+      <ul>
+        <li>English (en-ZA), Afrikaans, isiZulu, isiXhosa</li>
+        <li>Sepedi, Sesotho, Setswana, siSwati</li>
+        <li>Tshivenda, Xitsonga, isiNdebele</li>
+        <li>Português, Français (global expansion)</li>
+        <li>AI assistant responds in selected language</li>
+        <li>System detects OS language on first launch</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Screen Reader Support</h4>
+      <ul>
+        <li>Full ARIA roles, labels, live regions</li>
+        <li>Skip links on every page</li>
+        <li>Focus trap in modals</li>
+        <li>Announcements for dynamic content changes</li>
+        <li>Charts have text-alternative tables</li>
+        <li>Compatible: VoiceOver, TalkBack, NVDA, JAWS</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Colour Blind Modes</h4>
+      <ul>
+        <li>Deuteranopia safe (most common — ~6% of males)</li>
+        <li>Protanopia safe</li>
+        <li>Tritanopia safe</li>
+        <li>Achromatopsia (complete — no colour)</li>
+        <li>All statuses use icon + colour (never colour alone)</li>
+        <li>Charts use patterns + colour</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <h4>Additional Settings</h4>
+      <ul>
+        <li>Text size: Small → Maximum (5 steps)</li>
+        <li>Font: System / Inter / Atkinson Hyperlegible / OpenDyslexic</li>
+        <li>Reduced motion (respects OS setting)</li>
+        <li>High contrast mode</li>
+        <li>Touch target size (up to 80×80px for motor issues)</li>
+        <li>Extended session timeout (2 hours for form completion)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout callout-gold">
+    <div class="callout-title">Colour Token System — All AI JSON Responses Are Colour-Mode Aware</div>
+    <p>The AI response JSON uses semantic colour tokens (<code>"color_scheme": "red"</code>), never hex values. The UI renderer maps each token to the correct actual colour for the current user's colour blind mode. A user with deuteranopia sees a different actual colour for "red" — but the semantic meaning (danger/error) is always conveyed by both colour AND an icon, so no information is ever lost for any user.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 10: INFRASTRUCTURE & COMPLIANCE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 10</span>
+      <span class="page-title">Infrastructure &amp; Compliance</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <h3>Cloud Infrastructure — AWS af-south-1 (Cape Town)</h3>
+  <p>Primary region: <code>af-south-1</code> (Cape Town) — mandated by POPIA data residency requirements for South African personal information. All client PII, policy data, and audit logs remain in South Africa.</p>
+
+  <div class="arch-diagram">┌─────────────────────────── AWS af-south-1 (Cape Town) ──────────────────────────────┐
+│                                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Availability Zone A                    Availability Zone B                │    │
+│  │  ┌──────────────────┐                   ┌──────────────────┐               │    │
+│  │  │  ECS Fargate     │                   │  ECS Fargate     │               │    │
+│  │  │  API containers  │                   │  API containers  │               │    │
+│  │  │  (auto-scaled)   │                   │  (failover)      │               │    │
+│  │  └────────┬─────────┘                   └────────┬─────────┘               │    │
+│  │           │                                      │                         │    │
+│  │  ┌────────▼──────────────────────────────────────▼──────┐                  │    │
+│  │  │   Amazon RDS PostgreSQL 16 — Multi-AZ               │                  │    │
+│  │  │   Row-Level Security · Encrypted at rest (AES-256)  │                  │    │
+│  │  │   Automated daily snapshots, 35-day retention       │                  │    │
+│  │  └──────────────────────────────────────────────────────┘                  │    │
+│  └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  Amazon S3 (documents, encrypted)    Amazon SQS (integration queue)                 │
+│  Amazon ElastiCache Redis (sessions) Amazon CloudWatch (monitoring, alerts)          │
+│  AWS WAF + Shield Standard           AWS KMS (key management)                       │
+│  Amazon CloudFront CDN               AWS Secrets Manager                            │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘</div>
+
+  <h3>Technology Stack — Cloudflare-Native Architecture</h3>
+  <div class="callout callout-navy">
+    <div class="callout-title">Architecture Philosophy</div>
+    <p><strong>Cloudflare Workers</strong> handles all edge concerns (routing, auth, rate limiting, caching, file storage, queues). <strong>Node.js + Hono</strong> (deployed on Workers) serves the business logic API endpoints. <strong>FastAPI (Python)</strong> handles AI/RAG processing, document parsing, and data transformation — deployed as a Worker service or container. <strong>React + TypeScript</strong> on all four portals, served from Cloudflare Pages with edge-side rendering.</p>
+  </div>
+  <div class="card-grid card-grid-3">
+    <div class="card">
+      <h4>Cloudflare Platform</h4>
+      <ul>
+        <li><strong>Workers</strong> — Edge API + auth middleware</li>
+        <li><strong>Pages</strong> — All 4 portals (SSR at edge)</li>
+        <li><strong>KV</strong> — Sessions, feature flags, cache</li>
+        <li><strong>R2</strong> — Documents, files, policy schedules</li>
+        <li><strong>D1</strong> — Edge-cached read replicas</li>
+        <li><strong>Queues</strong> — Integration gateway jobs</li>
+        <li><strong>Hyperdrive</strong> — PostgreSQL connection pooling</li>
+        <li><strong>AI Gateway</strong> — Unified LLM access + observability</li>
+        <li><strong>WAF + Zero Trust</strong> — Admin portal security</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Node.js API (on Workers)</h4>
+      <ul>
+        <li><strong>Hono</strong> — Ultra-fast Workers-native router</li>
+        <li><strong>TypeScript 5</strong> — Full type safety</li>
+        <li><strong>Drizzle ORM</strong> — Works with D1 + PostgreSQL</li>
+        <li><strong>Zod</strong> — Schema validation</li>
+        <li><strong>Jose</strong> — JWT creation and verification</li>
+        <li><strong>Resend</strong> — Transactional email</li>
+        <li><strong>Twilio SDK</strong> — SMS</li>
+        <li><strong>ws</strong> — WebSocket (real-time)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>FastAPI (Python — AI Services)</h4>
+      <ul>
+        <li><strong>FastAPI</strong> — Async Python API framework</li>
+        <li><strong>LangChain</strong> — RAG pipeline orchestration</li>
+        <li><strong>OpenAI SDK</strong> — GPT-4o + embeddings</li>
+        <li><strong>pgvector</strong> — Vector similarity search</li>
+        <li><strong>PyMuPDF</strong> — PDF document parsing</li>
+        <li><strong>Pydantic v2</strong> — Data validation + serialisation</li>
+        <li><strong>Celery + Redis</strong> — Async document indexing</li>
+        <li><strong>httpx</strong> — Async HTTP client</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Compliance Summary</h3>
+  <table>
+    <thead><tr><th>Regulation</th><th>Key Requirement</th><th>How Platform Addresses It</th></tr></thead>
+    <tbody>
+      <tr><td><strong>POPIA</strong></td><td>Consent management, data residency, right to erasure, breach notification</td><td>Consent recorded per data type with timestamp. All data in af-south-1. Pseudonymisation on erasure (never hard delete). Breach alert workflow to Information Regulator within 72hrs.</td></tr>
+      <tr><td><strong>FAIS</strong></td><td>Record of Advice, commission disclosure, 5-year retention, FNA</td><td>ROA builder — immutable once signed by client (e-signature). Commission disclosed on quote comparison screen and stored. Soft delete with 5-year minimum retention enforced at DB level. FNA wizard built into onboarding.</td></tr>
+      <tr><td><strong>FICA</strong></td><td>KYC, PEP/sanctions screening, risk scoring, SAR</td><td>KYC record per client with expiry tracking. PEP/sanctions check via approved provider (GBG / Refinitiv). Risk score stored. Suspicious Activity Report workflow in admin portal.</td></tr>
+      <tr><td><strong>GDPR</strong></td><td>Data subject rights, DPA, cross-border transfers</td><td>Tenant-level data region config. Standard Contractual Clauses for any cross-border transfers. Same erasure mechanism as POPIA.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Implementation Roadmap</h3>
+  <table>
+    <thead><tr><th>Phase</th><th>Duration</th><th>Deliverables</th></tr></thead>
+    <tbody>
+      <tr class="highlight-row"><td><strong>Phase 1 — Foundation</strong></td><td>Months 1–3</td><td>Multi-tenant schema, RLS, IAM, authentication (magic link + MFA), client portal shell, admin portal shell, basic client CRM, document upload, audit log</td></tr>
+      <tr><td><strong>Phase 2 — Core Operations</strong></td><td>Months 4–6</td><td>Application wizard, policy management, claims, task management, notification system (email + WhatsApp + SMS), integration gateway (Priority 1 insurers), ROA builder</td></tr>
+      <tr class="highlight-row"><td><strong>Phase 3 — Intelligence</strong></td><td>Months 7–9</td><td>Recommendation engine, RAG system (insurer documents), client AI assistant, JSON styling system, in-app search engine, insurer onboarding portal</td></tr>
+      <tr><td><strong>Phase 4 — Growth</strong></td><td>Months 10–12</td><td>Financial goals module, market benchmarking, accessibility full suite (13 languages, colour blind modes), super admin analytics, multi-tenant licensing, Priority 2 &amp; 3 insurer integrations</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-navy">
+    <div class="callout-title">Royal Square Financial — Tenant #1</div>
+    <p>Royal Square Financial uses the platform first, providing real-world validation of every feature before it is offered to other brokers. The super admin portal gives Royal Square leadership a command centre for the entire business. As the platform proves its value, it becomes a licensed SaaS product for other independent brokers in South Africa — creating a second revenue stream alongside the brokerage business itself.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 11: FULL TECH STACK & NPM PACKAGES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="section-badge">Section 11</span>
+      <span class="page-title">Full Tech Stack &amp; Package Manifest</span>
+    </div>
+    <div class="page-header-right">Royal Square Financial<br>Platform Architecture v1.0</div>
+  </div>
+
+  <div class="arch-diagram">                    ROYALSYNC — FULL ARCHITECTURE OVERVIEW
+
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │                        CLOUDFLARE EDGE NETWORK                               │
+  │                                                                              │
+  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │
+  │  │CLIENT PORTAL│  │ADMIN PORTAL │  │SUPER ADMIN  │  │INSURER PORTAL  │   │
+  │  │app.royal... │  │admin.royal..│  │superadmin...│  │partners.royal..│   │
+  │  │Cloudflare   │  │Cloudflare   │  │Cloudflare   │  │Cloudflare      │   │
+  │  │Pages + SSR  │  │Pages + SSR  │  │Pages + Zero │  │Pages           │   │
+  │  │React 18 +   │  │React 18 +   │  │Trust Auth   │  │React 18 + TS   │   │
+  │  │TypeScript   │  │TypeScript   │  │React 18 +TS │  │                │   │
+  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └───────┬────────┘   │
+  │         └────────────────┴────────────────┴─────────────────┘            │
+  │                                     │                                     │
+  │              ┌──────────────────────▼───────────────────────┐            │
+  │              │         CLOUDFLARE WORKERS — EDGE API         │            │
+  │              │  Hono Router · JWT Auth · Rate Limiting       │            │
+  │              │  Request Validation · CORS · Logging          │            │
+  │              └──────────────────────┬───────────────────────┘            │
+  │                      ┌─────────────┼──────────────┐                      │
+  │         ┌────────────▼──┐  ┌───────▼──────┐  ┌────▼────────────────┐    │
+  │         │ Cloudflare KV │  │ Cloudflare   │  │ Cloudflare Queues  │    │
+  │         │ Sessions      │  │ R2 Storage   │  │ Integration Jobs   │    │
+  │         │ Cache/Flags   │  │ Documents    │  │ Background Tasks   │    │
+  │         └───────────────┘  └──────────────┘  └────────────────────┘    │
+  └──────────────────────────────────────────────────────────────────────────┘
+                                         │
+              ┌──────────────────────────┼──────────────────────────┐
+              │                          │                          │
+   ┌──────────▼──────────┐  ┌────────────▼─────────┐  ┌───────────▼──────────┐
+   │  NODE.JS API        │  │  FASTAPI (Python)     │  │  POSTGRESQL 16       │
+   │  Hono on Workers    │  │  AI & Processing      │  │  Neon / Supabase     │
+   │  Business Logic     │  │  RAG Pipeline         │  │  via Hyperdrive      │
+   │  WebSocket Server   │  │  Document Parser      │  │  Row-Level Security  │
+   │  Notification Svc   │  │  Insurer Normaliser   │  │  pgvector extension  │
+   └─────────────────────┘  └──────────────────────┘  └──────────────────────┘</div>
+
+  <h3>React Frontend — npm Package Manifest</h3>
+
+  <h4>Core Framework &amp; Build</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>react</code> + <code>react-dom</code></td><td>^18.3</td><td>UI library</td></tr>
+      <tr><td><code>typescript</code></td><td>^5.5</td><td>Type safety across all 4 portals</td></tr>
+      <tr><td><code>vite</code></td><td>^5.4</td><td>Build tool + dev server (Cloudflare Pages compatible)</td></tr>
+      <tr><td><code>@cloudflare/vite-plugin</code></td><td>latest</td><td>Vite plugin for Workers + D1 + KV local dev</td></tr>
+      <tr><td><code>wrangler</code></td><td>^3.x</td><td>Cloudflare deployment CLI</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Routing &amp; Navigation</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@tanstack/react-router</code></td><td>^1.x</td><td>Type-safe client-side routing with file-based routes</td></tr>
+      <tr><td><code>@tanstack/router-vite-plugin</code></td><td>^1.x</td><td>Auto-generates typed route tree from file structure</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Styling</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>tailwindcss</code></td><td>^4.0</td><td>Utility-first CSS — v4 with CSS-first config (no tailwind.config.js)</td></tr>
+      <tr><td><code>@tailwindcss/vite</code></td><td>^4.0</td><td>Vite integration for Tailwind v4</td></tr>
+      <tr><td><code>class-variance-authority</code></td><td>^0.7</td><td>Type-safe component variant system (used by shadcn)</td></tr>
+      <tr><td><code>clsx</code></td><td>^2.x</td><td>Conditional class name merging</td></tr>
+      <tr><td><code>tailwind-merge</code></td><td>^2.x</td><td>Merges Tailwind classes without conflicts</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Component Library (shadcn/ui + Radix primitives)</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@radix-ui/react-dialog</code></td><td>Accessible modal dialogs (focus trap, ARIA)</td></tr>
+      <tr><td><code>@radix-ui/react-dropdown-menu</code></td><td>Dropdown menus with keyboard navigation</td></tr>
+      <tr><td><code>@radix-ui/react-select</code></td><td>Accessible select component</td></tr>
+      <tr><td><code>@radix-ui/react-tabs</code></td><td>Tab navigation (all portals)</td></tr>
+      <tr><td><code>@radix-ui/react-tooltip</code></td><td>Accessible tooltips</td></tr>
+      <tr><td><code>@radix-ui/react-popover</code></td><td>Popover panels</td></tr>
+      <tr><td><code>@radix-ui/react-switch</code></td><td>Toggle switches (accessibility settings)</td></tr>
+      <tr><td><code>@radix-ui/react-checkbox</code></td><td>Checkboxes (permission matrix)</td></tr>
+      <tr><td><code>@radix-ui/react-accordion</code></td><td>Expandable sections (policy details)</td></tr>
+      <tr><td><code>@radix-ui/react-toast</code></td><td>Toast notifications</td></tr>
+      <tr><td><code>@radix-ui/react-avatar</code></td><td>Client and adviser avatars</td></tr>
+      <tr><td><code>@radix-ui/react-progress</code></td><td>Progress bars (goals, uploads)</td></tr>
+      <tr><td><code>@radix-ui/react-slider</code></td><td>Sliders (accessibility settings, coverage amounts)</td></tr>
+      <tr><td><code>@radix-ui/react-separator</code></td><td>Dividers</td></tr>
+      <tr><td><code>@radix-ui/react-label</code></td><td>Accessible form labels</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Icons</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>lucide-react</code></td><td><strong>Primary icon library</strong> — 1,400+ icons, all used in AI JSON responses (shield-check, shield-x, alert-triangle, bar-chart-2, trending-up, banknote, etc.)</td></tr>
+      <tr><td><code>@heroicons/react</code></td><td>Supplement for any gaps — Heroicons 24px solid + outline sets</td></tr>
+      <tr><td><code>react-country-flag</code></td><td>Flag emoji components for language selector</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Data Fetching &amp; Server State</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@tanstack/react-query</code></td><td>Server state management, caching, background refetch, optimistic updates</td></tr>
+      <tr><td><code>@tanstack/react-query-devtools</code></td><td>Dev tools for inspecting query cache</td></tr>
+      <tr><td><code>ky</code></td><td>Fetch-based HTTP client — tiny, works in Workers context</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Forms &amp; Validation</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>react-hook-form</code></td><td>Performant forms — minimal re-renders, wizard step support</td></tr>
+      <tr><td><code>@hookform/resolvers</code></td><td>Zod integration with React Hook Form</td></tr>
+      <tr><td><code>zod</code></td><td>Schema validation — shared between frontend and Hono backend</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Tables, Data Grids &amp; Virtualisation</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@tanstack/react-table</code></td><td>Headless table engine — sorting, filtering, pagination, column visibility (client list, policy portfolio)</td></tr>
+      <tr><td><code>@tanstack/react-virtual</code></td><td>Virtual scrolling for large lists (1,000+ clients in admin)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Charts &amp; Data Visualisation</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>recharts</code></td><td>Composable chart library — net worth over time, premium breakdown, goal progress</td></tr>
+      <tr><td><code>@tremor/react</code></td><td>Pre-built dashboard components — metric cards, bar charts, area charts (super admin analytics)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Search, Command Palette &amp; Combobox</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>cmdk</code></td><td><strong>Cmd+K command palette</strong> — powers the in-app universal search across all portals</td></tr>
+      <tr><td><code>fuse.js</code></td><td>Fuzzy search for local navigation index (offline-capable, &lt;50ms)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>File Upload</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>tus-js-client</code></td><td>Resumable chunked uploads to Cloudflare R2 — network drop safe</td></tr>
+      <tr><td><code>react-dropzone</code></td><td>Drag-and-drop file input component with ARIA support</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Rich Text &amp; Document Editing</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@tiptap/react</code></td><td>Rich text editor for ROA builder, email templates, notes</td></tr>
+      <tr><td><code>@tiptap/starter-kit</code></td><td>Common Tiptap extensions bundle</td></tr>
+      <tr><td><code>@react-pdf/renderer</code></td><td>Generate ROA PDFs, policy schedules, commission statements in-browser</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Dates, Numbers &amp; Formatting</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>date-fns</code></td><td>Date manipulation — renewal calculations, KYC expiry, SLA deadlines</td></tr>
+      <tr><td><code>date-fns-tz</code></td><td>Timezone support (Africa/Johannesburg primary)</td></tr>
+      <tr><td><code>numeral</code></td><td>South African number formatting (R 1 240,00 with space thousands)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Animation &amp; Motion</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>framer-motion</code></td><td>Declarative animations — respects <code>prefers-reduced-motion</code> natively. Used for page transitions, notification slide-ins, AI response reveal</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Notifications &amp; Toast</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>sonner</code></td><td>Toast notifications — dismissable, accessible, supports promise toasts for async operations</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Internationalisation (i18n)</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>i18next</code></td><td>Core i18n framework — 13 language namespaces</td></tr>
+      <tr><td><code>react-i18next</code></td><td>React bindings — <code>useTranslation()</code> hook in every component</td></tr>
+      <tr><td><code>i18next-browser-languagedetector</code></td><td>Detects OS/browser language on first load</td></tr>
+      <tr><td><code>i18next-http-backend</code></td><td>Lazy-loads translation files from Cloudflare R2</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Digital Signatures &amp; Consent</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>react-signature-canvas</code></td><td>Client-side signature capture (ROA signing, mandate authorisation)</td></tr>
+      <tr><td><code>@docuseal/react</code></td><td>Enterprise e-signature flows for complex documents</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Drag &amp; Drop</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>@dnd-kit/core</code></td><td>Accessible drag-and-drop — Kanban task board, document reordering</td></tr>
+      <tr><td><code>@dnd-kit/sortable</code></td><td>Sortable list extension for dnd-kit</td></tr>
+    </tbody>
+  </table>
+
+  <h4>PWA &amp; Offline (Client Portal)</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>vite-plugin-pwa</code></td><td>Service worker generation, offline caching strategy, Web App Manifest</td></tr>
+      <tr><td><code>workbox-window</code></td><td>Workbox runtime strategies — cache-first for static, network-first for API</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Testing</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>vitest</code></td><td>Unit and integration testing — Vite-native, fast</td></tr>
+      <tr><td><code>@testing-library/react</code></td><td>Component testing with accessibility-first queries</td></tr>
+      <tr><td><code>playwright</code></td><td>End-to-end tests — all critical user flows across all 4 portals</td></tr>
+      <tr><td><code>@cloudflare/vitest-pool-workers</code></td><td>Run Vitest tests inside the Workers runtime for accurate edge testing</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Developer Experience</h4>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>eslint</code> + <code>@typescript-eslint/eslint-plugin</code></td><td>Linting with TypeScript-aware rules</td></tr>
+      <tr><td><code>prettier</code></td><td>Code formatting — consistent across all workspaces</td></tr>
+      <tr><td><code>husky</code> + <code>lint-staged</code></td><td>Pre-commit hooks — lint + type check before every commit</td></tr>
+      <tr><td><code>turbo</code></td><td>Monorepo build orchestration — shared packages, incremental builds</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Hono API (Node.js on Cloudflare Workers)</h3>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>hono</code></td><td>Ultra-fast framework built for Cloudflare Workers — 12x faster than Express in edge environment</td></tr>
+      <tr><td><code>@hono/zod-validator</code></td><td>Request body/query validation using shared Zod schemas</td></tr>
+      <tr><td><code>@hono/jwt</code></td><td>JWT middleware for auth on every protected route</td></tr>
+      <tr><td><code>drizzle-orm</code></td><td>TypeScript ORM — works with PostgreSQL (via Hyperdrive) and D1</td></tr>
+      <tr><td><code>drizzle-kit</code></td><td>Schema migration generation and management</td></tr>
+      <tr><td><code>@neondatabase/serverless</code></td><td>Neon PostgreSQL serverless driver — compatible with Cloudflare Workers</td></tr>
+      <tr><td><code>jose</code></td><td>JWT signing and verification (Web Crypto API — works in Workers)</td></tr>
+      <tr><td><code>resend</code></td><td>Transactional email via Resend API (1-line setup, React Email templates)</td></tr>
+      <tr><td><code>react-email</code></td><td>Build email templates in React — rendered server-side and sent via Resend</td></tr>
+      <tr><td><code>otplib</code></td><td>TOTP generation for MFA — works in Workers WebCrypto</td></tr>
+      <tr><td><code>qrcode</code></td><td>Generate MFA QR codes for authenticator app setup</td></tr>
+    </tbody>
+  </table>
+
+  <h3>FastAPI Python Service — pip Requirements</h3>
+  <table>
+    <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>fastapi</code></td><td>Async Python web framework — AI and processing endpoints</td></tr>
+      <tr><td><code>uvicorn[standard]</code></td><td>ASGI server for FastAPI</td></tr>
+      <tr><td><code>pydantic[v2]</code></td><td>Data validation — matches Zod schemas on the Node.js side</td></tr>
+      <tr><td><code>langchain</code></td><td>RAG pipeline orchestration — document loaders, text splitters, retrievers</td></tr>
+      <tr><td><code>langchain-openai</code></td><td>OpenAI integration with LangChain (GPT-4o, text-embedding-3-large)</td></tr>
+      <tr><td><code>langchain-community</code></td><td>pgvector integration, document loaders</td></tr>
+      <tr><td><code>openai</code></td><td>OpenAI Python SDK — direct access for fine-grained control</td></tr>
+      <tr><td><code>pgvector</code></td><td>PostgreSQL vector type support for similarity search</td></tr>
+      <tr><td><code>pymupdf</code></td><td>PDF parsing — extract text, tables, and structure from insurer documents</td></tr>
+      <tr><td><code>python-multipart</code></td><td>File upload handling in FastAPI</td></tr>
+      <tr><td><code>httpx</code></td><td>Async HTTP client — calling external insurer REST/SOAP APIs</td></tr>
+      <tr><td><code>celery[redis]</code></td><td>Background tasks — document indexing, batch embedding generation</td></tr>
+      <tr><td><code>redis</code></td><td>Celery broker + result backend + rate limiting</td></tr>
+      <tr><td><code>boto3</code></td><td>AWS SDK — S3-compatible calls to Cloudflare R2</td></tr>
+      <tr><td><code>zeep</code></td><td>SOAP client — for SOAP/XML insurer integrations (Old Mutual, etc.)</td></tr>
+      <tr><td><code>paramiko</code></td><td>SFTP client — for file-based insurer integrations</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Monorepo Structure</h3>
+  <pre style="font-size:7.5pt;">royalsync/
+├── apps/
+│   ├── client-portal/      # React + Vite — Cloudflare Pages
+│   ├── admin-portal/       # React + Vite — Cloudflare Pages
+│   ├── super-admin/        # React + Vite — Cloudflare Pages + Zero Trust
+│   ├── insurer-portal/     # React + Vite — Cloudflare Pages
+│   ├── api/                # Hono on Cloudflare Workers (Node.js/TS)
+│   └── ai-service/         # FastAPI (Python) — document processing + RAG
+├── packages/
+│   ├── ui/                 # Shared component library (shadcn + custom)
+│   ├── schemas/            # Shared Zod schemas (frontend + API)
+│   ├── types/              # Shared TypeScript types
+│   ├── db/                 # Drizzle schema + migrations
+│   ├── email-templates/    # React Email templates
+│   └── i18n/               # Translation files (13 languages)
+├── workers/
+│   ├── auth-worker/        # Edge auth middleware (JWT validation, session)
+│   ├── upload-worker/      # Chunked upload handler → R2
+│   ├── notification-worker/# Queue consumer → WhatsApp/Email/SMS dispatch
+│   └── integration-worker/ # Queue consumer → Insurer API calls
+├── turbo.json              # Turborepo pipeline config
+├── pnpm-workspace.yaml     # pnpm monorepo config
+└── wrangler.toml           # Cloudflare Workers config</pre>
+
+  <h3>Cloudflare Workers — What Each Worker Does</h3>
+  <table>
+    <thead><tr><th>Worker</th><th>Bindings Used</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td><strong>auth-worker</strong></td><td>KV (sessions), D1 (user lookup cache)</td><td>Validates JWT on every request. Sets tenant context. Blocks unauthenticated requests at edge before they reach the API — zero cost on origin.</td></tr>
+      <tr><td><strong>api-worker</strong> (Hono)</td><td>KV, Hyperdrive (→PostgreSQL), D1, R2, Queues, AI Gateway</td><td>All business logic endpoints. Routes requests to appropriate handlers. Returns JSON. WebSocket upgrade for real-time.</td></tr>
+      <tr><td><strong>upload-worker</strong></td><td>R2 (storage), KV (upload state)</td><td>Handles chunked file uploads directly to R2. Tracks upload progress in KV. Supports resume on network drop. Validates file type and size.</td></tr>
+      <tr><td><strong>notification-worker</strong></td><td>Queues (consumer), KV (dedup)</td><td>Consumes notification jobs from Cloudflare Queues. Routes to WhatsApp API / Resend (email) / Twilio (SMS). Dedup via KV to prevent double-send.</td></tr>
+      <tr><td><strong>integration-worker</strong></td><td>Queues (consumer), KV (state), R2 (docs)</td><td>Consumes insurer integration jobs. Calls FastAPI service for insurer-specific normalisation. Handles retry and dead-letter. Stores responses in R2.</td></tr>
+      <tr><td><strong>search-worker</strong></td><td>Hyperdrive, D1 (index cache)</td><td>Handles admin full-text search across clients, policies, claims. Uses pg_trgm on PostgreSQL. Caches common queries in D1.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- BACK COVER -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="cover" style="min-height:40vh;justify-content:flex-end;padding-bottom:60px;">
+  <div style="text-align:center;">
+    <div style="font-size:9pt;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
+      Royal Square Financial (Pty) Ltd
+    </div>
+    <div style="font-size:8pt;color:rgba(255,255,255,0.35);">
+      Platform Architecture &amp; Technical Planning Document · Version 1.0 · September 2026<br>
+      CONFIDENTIAL — For internal and approved partner use only
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
