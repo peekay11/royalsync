@@ -18,14 +18,19 @@ export const apiRequest = async <T>(endpoint: string, options: RequestInit = {})
   return body.data;
 };
 
-export const uploadDocument = async (file: File) => {
+export const uploadDocument = async (file: File, category: string = 'General') => {
   const token = localStorage.getItem('royalsync_token');
   const form = new FormData();
   form.append('file', file);
+  form.append('category', category);
   const response = await fetch(`${API_BASE}/documents/upload`, { method: 'POST', body: form, headers: token ? { Authorization: `Bearer ${token}` } : undefined });
   const body = await response.json() as ApiEnvelope<unknown>;
   if (!response.ok || !body.success) throw new Error(body.error || 'Upload failed');
   return body.data;
+};
+
+export const deleteDocument = async (id: string) => {
+  return apiRequest(`/documents/${id}`, { method: 'DELETE' });
 };
 
 export const downloadDocument = async (id: string, filename: string) => {
