@@ -69,7 +69,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
     setLoading(true);
 
     try {
-      await ApiService.register(form);
+      await ApiService.register({ ...form, mobile: form.phone });
       setLoading(false);
       onDone();
     } catch (err: any) {
