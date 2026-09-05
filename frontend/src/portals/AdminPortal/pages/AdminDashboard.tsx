@@ -1,12 +1,12 @@
 import { useApi } from '../../../hooks/useApi';
 import { FiUsers, FiCheckSquare, FiAlertCircle } from 'react-icons/fi';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export const AdminDashboard = () => {
-  const { data: clients, loading: cLoad } = useApi<any[]>('/crm/clients');
-  const { data: tasks, loading: tLoad } = useApi<any[]>('/workflow/tasks');
-  const { data: claims, loading: clLoad } = useApi<any[]>('/claims');
+  const { data, loading, error, refetch } = useApi<any>('/dashboard/admin');
 
-  if (cLoad || tLoad || clLoad) return <div className="p-8 text-gray-500 animate-pulse">Loading dashboard...</div>;
+  if (loading) return <div className="p-8 text-gray-500 animate-pulse">Loading dashboard...</div>;
+  if (error) return <div className="p-8 space-y-3"><p className="text-red-600">{error}</p><button onClick={refetch} className="border rounded-lg px-4 py-2">Retry</button></div>;
 
   return (
     <div className="space-y-6">
@@ -18,7 +18,7 @@ export const AdminDashboard = () => {
             <span className="text-sm font-medium text-gray-500">Total Clients</span>
             <FiUsers className="text-gray-400 text-xl" />
           </div>
-          <div className="text-4xl font-light text-gray-900">{clients?.length || 0}</div>
+          <div className="text-4xl font-light text-gray-900">{data?.totalClients || 0}</div>
         </div>
 
         <div className="border border-gray-200 rounded-xl p-6 bg-white flex flex-col justify-between h-32 hover:border-red-200 transition-colors">
@@ -26,7 +26,7 @@ export const AdminDashboard = () => {
             <span className="text-sm font-medium text-gray-500">Pending Tasks</span>
             <FiCheckSquare className="text-gray-400 text-xl" />
           </div>
-          <div className="text-4xl font-light text-gray-900">{tasks?.length || 0}</div>
+          <div className="text-4xl font-light text-gray-900">{data?.pendingTasks || 0}</div>
         </div>
 
         <div className="border border-gray-200 rounded-xl p-6 bg-white flex flex-col justify-between h-32 hover:border-red-200 transition-colors">
@@ -34,28 +34,13 @@ export const AdminDashboard = () => {
             <span className="text-sm font-medium text-gray-500">Active Claims</span>
             <FiAlertCircle className="text-gray-400 text-xl" />
           </div>
-          <div className="text-4xl font-light text-gray-900">{claims?.length || 0}</div>
+          <div className="text-4xl font-light text-gray-900">{data?.activeClaims || 0}</div>
         </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h2 className="text-lg font-medium text-gray-800 mb-4">My Tasks Today</h2>
-        <div className="space-y-3">
-          {tasks?.map(task => (
-            <div key={task.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <input type="checkbox" className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" />
-                <span className="text-sm font-medium text-gray-700">{task.title}</span>
-              </div>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${task.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                {task.priority} Priority
-              </span>
-            </div>
-          ))}
-          {(!tasks || tasks.length === 0) && (
-            <p className="text-sm text-gray-500">No tasks due today. Great job!</p>
-          )}
-        </div>
+        <div className="h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={data?.leadFunnel || []}><CartesianGrid strokeDasharray="3 3" stroke="#eee" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip /><Bar dataKey="value" fill="#d92820" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div>
       </div>
     </div>
   );

@@ -1,0 +1,5 @@
+ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE users ADD COLUMN mfa_enabled INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN last_login_at TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);

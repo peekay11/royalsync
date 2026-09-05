@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 export interface UserRecord {
   id: string;
   email: string;
@@ -26,6 +23,18 @@ export interface Database {
   policies: Array<Record<string, unknown>>;
   claims: Array<Record<string, unknown>>;
   tasks: Array<Record<string, unknown>>;
+  goals: Array<Record<string, unknown>>;
+  documents: Array<Record<string, unknown>>;
+  payments: Array<Record<string, unknown>>;
+  applications: Array<Record<string, unknown>>;
+  notifications: Array<Record<string, unknown>>;
+  auditLog: Array<Record<string, unknown>>;
+  tenants: Array<Record<string, unknown>>;
+  insurers: Array<Record<string, unknown>>;
+  templates: Array<Record<string, unknown>>;
+  integrations: Array<Record<string, unknown>>;
+  settings: Array<Record<string, unknown>>;
+  kyc: Array<Record<string, unknown>>;
 }
 
 export const db: Database = {
@@ -34,18 +43,19 @@ export const db: Database = {
   leads: [],
   policies: [],
   claims: [],
-  tasks: []
+  tasks: [],
+  goals: [],
+  documents: [],
+  payments: [],
+  applications: [],
+  notifications: [],
+  auditLog: [],
+  tenants: [],
+  insurers: [],
+  templates: [],
+  integrations: [],
+  settings: [],
+  kyc: []
 };
 
-const dataPath = path.join(process.cwd(), 'data', 'db.json');
-
-if (fs.existsSync(dataPath)) {
-  Object.assign(db, JSON.parse(fs.readFileSync(dataPath, 'utf8')));
-}
-
-export const saveDb = () => {
-  fs.mkdirSync(path.dirname(dataPath), { recursive: true });
-  const temporaryPath = `${dataPath}.tmp`;
-  fs.writeFileSync(temporaryPath, JSON.stringify(db, null, 2));
-  fs.renameSync(temporaryPath, dataPath);
-};
+export const saveDb = () => undefined;

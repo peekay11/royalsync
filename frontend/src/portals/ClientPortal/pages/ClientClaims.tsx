@@ -1,8 +1,27 @@
 import { useApi } from '../../../hooks/useApi';
 import { FiPlus } from 'react-icons/fi';
+import { apiRequest } from '../../../lib/api';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export const ClientClaims = () => {
   const { data: claims, loading } = useApi<any[]>('/claims');
+  const [submitting, setSubmitting] = useState(false);
+
+  const reportClaim = async () => {
+    const type = window.prompt('Claim type');
+    const description = window.prompt('Describe what happened');
+    if (!type || !description) return;
+    setSubmitting(true);
+    try {
+      await apiRequest('/claims', { method: 'POST', body: JSON.stringify({ type, description }) });
+      toast.success('Claim submitted. Refresh to view it.');
+    } catch {
+      toast.error('Failed to submit claim');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="p-8 text-gray-500">Loading claims...</div>;
 
@@ -10,8 +29,8 @@ export const ClientClaims = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-normal text-gray-800">My Claims</h1>
-        <button className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
-          <FiPlus /> Report a Claim
+        <button onClick={reportClaim} disabled={submitting} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50">
+          <FiPlus /> {submitting ? 'Submitting...' : 'Report a Claim'}
         </button>
       </div>
 

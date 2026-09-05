@@ -1,21 +1,37 @@
 import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User } from '../types';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8787/api';
 
 let authToken: string | null = null;
 let tokenLoaded = false;
+const TOKEN_KEY = 'royalsync_token';
+
+const readStoredToken = async () => {
+  if (Platform.OS === 'web') return globalThis.localStorage?.getItem(TOKEN_KEY) || null;
+  return SecureStore.getItemAsync(TOKEN_KEY);
+};
+
+const writeStoredToken = async (token: string | null) => {
+  if (Platform.OS === 'web') {
+    if (token) globalThis.localStorage?.setItem(TOKEN_KEY, token);
+    else globalThis.localStorage?.removeItem(TOKEN_KEY);
+    return;
+  }
+  if (token) await SecureStore.setItemAsync(TOKEN_KEY, token);
+  else await SecureStore.deleteItemAsync(TOKEN_KEY);
+};
 
 export const setAuthToken = async (token: string | null) => {
   authToken = token;
   tokenLoaded = true;
-  if (token) await SecureStore.setItemAsync('royalsync_token', token);
-  else await SecureStore.deleteItemAsync('royalsync_token');
+  await writeStoredToken(token);
 };
 
 const getHeaders = async () => {
   if (!tokenLoaded) {
-    authToken = await SecureStore.getItemAsync('royalsync_token');
+    authToken = await readStoredToken();
     tokenLoaded = true;
   }
   const headers: Record<string, string> = {

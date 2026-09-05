@@ -41,4 +41,18 @@ export class AuthController extends BaseController {
     const authUser: AuthUser = { id: user.id, email: user.email, role: user.role, clientId };
     return this.sendSuccess(res, { token: createToken(authUser), user: authUser }, 'Registration successful', 201);
   };
+
+  public bootstrapAdmin = (req: Request, res: Response) => {
+    const configuredToken = process.env.BOOTSTRAP_TOKEN;
+    if (!configuredToken || req.header('x-bootstrap-token') !== configuredToken) {
+      return this.sendError(res, 'Bootstrap authorization failed', 401);
+    }
+    if (db.users.length > 0) return this.sendError(res, 'Bootstrap is disabled after the first account exists', 409);
+    const { email, password } = req.body as { email?: string; password?: string };
+    if (!email || !password || password.length < 12) return this.sendError(res, 'Email and a 12-character password are required');
+    const user = { id: `usr_${Date.now()}`, email: email.toLowerCase(), role: 'SUPER_ADMIN' as const, passwordHash: hashPassword(password) };
+    db.users.push(user);
+    saveDb();
+    return this.sendSuccess(res, { id: user.id, email: user.email, role: user.role }, 'Initial administrator created', 201);
+  };
 }

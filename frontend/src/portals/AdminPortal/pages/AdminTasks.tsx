@@ -28,13 +28,25 @@ export const AdminTasks = () => {
     }
   };
 
+  const createTask = async () => {
+    const title = window.prompt('Task title');
+    if (!title) return;
+    try {
+      const task = await apiRequest<any>('/workflow/tasks', { method: 'POST', body: JSON.stringify({ title, priority: 'normal', status: 'open' }) });
+      setTasks(current => [task, ...current]);
+      toast.success('Task created');
+    } catch {
+      toast.error('Failed to create task');
+    }
+  };
+
   if (loading) return <div className="p-12 flex justify-center"><ClipLoader color="#ef4444" /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-normal text-gray-800">Task Board</h1>
-        <button className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
+        <button onClick={createTask} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
           <FiPlus /> New Task
         </button>
       </div>

@@ -1,0 +1,33 @@
+name = "royalsync-api"
+main = "worker/index.ts"
+compatibility_date = "2026-09-05"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+CORS_ORIGINS = "http://localhost:5173,http://localhost:8084"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "royalsync"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "royalsync-documents"
+
+[env.production]
+name = "royalsync-api-production"
+
+[env.production.vars]
+CORS_ORIGINS = "https://app.example.com,https://admin.example.com,https://superadmin.example.com"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "royalsync"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[env.production.r2_buckets]]
+binding = "DOCS"
+bucket_name = "royalsync-documents"
