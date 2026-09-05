@@ -37,6 +37,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       Animated.spring(slideAnim, {
         toValue: 0,
         bounciness: 6,
+        useNativeDriver: true,
       }).start();
 
       // Auto dismiss after 6 seconds
@@ -54,6 +55,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
     Animated.timing(slideAnim, {
       toValue: -120,
       duration: 250,
+      useNativeDriver: true,
     }).start(() => {
       onDismiss();
     });
