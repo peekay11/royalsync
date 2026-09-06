@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "wrangler dev",
+    "build": "prisma generate",
+    "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test test/**/*.test.ts",
@@ -51,7 +52,7 @@
     "prisma": "^5.22.0",
     "ts-jest": "^29.4.12",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2",
+    "typescript": "^5.8.2",
     "wrangler": "^4.129.0"
   },
   "prisma": {

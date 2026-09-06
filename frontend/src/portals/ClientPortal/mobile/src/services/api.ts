@@ -260,6 +260,26 @@ export const ApiService = {
     }
   },
 
+  async requestPolicyCover(payload: {
+    productType: string;
+    insurerName?: string;
+    premium?: string | number;
+    sumAssured?: string | number;
+    notes?: string;
+  }): Promise<any> {
+    try {
+      const res = await fetchWithFallback('/sales/applications', {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Failed to submit policy request');
+      return unwrap(await res.json());
+    } catch (e) {
+      throw e;
+    }
+  },
+
   async getClaims(): Promise<Claim[]> {
     try {
       const res = await fetchWithFallback('/claims', { headers: await getHeaders() });

@@ -137,7 +137,7 @@ export const createApp = () => {
 
   // ─── Sales – Applications ─────────────────────────────────────────────────
   app.get('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), apps.getApplications);
-  app.post('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), apps.createApplication);
+  app.post('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), apps.createApplication);
   app.put('/api/sales/applications/:id/status', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), apps.updateApplicationStatus);
   // Legacy route used by existing frontend
   app.put('/api/sales/applications/:id', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), apps.updateApplicationStatus);

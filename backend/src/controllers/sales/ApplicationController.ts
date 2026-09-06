@@ -27,24 +27,48 @@ export class ApplicationController extends BaseController {
   };
 
   public createApplication = async (req: AuthRequest, res: Response) => {
-    const { clientId, productType, insurerId, premium, sumAssured } = req.body as Record<string, string | undefined>;
-    if (!clientId || !productType) return this.sendError(res, 'clientId and productType are required');
-    const tenantId = await this.getUserTenantId(req.user?.id);
+    const { productType, insurerId, premium, sumAssured, notes } = req.body as Record<string, string | undefined>;
+    const targetClientId = req.user?.role === 'CLIENT' ? req.user.clientId : (req.body.clientId || req.user?.clientId);
+    if (!targetClientId || !productType) return this.sendError(res, 'Target client and productType are required');
+    
+    let tenantId = await this.getUserTenantId(req.user?.id);
+    if (!tenantId) {
+      const client = await prisma.client.findUnique({ where: { id: targetClientId }, select: { tenantId: true } });
+      tenantId = client?.tenantId || null;
+    }
     if (!tenantId) return this.sendError(res, 'Tenant not found', 400);
+
     const app = await prisma.application.create({
       data: {
         tenantId,
-        clientId,
+        clientId: targetClientId,
         productType,
         insurerId: insurerId || null,
         premium: premium ? parseFloat(premium) : 0,
         sumAssured: sumAssured ? parseFloat(sumAssured) : 0,
-        status: 'draft'
+        status: 'ready_to_quote'
       },
       include: { client: true, insurer: true }
     });
-    await audit(req.user, 'CREATE_APPLICATION', 'applications', app.id);
-    return this.sendSuccess(res, app, 'Application created', 201);
+
+    // Notify administrators / advisers of the client's policy quote request
+    try {
+      const client = await prisma.client.findUnique({ where: { id: targetClientId } });
+      const clientName = client ? `${client.firstName} ${client.lastName}` : 'A policyholder';
+      await prisma.notification.create({
+        data: {
+          tenantId,
+          clientId: targetClientId,
+          title: `New Policy Request: ${productType}`,
+          body: `${clientName} has requested a new policy quote for ${productType}.`,
+          channel: 'in_app',
+          status: 'unread'
+        }
+      });
+    } catch {}
+
+    await audit(req.user, 'CREATE_APPLICATION', 'applications', app.id, `Policy request for ${productType}`);
+    return this.sendSuccess(res, app, 'Policy addition request submitted successfully', 201);
   };
 
   public updateApplicationStatus = async (req: AuthRequest, res: Response) => {
