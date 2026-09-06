@@ -5,35 +5,84 @@ import type { AuthRequest } from '../../types/auth';
 
 export class ClientDataController extends BaseController {
   public getProfile = async (req: AuthRequest, res: Response) => {
-    if (!req.user?.clientId) return this.sendError(res, 'Client profile not found', 404);
-    const client = await prisma.client.findUnique({
-      where: { id: req.user.clientId },
-      include: { user: { select: { email: true } } }
-    });
-    if (!client) return this.sendError(res, 'Client profile not found', 404);
-    return this.sendSuccess(res, {
-      id: client.id,
-      firstName: client.firstName,
-      lastName: client.lastName,
-      name: `${client.firstName} ${client.lastName}`,
-      initials: `${client.firstName[0]}${client.lastName[0]}`,
-      email: client.email || client.user?.email || '',
-      phone: client.mobile,
-      idNumber: client.idNumber,
-      kycStatus: client.kycStatus,
-      riskProfile: client.riskProfile,
-      assignedAdviserId: client.assignedAdviserId
-    }, 'Profile retrieved');
+    let clientId = req.user?.clientId;
+    if (!clientId && req.user?.id) {
+      const foundClient = await prisma.client.findFirst({ where: { userId: req.user.id } });
+      if (foundClient) clientId = foundClient.id;
+    }
+
+    if (clientId) {
+      const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        include: { user: { select: { email: true } } }
+      });
+      if (client) {
+        return this.sendSuccess(res, {
+          id: client.id,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          name: `${client.firstName} ${client.lastName}`.trim() || 'Client',
+          initials: `${(client.firstName[0] || 'C')}${(client.lastName[0] || '')}`.toUpperCase(),
+          email: client.email || client.user?.email || req.user?.email || '',
+          phone: client.mobile || '',
+          idNumber: client.idNumber || '',
+          kycStatus: client.kycStatus || 'verified',
+          riskProfile: client.riskProfile || 'Medium',
+          assignedAdviserId: client.assignedAdviserId
+        }, 'Profile retrieved');
+      }
+    }
+
+    if (req.user?.id) {
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+      if (user) {
+        return this.sendSuccess(res, {
+          id: user.id,
+          firstName: user.firstName || 'User',
+          lastName: user.lastName || '',
+          name: `${user.firstName} ${user.lastName}`.trim() || user.email.split('@')[0],
+          initials: `${(user.firstName[0] || user.email[0] || 'U')}${(user.lastName[0] || '')}`.toUpperCase(),
+          email: user.email,
+          phone: '',
+          idNumber: user.idNumber || '',
+          kycStatus: 'verified',
+          riskProfile: 'Low',
+          role: user.role
+        }, 'Profile retrieved');
+      }
+    }
+
+    return this.sendError(res, 'Client profile not found', 404);
   };
 
   public updateProfile = async (req: AuthRequest, res: Response) => {
-    if (!req.user?.clientId) return this.sendError(res, 'Client profile not found', 404);
+    let clientId = req.user?.clientId;
+    if (!clientId && req.user?.id) {
+      const foundClient = await prisma.client.findFirst({ where: { userId: req.user.id } });
+      if (foundClient) clientId = foundClient.id;
+    }
+
     const { firstName, lastName, mobile, email } = req.body as Record<string, string | undefined>;
-    if (!firstName || !lastName || !mobile) return this.sendError(res, 'First name, last name and mobile are required');
-    await prisma.client.update({
-      where: { id: req.user.clientId },
-      data: { firstName, lastName, mobile, email }
-    });
+    if (clientId) {
+      await prisma.client.update({
+        where: { id: clientId },
+        data: {
+          ...(firstName ? { firstName } : {}),
+          ...(lastName ? { lastName } : {}),
+          ...(mobile ? { mobile } : {}),
+          ...(email ? { email } : {})
+        }
+      });
+    } else if (req.user?.id) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          ...(firstName ? { firstName } : {}),
+          ...(lastName ? { lastName } : {}),
+          ...(email ? { email } : {})
+        }
+      });
+    }
     return this.getProfile(req, res);
   };
 

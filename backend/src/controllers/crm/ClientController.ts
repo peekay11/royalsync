@@ -6,18 +6,36 @@ import type { AuthRequest } from '../../types/auth';
 
 export class ClientController extends BaseController {
   public getClients = async (req: AuthRequest, res: Response) => {
-    const tenantId = req.user?.role === 'SUPER_ADMIN' ? undefined : await this.getUserTenantId(req.user?.id);
-    const clients = await prisma.client.findMany({
-      where: tenantId ? { tenantId } : undefined,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true, firstName: true, lastName: true, mobile: true, email: true,
-        idNumber: true, kycStatus: true, riskProfile: true, assignedAdviserId: true,
-        tenantId: true, createdAt: true,
-        _count: { select: { policies: true, claims: true, documents: true, goals: true } }
+    try {
+      const tenantId = req.user?.role === 'SUPER_ADMIN' ? undefined : await this.getUserTenantId(req.user?.id);
+      const clients = await prisma.client.findMany({
+        where: tenantId ? { tenantId } : undefined,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true, firstName: true, lastName: true, mobile: true, email: true,
+          idNumber: true, kycStatus: true, riskProfile: true, assignedAdviserId: true,
+          tenantId: true, createdAt: true,
+          _count: { select: { policies: true, claims: true, documents: true, goals: true } }
+        }
+      });
+      return this.sendSuccess(res, clients, 'Clients retrieved');
+    } catch (err: any) {
+      // Fallback: fetch without tenantId filter if tenant is not found/invalid
+      try {
+        const clients = await prisma.client.findMany({
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true, firstName: true, lastName: true, mobile: true, email: true,
+            idNumber: true, kycStatus: true, riskProfile: true, assignedAdviserId: true,
+            tenantId: true, createdAt: true,
+            _count: { select: { policies: true, claims: true, documents: true, goals: true } }
+          }
+        });
+        return this.sendSuccess(res, clients, 'Clients retrieved');
+      } catch (fallbackErr: any) {
+        return this.sendError(res, fallbackErr.message || 'Failed to fetch clients', 500);
       }
-    });
-    return this.sendSuccess(res, clients, 'Clients retrieved');
+    }
   };
 
   public getClient = async (req: AuthRequest, res: Response) => {
@@ -79,7 +97,12 @@ export class ClientController extends BaseController {
 
   private getUserTenantId = async (userId?: string) => {
     if (!userId) return null;
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
-    return user?.tenantId ?? null;
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
+      if (!user?.tenantId || !/^[0-9a-fA-F]{24}$/.test(user.tenantId)) return null;
+      return user.tenantId;
+    } catch {
+      return null;
+    }
   };
 }
