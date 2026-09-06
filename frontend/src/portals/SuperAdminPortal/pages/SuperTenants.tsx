@@ -102,8 +102,8 @@ export const SuperTenants = () => {
       setEmail('');
       setSubdomain('');
       refetch();
-    } catch {
-      toast.error('Failed to create tenant');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to create tenant');
     }
   };
 

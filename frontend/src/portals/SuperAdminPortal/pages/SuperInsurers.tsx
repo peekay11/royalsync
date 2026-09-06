@@ -127,8 +127,8 @@ export const SuperInsurers = () => {
       setProductLineStr('Motor, Life');
       setApiUrl('');
       refetch();
-    } catch {
-      toast.error('Failed to add insurer');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to add insurer');
     }
   };
 

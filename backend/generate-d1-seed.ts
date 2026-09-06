@@ -28,8 +28,15 @@ async function main() {
   let idCounter = 1;
   const now = new Date().toISOString();
 
-  // Insert a tenant
-  sql += `INSERT INTO tenants (id, name, created_at, updated_at) VALUES ('tenant_1', 'RoyalSync Core', '${now}', '${now}');\n`;
+  const tenantData = JSON.stringify({ name: 'RoyalSync Core', slug: 'royalsync-core', plan: 'enterprise', status: 'active' });
+  const tenantData2 = JSON.stringify({ name: 'Acacia Financial', slug: 'acacia-financial', plan: 'professional', status: 'active' });
+  sql += `INSERT OR REPLACE INTO records (id, collection, data, created_at, updated_at) VALUES ('tenant_1', 'tenants', '${tenantData}', '${now}', '${now}');\n`;
+  sql += `INSERT OR REPLACE INTO records (id, collection, data, created_at, updated_at) VALUES ('tenant_2', 'tenants', '${tenantData2}', '${now}', '${now}');\n`;
+
+  const insurer1 = JSON.stringify({ name: 'Mutual & Federal', domain: 'mutualfederal.co.za', category: 'short-term', contactEmail: 'broker@mutualfederal.co.za', status: 'active' });
+  const insurer2 = JSON.stringify({ name: 'Old Mutual', domain: 'oldmutual.co.za', category: 'life', contactEmail: 'info@oldmutual.co.za', status: 'active' });
+  sql += `INSERT OR REPLACE INTO records (id, collection, data, created_at, updated_at) VALUES ('insurer_1', 'insurers', '${insurer1}', '${now}', '${now}');\n`;
+  sql += `INSERT OR REPLACE INTO records (id, collection, data, created_at, updated_at) VALUES ('insurer_2', 'insurers', '${insurer2}', '${now}', '${now}');\n`;
 
   for (const u of users) {
     const hash = await hashPassword(u.pass);
@@ -37,8 +44,8 @@ async function main() {
     const clientId = `cli_seed_${idCounter}`;
     idCounter++;
 
-    sql += `INSERT INTO clients (id, tenant_id, first_name, last_name, mobile, kyc_status, risk_profile, created_at, updated_at) VALUES ('${clientId}', 'tenant_1', '${u.name}', 'User', '0000000000', 'pending', 'Unknown', '${now}', '${now}');\n`;
-    sql += `INSERT INTO users (id, email, password_hash, role, tenant_id, client_id, status, created_at, updated_at) VALUES ('${userId}', '${u.email}', '${hash}', '${u.role}', 'tenant_1', '${clientId}', 'active', '${now}', '${now}');\n`;
+    sql += `INSERT OR REPLACE INTO clients (id, tenant_id, first_name, last_name, mobile, kyc_status, risk_profile, created_at, updated_at) VALUES ('${clientId}', 'tenant_1', '${u.name}', 'User', '0000000000', 'pending', 'Unknown', '${now}', '${now}');\n`;
+    sql += `INSERT OR REPLACE INTO users (id, email, password_hash, role, tenant_id, client_id, status, created_at, updated_at) VALUES ('${userId}', '${u.email}', '${hash}', '${u.role}', 'tenant_1', '${clientId}', 'active', '${now}', '${now}');\n`;
   }
 
   require('fs').writeFileSync('d1-seed.sql', sql);
