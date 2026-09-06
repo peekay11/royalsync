@@ -1,11 +1,27 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { DARK_COLORS, LIGHT_COLORS, ThemeColors, ThemeMode } from './colors';
+import {
+  FONT_FAMILY,
+  FONT_SIZES,
+  LINE_HEIGHTS,
+  SPACING,
+  RADIUS,
+  TOUCH_TARGET,
+  TYPOGRAPHY,
+} from './typography';
 
 interface ThemeContextType {
   theme: ThemeMode;
   isDark: boolean;
   colors: ThemeColors;
   easyMode: boolean;
+  fontFamily: string | undefined;
+  fontSizes: typeof FONT_SIZES;
+  lineHeights: typeof LINE_HEIGHTS;
+  spacing: typeof SPACING;
+  radius: typeof RADIUS;
+  touchTarget: typeof TOUCH_TARGET;
+  typography: typeof TYPOGRAPHY;
   toggleTheme: () => void;
   setTheme: (theme: ThemeMode) => void;
   toggleEasyMode: () => void;
@@ -18,6 +34,13 @@ const ThemeContext = createContext<ThemeContextType>({
   isDark: false,
   colors: LIGHT_COLORS,
   easyMode: false,
+  fontFamily: FONT_FAMILY,
+  fontSizes: FONT_SIZES,
+  lineHeights: LINE_HEIGHTS,
+  spacing: SPACING,
+  radius: RADIUS,
+  touchTarget: TOUCH_TARGET,
+  typography: TYPOGRAPHY,
   toggleTheme: () => {},
   setTheme: () => {},
   toggleEasyMode: () => {},
@@ -62,6 +85,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode; defaultTheme?: Theme
         isDark,
         colors,
         easyMode,
+        fontFamily: FONT_FAMILY,
+        fontSizes: FONT_SIZES,
+        lineHeights: LINE_HEIGHTS,
+        spacing: SPACING,
+        radius: RADIUS,
+        touchTarget: TOUCH_TARGET,
+        typography: TYPOGRAPHY,
         toggleTheme,
         setTheme,
         toggleEasyMode,
@@ -75,4 +105,5 @@ export const ThemeProvider: React.FC<{ children: ReactNode; defaultTheme?: Theme
 };
 
 export const useTheme = () => useContext(ThemeContext);
+export * from './typography';
 

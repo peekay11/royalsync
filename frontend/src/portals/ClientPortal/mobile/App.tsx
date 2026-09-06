@@ -33,13 +33,24 @@ function MainApp() {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-          input, textarea {
+          * {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+          body {
+            font-size: 14px;
+            line-height: 1.42857;
+            touch-action: manipulation;
+          }
+          input, textarea, select, button {
             outline: none !important;
             border: none !important;
             background: transparent !important;
             box-shadow: none !important;
+            font-family: inherit !important;
           }
-          input:focus, textarea:focus {
+          input:focus, textarea:focus, select:focus {
             outline: none !important;
             border: none !important;
             box-shadow: none !important;
