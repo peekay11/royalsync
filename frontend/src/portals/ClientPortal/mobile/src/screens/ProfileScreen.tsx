@@ -26,6 +26,7 @@ import { RoyalSquareLogo } from '../components/RoyalSquareLogo';
 import { NoticeOfAppointmentModal } from '../components/NoticeOfAppointmentModal';
 import { ClientServiceAgreementModal } from '../components/ClientServiceAgreementModal';
 import { DocumentExpiryNotificationModal } from '../components/DocumentExpiryNotificationModal';
+import { UpdateProfileModal } from '../components/UpdateProfileModal';
 
 interface ProfileScreenProps {
   onSignOut: () => void;
@@ -38,6 +39,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
   const [mandateVisible, setMandateVisible] = useState(false);
   const [agreementVisible, setAgreementVisible] = useState(false);
   const [expiryModalVisible, setExpiryModalVisible] = useState(false);
+  const [updateProfileVisible, setUpdateProfileVisible] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -95,6 +97,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
             ● KYC Verified Policyholder
           </Text>
         </View>
+
+        {/* Big Update Profile Details Button */}
+        <TouchableOpacity
+          style={[
+            styles.updateProfileHeaderBtn,
+            {
+              backgroundColor: colors.primary,
+              borderColor: colors.primary,
+            },
+          ]}
+          onPress={() => setUpdateProfileVisible(true)}
+          activeOpacity={0.85}
+        >
+          <DocumentTextIcon color="#ffffff" size={16} />
+          <Text style={styles.updateProfileHeaderBtnText}>Update Profile Details</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 3-column stats bar */}
@@ -336,8 +354,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
       </View>
 
       {/* Policyholder Personal & Payout Info */}
-      <View style={styles.sectionHeader}>
+      <View style={[styles.sectionHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
         <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>PERSONAL & PAYOUT DETAILS</Text>
+        <TouchableOpacity
+          onPress={() => setUpdateProfileVisible(true)}
+          style={[styles.editPillBtn, { backgroundColor: colors.primaryAlpha, borderColor: colors.primaryBorder }]}
+        >
+          <Text style={[styles.editPillText, { color: colors.primary }]}>Edit Details</Text>
+        </TouchableOpacity>
       </View>
       <View
         style={[
@@ -405,6 +429,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
         <RoyalSquareLogo size={22} secondaryColor={isDark ? '#888888' : '#666666'} />
         <Text style={[styles.footerBrandText, { color: colors.textMuted }]}>ROYAL SQUARE FINANCIAL</Text>
       </View>
+
+      {/* Update Profile Modal */}
+      <UpdateProfileModal
+        visible={updateProfileVisible}
+        onClose={() => setUpdateProfileVisible(false)}
+        profile={profile}
+        onProfileUpdated={fetchProfile}
+      />
 
       {/* Notice of Appointment Modal */}
       <NoticeOfAppointmentModal
@@ -701,5 +733,35 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 2,
+  },
+  updateProfileHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowColor: '#e11d48',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  updateProfileHeaderBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  editPillBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  editPillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

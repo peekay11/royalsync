@@ -138,6 +138,23 @@ export const ApiService = {
     }
   },
 
+  async updateUserProfile(payload: Record<string, any>): Promise<UserProfile> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/profile`, {
+        method: 'PUT',
+        headers: await getHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+      return unwrap(await res.json());
+    } catch (e) {
+      throw e;
+    }
+  },
+
   async getPolicies(category?: string): Promise<Policy[]> {
     try {
       const url = category && category !== 'All'
