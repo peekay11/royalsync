@@ -78,12 +78,40 @@ const collectionForPath: Record<string, string> = {
 
 const roleAllowed = (user: User, roles: Role[]) => roles.includes(user.role);
 
+const calculateDocumentExpiry = (category: string, customExpiryDate?: string): { expiryDate: string; daysValid: number } => {
+  if (customExpiryDate && !isNaN(new Date(customExpiryDate).getTime())) {
+    const target = new Date(customExpiryDate);
+    const days = Math.round((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return { expiryDate: target.toISOString().split('T')[0], daysValid: Math.max(days, 0) };
+  }
+
+  const d = new Date();
+  let daysToAdd = 365; // default 1 year
+
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('address') || cat.includes('residence') || cat.includes('utility') || cat.includes('bank') || cat.includes('statement')) {
+    daysToAdd = 90; // 3 months for FICA proof of address/bank statement
+  } else if (cat.includes('vehicle') || cat.includes('roadworthy') || cat.includes('disc') || cat.includes('tax') || cat.includes('schedule')) {
+    daysToAdd = 365; // 1 year
+  } else if (cat.includes('medical') || cat.includes('health') || cat.includes('assessment')) {
+    daysToAdd = 180; // 6 months
+  } else if (cat.includes('id') || cat.includes('kyc') || cat.includes('passport') || cat.includes('license') || cat.includes('licence')) {
+    daysToAdd = 365 * 5; // 5 years
+  }
+
+  d.setDate(d.getDate() + daysToAdd);
+  return { expiryDate: d.toISOString().split('T')[0], daysValid: daysToAdd };
+};
+
 const listRecords = async (env: Env, collection: string, user: User, url?: URL) => {
   const page = Math.max(Number(url?.searchParams.get('page') || 1), 1);
   const limit = Math.min(Math.max(Number(url?.searchParams.get('limit') || 50), 1), 100);
   const offset = (page - 1) * limit;
   const query = user.role === 'CLIENT'
-    ? 'SELECT id, client_id, data, created_at, updated_at FROM records WHERE collection = ? AND client_id = ? AND (tenant_id = ? OR tenant_id IS NULL) ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ? (collection === 'notifications'
+        ? 'SELECT id, client_id, data, created_at, updated_at FROM records WHERE collection = ? AND (client_id = ? OR client_id IS NULL OR client_id = "") AND (tenant_id = ? OR tenant_id IS NULL) ORDER BY created_at DESC LIMIT ? OFFSET ?'
+        : 'SELECT id, client_id, data, created_at, updated_at FROM records WHERE collection = ? AND client_id = ? AND (tenant_id = ? OR tenant_id IS NULL) ORDER BY created_at DESC LIMIT ? OFFSET ?'
+      )
     : 'SELECT id, client_id, data, created_at, updated_at FROM records WHERE collection = ? AND (tenant_id = ? OR tenant_id IS NULL) ORDER BY created_at DESC LIMIT ? OFFSET ?';
   const statement = user.role === 'CLIENT'
     ? env.DB.prepare(query).bind(collection, user.clientId || '', user.tenantId || '', limit, offset)
@@ -463,11 +491,14 @@ app.post('/api/documents/upload', async c => {
   const form = await c.req.parseBody();
   const file = form.file;
   const category = typeof form.category === 'string' && form.category.trim() ? form.category.trim() : 'General';
+  const customExpiry = typeof form.expiryDate === 'string' && form.expiryDate.trim() ? form.expiryDate.trim() : undefined;
+
   if (!(file instanceof File)) return c.json({ success: false, error: 'A valid file is required' }, 400);
   if (file.size > 25 * 1024 * 1024) return c.json({ success: false, error: 'File exceeds the 25 MB limit' }, 413);
 
   const fileExt = file.name.includes('.') ? file.name.split('.').pop()?.toLowerCase() || 'doc' : 'doc';
   const key = `${user.tenantId || 'global'}/${user.clientId || user.id}/${crypto.randomUUID()}-${file.name}`;
+  const { expiryDate, daysValid } = calculateDocumentExpiry(category, customExpiry);
   
   if (c.env.DOCS) {
     try {
@@ -485,6 +516,9 @@ app.post('/api/documents/upload', async c => {
     key,
     type: fileExt,
     category,
+    expiryDate,
+    daysValid,
+    expiryStatus: daysValid <= 0 ? 'expired' : daysValid <= 30 ? 'expiring_soon' : 'valid',
     contentType: file.type || 'application/octet-stream',
     size: file.size,
     client_id: user.clientId || null,
@@ -493,8 +527,24 @@ app.post('/api/documents/upload', async c => {
   };
   const timestamp = now();
   await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(record.id, 'documents', user.tenantId || null, record.client_id, JSON.stringify(record), timestamp, timestamp).run();
+  
+  // Automatically generate and dispatch alert notification to client
+  const notif = {
+    id: id('notif'),
+    title: `Document Uploaded: ${file.name}`,
+    message: `Your ${category} document has been recorded. Validity is tracked until ${expiryDate} (${daysValid} days). You will receive automated alerts before it expires.`,
+    category: 'document',
+    priority: daysValid <= 30 ? 'High' : 'Normal',
+    audience: 'Client',
+    badgeText: 'DOC VERIFIED',
+    client_id: user.clientId || null,
+    read: false,
+    created_at: timestamp
+  };
+  await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(notif.id, 'notifications', user.tenantId || null, notif.client_id, JSON.stringify(notif), timestamp, timestamp).run();
+
   await writeAudit(c.env, user, 'upload', 'documents', record.id, null, record, c.req.raw);
-  return c.json({ success: true, message: 'Document uploaded successfully', data: record }, 201);
+  return c.json({ success: true, message: 'Document uploaded and expiry tracked successfully', data: record }, 201);
 });
 
 app.get('/api/documents/:id/download', async c => {
