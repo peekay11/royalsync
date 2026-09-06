@@ -29,7 +29,8 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "hono": "^4.13.7",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "puppeteer-core": "^25.10.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260905.1",
@@ -46,5 +47,8 @@
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "wrangler": "^4.129.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://royalsync-api.pasekamabitsela22.workers.dev/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
 
 export interface ApiEnvelope<T> {
   success: boolean;

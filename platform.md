@@ -8,3 +8,4 @@ All portals are successfully deployed to Cloudflare Pages as a unified web appli
 * **Partner Portal**: [https://royalsync-frontend.pages.dev/partner](https://royalsync-frontend.pages.dev/partner)
 
 *(Note: These routes share the same authentication flow, but your access is strictly dictated by your assigned Role-Based Access Control level).*
+n* **Mobile App Preview**: [https://royalsync-mobile.pages.dev/](https://royalsync-mobile.pages.dev/)

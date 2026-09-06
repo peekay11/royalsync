@@ -63,7 +63,9 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
-      navigate(`/${defaultRole.toLowerCase().replace('_', '-')}`);
+      const role: string = result.user?.role ?? defaultRole;
+      const path = role === 'SUPER_ADMIN' ? '/super-admin' : role === 'ADMIN' || role === 'ADVISER' ? '/admin' : role === 'PARTNER' ? '/partner' : '/client';
+      navigate(path);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Login failed');
     } finally {
@@ -284,7 +286,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   placeholder="e.g. Sipho"
-                  className="w-full pl-10 pr-3.5 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                  className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
                 />
               </div>
             </div>
@@ -293,19 +295,34 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
               <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
                 Last Name
               </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  <FiUser size={16} />
-                </span>
-                <input
-                  required
-                  type="text"
-                  value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  placeholder="e.g. Dlamini"
-                  className="w-full pl-10 pr-3.5 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-                />
-              </div>
+              <input
+                required
+                type="text"
+                value={lastName}
+                onChange={e => setLastName(e.target.value)}
+                placeholder="e.g. Dlamini"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Mobile Number */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+              Mobile Number
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                <FiPhone size={16} />
+              </span>
+              <input
+                required
+                type="tel"
+                value={mobile}
+                onChange={e => setMobile(e.target.value)}
+                placeholder="e.g. 082 123 4567"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+              />
             </div>
           </div>
 
@@ -317,7 +334,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
             </label>
             <div className="relative flex items-center">
               <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
-                <FiCreditCard size={18} />
+                <FiCreditCard size={16} />
               </span>
               <input
                 required
@@ -326,27 +343,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
                 onChange={e => setIdNumber(e.target.value)}
                 placeholder="e.g. 9001015009087"
                 maxLength={13}
-                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Mobile Number */}
-          <div className="space-y-1.5 text-left">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-              Mobile Contact Number
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
-                <FiPhone size={18} />
-              </span>
-              <input
-                required
-                type="tel"
-                value={mobile}
-                onChange={e => setMobile(e.target.value)}
-                placeholder="e.g. 071 234 5678"
-                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
               />
             </div>
           </div>
@@ -395,17 +392,38 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
 };
 
 const PortalSelector = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
-      <h1 className="text-2xl font-normal text-gray-800 text-center mb-6">Select a Portal</h1>
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950 font-sans p-4">
+    <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-zinc-800 max-w-md w-full space-y-6">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/10 text-red-600 mb-2 border border-red-600/20">
+          <FiShield size={28} />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">RoyalSync Financial Hub</h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Select an operational portal to proceed</p>
+      </div>
+
       <div className="flex flex-col gap-3">
-        <Link to="/client" className="p-4 border border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 transition-colors text-center font-medium text-gray-700">Client Portal</Link>
-        <Link to="/admin" className="p-4 border border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 transition-colors text-center font-medium text-gray-700">Admin Portal</Link>
-        <Link to="/super-admin" className="p-4 border border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 transition-colors text-center font-medium text-gray-700">Super Admin Portal</Link>
-        <Link to="/partner" className="p-4 border border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 transition-colors text-center font-medium text-gray-700">Partner Portal</Link>
+        <Link to="/client" className="p-4 border border-gray-200 dark:border-zinc-750 rounded-2xl hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center justify-between">
+          <span>Client Portal</span>
+          <FiArrowRight className="text-red-600" />
+        </Link>
+        <Link to="/admin" className="p-4 border border-gray-200 dark:border-zinc-750 rounded-2xl hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center justify-between">
+          <span>Admin & Broker Portal</span>
+          <FiArrowRight className="text-red-600" />
+        </Link>
+        <Link to="/super-admin" className="p-4 border border-gray-200 dark:border-zinc-750 rounded-2xl hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center justify-between">
+          <span>Super Admin Operations</span>
+          <FiArrowRight className="text-red-600" />
+        </Link>
+        <Link to="/partner" className="p-4 border border-gray-200 dark:border-zinc-750 rounded-2xl hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center justify-between">
+          <span>Underwriting Partner Portal</span>
+          <FiArrowRight className="text-red-600" />
+        </Link>
       </div>
       {localStorage.getItem('royalsync_token') && (
-        <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full mt-6 text-sm text-gray-500 hover:text-gray-800 text-center">Logout</button>
+        <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full mt-4 text-xs font-semibold text-gray-400 hover:text-red-600 text-center transition-colors">
+          Logout Active Session
+        </button>
       )}
     </div>
   </div>

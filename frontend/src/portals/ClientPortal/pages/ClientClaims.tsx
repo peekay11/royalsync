@@ -342,10 +342,10 @@ export const ClientClaims = () => {
             isDocumentSubmitted={activeClaim.stage1_documentsSubmitted || false}
           />
 
-          {/* ── 10-STAGE DETAILED CARDS ACCORDION & WORKFLOW ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ── 10-STAGE DETAILED CARDS ACCORDION & WORKFLOW (2 EQUAL COLUMNS) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* ── LEFT COLUMN (Stages 1 to 5) ── */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6">
               {/* STAGE 1: INSURER CLAIM NUMBER & HANDLER */}
               <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6">
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3 mb-4">

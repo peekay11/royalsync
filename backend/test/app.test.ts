@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { createApp } from '../src/app';
 
-process.env.AUTH_SECRET = 'test-only-secret';
+import 'dotenv/config';
+
+process.env.AUTH_SECRET = process.env.AUTH_SECRET || 'test-only-secret';
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'file:./dev.db';
 const server = createApp().listen(0);
 let baseUrl = '';
 let token = '';

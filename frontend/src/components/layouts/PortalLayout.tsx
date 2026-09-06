@@ -5,6 +5,7 @@ import { FiSettings, FiBell, FiX, FiCheck, FiShield } from 'react-icons/fi';
 import { useApi } from '../../hooks/useApi';
 import { apiRequest } from '../../lib/api';
 import { LegalPrivacyModal } from '../legal/LegalPrivacyModal';
+import { RoyalSquareLogo } from '../RoyalSquareLogo';
 
 interface SidebarItem {
   name: string;
@@ -62,7 +63,8 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
     <div className="flex min-h-screen bg-white text-gray-800 font-sans">
       {/* Sidebar */}
       <aside className="w-64 border-r border-gray-200 flex flex-col bg-gray-50/50">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
+        <div className="h-16 flex items-center gap-2.5 px-6 border-b border-gray-200">
+          <RoyalSquareLogo size={28} />
           <span className="text-xl font-medium text-gray-700 tracking-tight">{title}</span>
         </div>
         <nav className="flex-1 py-4 flex flex-col gap-1 px-3">
