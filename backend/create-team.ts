@@ -7,14 +7,6 @@ async function main() {
   const tenant = await prisma.tenant.findFirst();
   if (!tenant) throw new Error("No tenant found");
 
-  let adminRole = await prisma.role.findUnique({ where: { name: 'SUPER_ADMIN' } });
-  if (!adminRole) {
-    adminRole = await prisma.role.create({ data: { name: 'SUPER_ADMIN' } });
-  }
-
-  const team = ['paseka', 'olive', 'bhekani', 'tshepiso'];
-  const details = [];
-
   for (const member of team) {
     const email = `${member}@royalsync.com`;
     const password = `${member}2026!`;
@@ -22,12 +14,14 @@ async function main() {
 
     const user = await prisma.user.upsert({
       where: { email },
-      update: { passwordHash: hash },
+      update: { passwordHash: hash, role: 'SUPER_ADMIN' },
       create: {
         email,
         passwordHash: hash,
-        tenantId: tenant.id,
-        roles: { create: { roleId: adminRole.id } }
+        role: 'SUPER_ADMIN',
+        firstName: member.charAt(0).toUpperCase() + member.slice(1),
+        lastName: 'Admin',
+        tenantId: tenant.id
       }
     });
     details.push({ email, password, role: 'SUPER_ADMIN' });

@@ -26,11 +26,28 @@ import type { AuthRequest } from './types/auth';
 
 export const createApp = () => {
   const app = express();
-  const allowedOrigins = (process.env.CORS_ORIGINS || '*').split(',').map(v => v.trim());
-  app.use(helmet());
-  app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500, standardHeaders: 'draft-7', legacyHeaders: false }));
-  app.use(cors({ origin: allowedOrigins }));
-  app.use(express.json({ limit: '2mb' }));
+
+  // ─── 1. CORS Preflight & Headers (Always First) ─────────────────────────
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-Bootstrap-Token');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    next();
+  });
+
+  app.use(helmet({ crossOriginResourcePolicy: false, crossOriginEmbedderPolicy: false }));
+  app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 2000, standardHeaders: 'draft-7', legacyHeaders: false }));
+  app.use(express.json({ limit: '10mb' }));
 
   const auth = new AuthController();
   const users = new UserController();
@@ -52,7 +69,7 @@ export const createApp = () => {
   const templates = new TemplateController();
 
   // ─── Health ───────────────────────────────────────────────────────────────
-  app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'royalsync-api', db: 'prisma-sqlite' }));
+  app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'royalsync-api', db: 'mongodb' }));
 
   // ─── Auth (public) ────────────────────────────────────────────────────────
   app.post('/api/auth/login', auth.login);

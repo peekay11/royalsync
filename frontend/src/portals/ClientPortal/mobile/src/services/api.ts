@@ -5,16 +5,20 @@ import { Platform } from 'react-native';
 const DEFAULT_ONLINE_API = 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
 const LOCAL_API_ENDPOINTS = [
   'http://localhost:5000/api',
+  'http://172.20.7.102:5000/api',
   'http://10.0.2.2:5000/api', // Android emulator localhost alias
   'http://127.0.0.1:5000/api',
-  'http://localhost:8787/api',
-  'http://127.0.0.1:8787/api'
 ];
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_ONLINE_API;
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || (
+  Platform.OS === 'web'
+    ? 'http://localhost:5000/api'
+    : 'http://172.20.7.102:5000/api'
+);
 
 const API_CANDIDATES = [
   API_BASE_URL,
+  ...(Platform.OS === 'android' ? ['http://10.0.2.2:5000/api', 'http://172.20.7.102:5000/api'] : []),
   ...LOCAL_API_ENDPOINTS.filter(url => url !== API_BASE_URL)
 ];
 
