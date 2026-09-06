@@ -489,7 +489,7 @@ export const ClientTasks = () => {
                   required
                   value={addressForm.city}
                   onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 />
               </div>
               <div>
@@ -499,7 +499,7 @@ export const ClientTasks = () => {
                   required
                   value={addressForm.postalCode}
                   onChange={e => setAddressForm({ ...addressForm, postalCode: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 />
               </div>
             </div>
@@ -691,7 +691,7 @@ export const ClientTasks = () => {
                   required
                   value={borderForm.departureDate}
                   onChange={e => setBorderForm({ ...borderForm, departureDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 />
               </div>
               <div>
@@ -701,7 +701,7 @@ export const ClientTasks = () => {
                   required
                   value={borderForm.returnDate}
                   onChange={e => setBorderForm({ ...borderForm, returnDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 />
               </div>
             </div>
@@ -751,7 +751,7 @@ export const ClientTasks = () => {
                 <select
                   value={irp5Form.taxYear}
                   onChange={e => setIrp5Form({ ...irp5Form, taxYear: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 >
                   <option value="2026">2026 Tax Year</option>
                   <option value="2025">2025 Tax Year</option>
@@ -763,7 +763,7 @@ export const ClientTasks = () => {
                 <select
                   value={irp5Form.certificateType}
                   onChange={e => setIrp5Form({ ...irp5Form, certificateType: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 >
                   <option value="IT3(a) / IRP5 Tax Certificate">IT3(a) Annuity / Lump Sum</option>
                   <option value="IT3(b) Interest & Dividend Income">IT3(b) Interest & Dividends</option>
@@ -820,7 +820,7 @@ export const ClientTasks = () => {
                   required
                   value={consultForm.preferredDate}
                   onChange={e => setConsultForm({ ...consultForm, preferredDate: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 />
               </div>
               <div>
@@ -828,7 +828,7 @@ export const ClientTasks = () => {
                 <select
                   value={consultForm.preferredTime}
                   onChange={e => setConsultForm({ ...consultForm, preferredTime: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-xs shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all"
                 >
                   <option value="09:00 AM">09:00 AM</option>
                   <option value="10:30 AM">10:30 AM</option>

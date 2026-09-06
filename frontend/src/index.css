@@ -12,3 +12,79 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── GLOBAL PREMIUM FORM INPUT DESIGN SYSTEM ── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
+  transition: all 0.15s ease-in-out;
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18) !important;
+  outline: none !important;
+}
+
+/* Reusable form input utility classes */
+.rs-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  border-width: 1px;
+  border-color: #e5e7eb;
+  background-color: #ffffff;
+  color: #111827;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease-in-out;
+}
+
+.dark .rs-input {
+  border-color: #374151;
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.rs-input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+  outline: none;
+}
+
+.rs-input::placeholder {
+  color: #9ca3af;
+}
+
+.dark .rs-input::placeholder {
+  color: #6b7280;
+}
+
+.rs-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  color: #4b5563;
+  margin-bottom: 0.375rem;
+}
+
+.dark .rs-label {
+  color: #d1d5db;
+}

@@ -624,7 +624,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.physicalAddress}
                     onChange={e => setForm({ ...form, physicalAddress: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. Unit 4, Sandton Crest, 12 Rivonia Road, Morningside"
                   />
                 </div>
@@ -637,7 +637,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.city}
                     onChange={e => setForm({ ...form, city: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. Sandton"
                   />
                 </div>
@@ -649,7 +649,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.province}
                     onChange={e => setForm({ ...form, province: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     {SA_PROVINCES.map(prov => (
                       <option key={prov} value={prov}>
@@ -667,7 +667,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.postalCode}
                     onChange={e => setForm({ ...form, postalCode: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. 2196"
                   />
                 </div>
@@ -695,7 +695,7 @@ export const ClientProfile = () => {
                       type="text"
                       value={form.postalAddress}
                       onChange={e => setForm({ ...form, postalAddress: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       placeholder="e.g. P.O. Box 7812, Sandton, 2146"
                     />
                   </div>
@@ -728,7 +728,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.bankName}
                     onChange={e => handleBankChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     {SA_BANKS.map(bank => (
                       <option key={bank.name} value={bank.name}>
@@ -746,7 +746,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.accountHolderName}
                     onChange={e => setForm({ ...form, accountHolderName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. S Dlamini"
                   />
                 </div>
@@ -771,7 +771,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.accountType}
                     onChange={e => setForm({ ...form, accountType: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     <option value="Cheque / Current">Cheque / Current</option>
                     <option value="Savings Account">Savings Account</option>
@@ -813,7 +813,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.emergencyContactName}
                     onChange={e => setForm({ ...form, emergencyContactName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. Nomvula Dlamini"
                   />
                 </div>
@@ -825,7 +825,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.emergencyContactRelationship}
                     onChange={e => setForm({ ...form, emergencyContactRelationship: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     <option value="Spouse">Spouse / Partner</option>
                     <option value="Parent">Parent</option>
@@ -844,7 +844,7 @@ export const ClientProfile = () => {
                     type="tel"
                     value={form.emergencyContactPhone}
                     onChange={e => setForm({ ...form, emergencyContactPhone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. 083 987 6543"
                   />
                 </div>
@@ -857,7 +857,7 @@ export const ClientProfile = () => {
                     type="email"
                     value={form.emergencyContactEmail}
                     onChange={e => setForm({ ...form, emergencyContactEmail: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. nomvula@gmail.com"
                   />
                 </div>
@@ -882,7 +882,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.employmentStatus}
                     onChange={e => setForm({ ...form, employmentStatus: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     <option value="Employed">Employed (Full-time)</option>
                     <option value="Self-Employed">Self-Employed / Business Owner</option>
@@ -900,7 +900,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.employer}
                     onChange={e => setForm({ ...form, employer: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. Standard Bank Corporate"
                   />
                 </div>
@@ -913,7 +913,7 @@ export const ClientProfile = () => {
                     type="text"
                     value={form.occupation}
                     onChange={e => setForm({ ...form, occupation: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     placeholder="e.g. Senior Software Architect"
                   />
                 </div>
@@ -925,7 +925,7 @@ export const ClientProfile = () => {
                   <select
                     value={form.monthlyIncome}
                     onChange={e => setForm({ ...form, monthlyIncome: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   >
                     <option value="Under R 25,000">Under R 25,000</option>
                     <option value="R 25,000 - R 45,000">R 25,000 - R 45,000</option>

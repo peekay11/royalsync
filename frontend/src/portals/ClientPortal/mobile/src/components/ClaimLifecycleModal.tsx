@@ -654,11 +654,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 12,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontWeight: '500',
   },
   submitBtn: {
     paddingVertical: 10,
