@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { AppStage, Screen, AppNotification } from './src/types';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
@@ -25,6 +25,30 @@ function MainApp() {
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
   const [activePush, setActivePush] = useState<AppNotification | null>(null);
   const [notifModalVisible, setNotifModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const styleId = 'rnw-input-reset';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          input, textarea {
+            outline: none !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+          }
+          input:focus, textarea:focus {
+            outline: none !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
 
   React.useEffect(() => {
     if (stage === 'app') {

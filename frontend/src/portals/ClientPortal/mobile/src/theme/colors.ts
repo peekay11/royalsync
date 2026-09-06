@@ -53,10 +53,10 @@ export const DARK_COLORS: ThemeColors = {
   primaryDark: '#B81B14',
   primaryLight: '#EA3B33',
   primaryAlpha: 'rgba(217, 40, 32, 0.14)',
-  primaryBorder: 'transparent',
+  primaryBorder: '#D92820',
 
   hoverBackground: 'rgba(217, 40, 32, 0.12)',
-  hoverBorder: 'transparent',
+  hoverBorder: '#D92820',
   hoverAlpha: 'rgba(217, 40, 32, 0.15)',
 
   royalPurple: '#8E28A0', // King Price Royal Purple (accent)
@@ -78,8 +78,8 @@ export const DARK_COLORS: ThemeColors = {
   white: '#ffffff',
   black: '#000000',
   divider: '#2A242C',
-  inputBackground: '#221e24',
-  inputBorder: 'transparent',
+  inputBackground: '#1e1a20',
+  inputBorder: '#332b38',
 };
 
 export const LIGHT_COLORS: ThemeColors = {
@@ -94,10 +94,10 @@ export const LIGHT_COLORS: ThemeColors = {
   primaryDark: '#B81B14',
   primaryLight: '#EA3B33',
   primaryAlpha: 'rgba(217, 40, 32, 0.08)',
-  primaryBorder: 'transparent',
+  primaryBorder: '#D92820',
 
   hoverBackground: 'rgba(217, 40, 32, 0.06)',
-  hoverBorder: 'transparent',
+  hoverBorder: '#D92820',
   hoverAlpha: 'rgba(217, 40, 32, 0.10)',
 
   royalPurple: '#651D71', // King Price Royal Purple
@@ -119,8 +119,8 @@ export const LIGHT_COLORS: ThemeColors = {
   white: '#ffffff',
   black: '#000000',
   divider: '#EEEEF0',
-  inputBackground: '#F4F5F8',
-  inputBorder: 'transparent',
+  inputBackground: '#F8FAFC',
+  inputBorder: '#E2E8F0',
 };
 
 // Default export fallback for backward compatibility

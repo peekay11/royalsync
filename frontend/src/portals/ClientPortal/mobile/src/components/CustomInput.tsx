@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { FormViewIcon, HideIcon } from './GrommetIcons';
 
@@ -26,7 +26,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   maxLength,
   icon,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,14 +37,30 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         style={[
           styles.inputWrapper,
           {
-            backgroundColor: 'transparent',
-            borderColor: focused ? colors.hoverBorder : colors.inputBorder,
+            backgroundColor: colors.inputBackground || (isDark ? '#1e1a20' : '#F8FAFC'),
+            borderColor: focused ? colors.primary : colors.inputBorder || (isDark ? '#332b38' : '#E2E8F0'),
+            borderWidth: 1.5,
           },
         ]}
       >
         {icon ? <View style={styles.iconContainer}>{icon}</View> : null}
         <TextInput
-          style={[styles.input, { backgroundColor: 'transparent', color: colors.text }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: 'transparent',
+              color: colors.text,
+              ...(Platform.OS === 'web'
+                ? ({
+                    outlineWidth: 0,
+                    outlineStyle: 'none',
+                    outlineColor: 'transparent',
+                    borderWidth: 0,
+                    boxShadow: 'none',
+                  } as any)
+                : {}),
+            },
+          ]}
           placeholder={placeholder}
           placeholderTextColor={colors.textSecondary}
           value={value}
@@ -75,10 +91,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1.1,
@@ -87,10 +103,9 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 14,
-    height: 48,
+    height: 50,
   },
   iconContainer: {
     marginRight: 10,
@@ -100,6 +115,10 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
+    height: '100%',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    borderWidth: 0,
   },
   eyeButton: {
     padding: 6,
