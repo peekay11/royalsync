@@ -67,15 +67,11 @@ export const ClientDocuments = () => {
   };
 
   const getExpiryDetails = (doc: any) => {
-    if (!doc.expiryDate && !doc.created_at) return { status: 'valid', label: 'Permanent', days: 9999 };
-
-    let targetDate = doc.expiryDate ? new Date(doc.expiryDate) : new Date(doc.created_at);
     if (!doc.expiryDate) {
-      const cat = (doc.category || '').toLowerCase();
-      const months = cat.includes('address') || cat.includes('bank') ? 3 : 12;
-      targetDate = new Date(targetDate.getTime() + months * 30 * 24 * 60 * 60 * 1000);
+      return { status: 'valid', label: 'Active', days: 9999, dateString: 'No Expiry' };
     }
 
+    const targetDate = new Date(doc.expiryDate);
     const now = Date.now();
     const diffDays = Math.ceil((targetDate.getTime() - now) / (1000 * 60 * 60 * 24));
 
@@ -85,7 +81,7 @@ export const ClientDocuments = () => {
     if (diffDays <= 30) {
       return { status: 'expiring_soon', label: `Expires in ${diffDays}d`, days: diffDays, dateString: targetDate.toLocaleDateString() };
     }
-    return { status: 'valid', label: `Valid (${diffDays}d left)`, days: diffDays, dateString: targetDate.toLocaleDateString() };
+    return { status: 'valid', label: `Valid until ${targetDate.toLocaleDateString()}`, days: diffDays, dateString: targetDate.toLocaleDateString() };
   };
 
   // Step 1: Trigger Document Scan when file is selected
@@ -227,7 +223,7 @@ export const ClientDocuments = () => {
         </div>
       </div>
 
-      {/* Automated Expiry Warnings Alert Banner */}
+      {/* Expiry Warnings Alert Banner (for documents with explicit user/insurer expiry dates) */}
       {expiringOrExpiredDocs.length > 0 && (
         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5 shadow-sm space-y-3">
           <div className="flex items-start gap-3">
@@ -239,7 +235,7 @@ export const ClientDocuments = () => {
                 Action Required: {expiringOrExpiredDocs.length} Document{expiringOrExpiredDocs.length > 1 ? 's' : ''} Expiring or Expired
               </h3>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                Automated compliance monitoring detected expiring documents. Upload an updated copy to prevent disruption to your policy coverage.
+                One or more documents with fixed expiration dates require your attention. Upload an updated copy to keep your records current.
               </p>
             </div>
           </div>

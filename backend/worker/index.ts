@@ -54,7 +54,7 @@ const sign = async (value: string, secret: string) => {
 
 const createToken = async (user: User, secret: string) => {
   const header = json({ alg: 'HS256', typ: 'JWT' });
-  const payload = json({ ...user, exp: Math.floor(Date.now() / 1000) + 28_800 });
+  const payload = json({ ...user, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 });
   const input = `${header}.${payload}`;
   return `${input}.${await sign(input, secret)}`;
 };
@@ -64,7 +64,7 @@ const readToken = async (token: string, secret: string): Promise<User | null> =>
   if (!header || !payload || !signature) return null;
   if (signature !== await sign(`${header}.${payload}`, secret)) return null;
   const parsed = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payload))) as User & { exp?: number };
-  if (!parsed.exp || parsed.exp < Math.floor(Date.now() / 1000)) return null;
+  if (parsed.exp && parsed.exp < Math.floor(Date.now() / 1000)) return null;
   return { id: parsed.id, email: parsed.email, role: parsed.role, tenantId: parsed.tenantId, clientId: parsed.clientId };
 };
 

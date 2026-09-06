@@ -33,7 +33,7 @@ export async function login(c: Context<AppEnv>) {
       permissions: permissions.map(p => `${p.resource}:${p.action}`)
     },
     JWT_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '365d' }
   );
 
   return c.json({ token, user: { id: user.id, email: user.email, roles: roleNames } });

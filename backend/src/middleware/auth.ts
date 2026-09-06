@@ -24,7 +24,7 @@ export const verifyPassword = (password: string, stored: string) => {
 
 export const createToken = (user: AuthUser) => {
   const header = encode({ alg: 'HS256', typ: 'JWT' });
-  const payload = encode({ ...user, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8 });
+  const payload = encode({ ...user, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 });
   const input = `${header}.${payload}`;
   const signature = crypto.createHmac('sha256', secret()).update(input).digest('base64url');
   return `${input}.${signature}`;
@@ -37,7 +37,7 @@ const readToken = (token: string): AuthUser | null => {
   const expected = crypto.createHmac('sha256', secret()).update(input).digest('base64url');
   if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
   const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString()) as AuthUser & { exp?: number };
-  if (!decoded.exp || decoded.exp < Math.floor(Date.now() / 1000)) return null;
+  if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) return null;
   return { id: decoded.id, email: decoded.email, role: decoded.role, clientId: decoded.clientId };
 };
 
