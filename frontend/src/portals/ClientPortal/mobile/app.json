@@ -16,10 +16,16 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.royalsquare.financial",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#111111"
-      }
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./assets/logo.png"
