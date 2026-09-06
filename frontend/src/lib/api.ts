@@ -6,7 +6,20 @@ const LOCAL_API_ENDPOINTS = [
   'http://127.0.0.1:8787/api'
 ];
 
-const CONFIGURED_API = import.meta.env.VITE_API_BASE_URL || DEFAULT_ONLINE_API;
+const rawApiUrl = import.meta.env.VITE_API_BASE_URL;
+const formatApiUrl = (url?: string): string => {
+  if (!url) return DEFAULT_ONLINE_API;
+  let formatted = url.trim();
+  if (!/^https?:\/\//i.test(formatted)) {
+    formatted = `https://${formatted}`;
+  }
+  if (!formatted.endsWith('/api') && !formatted.includes('/api/')) {
+    formatted = formatted.replace(/\/+$/, '') + '/api';
+  }
+  return formatted;
+};
+
+const CONFIGURED_API = formatApiUrl(rawApiUrl);
 
 // Priority list: First try configured API, then local endpoints as fallbacks
 const API_CANDIDATES: string[] = [

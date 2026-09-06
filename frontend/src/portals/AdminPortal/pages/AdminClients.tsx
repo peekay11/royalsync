@@ -7,7 +7,7 @@ import {
   FiCheckCircle, FiClock, FiX, FiDownload, FiUpload, FiSend,
   FiEdit3, FiRefreshCw, FiCreditCard
 } from 'react-icons/fi';
-import { apiRequest } from '../../../lib/api';
+import { apiRequest, getActiveApiBase } from '../../../lib/api';
 import { CompanyLogo } from '../../../components/CompanyLogo';
 
 interface ClientItem {
@@ -404,7 +404,7 @@ export const AdminClients = () => {
       formData.append('clientId', clientDetail.id);
 
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/documents/upload', {
+      const res = await fetch(`${getActiveApiBase()}/documents/upload`, {
         method: 'POST',
         headers: {
           Authorization: token ? `Bearer ${token}` : ''
@@ -1219,7 +1219,7 @@ export const AdminClients = () => {
                                   {doc.status}
                                 </span>
                                 <a
-                                  href={`http://localhost:5000/api/documents/${doc.id}/download`}
+                                  href={`${getActiveApiBase()}/documents/${doc.id}/download`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
