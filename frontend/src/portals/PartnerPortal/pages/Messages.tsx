@@ -198,8 +198,8 @@ export const PartnerMessages = () => {
   };
 
   const filteredChannels = channels.filter(c => 
-    c.name.toLowerCase().includes(searchChannel.toLowerCase()) ||
-    c.role.toLowerCase().includes(searchChannel.toLowerCase())
+    (c.name || '').toLowerCase().includes((searchChannel || '').toLowerCase()) ||
+    (c.role || '').toLowerCase().includes((searchChannel || '').toLowerCase())
   );
 
   return (

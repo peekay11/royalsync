@@ -143,15 +143,21 @@ export const AdminTemplates = () => {
     const combined = [...DEFAULT_TEMPLATES];
     if (apiTemplates && Array.isArray(apiTemplates)) {
       apiTemplates.forEach(t => {
-        if (!combined.some(c => c.id === t.id || c.title === t.title)) {
-          combined.push(t);
+        if (!combined.some(c => c.id === t.id || c.title === (t.title || (t as any).name))) {
+          combined.push({
+            ...t,
+            title: t.title || (t as any).name || 'Template',
+            category: t.category || 'General',
+            content: t.content || '',
+          });
         }
       });
     }
+    const q = (searchQuery || '').toLowerCase().trim();
     return combined.filter(
       t =>
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.title || '').toLowerCase().includes(q) ||
+        (t.category || '').toLowerCase().includes(q)
     );
   }, [apiTemplates, searchQuery]);
 

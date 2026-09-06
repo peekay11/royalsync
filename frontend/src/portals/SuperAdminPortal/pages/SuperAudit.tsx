@@ -33,15 +33,18 @@ export const SuperAudit = () => {
 
   const logs = useMemo(() => {
     const list = Array.isArray(rawLogs) ? rawLogs : [];
+    const q = (searchQuery || '').toLowerCase().trim();
+    const selAction = (selectedAction || 'all').toLowerCase();
     return list.filter(item => {
-      const matchesAction = selectedAction === 'all' || item.action.toLowerCase() === selectedAction.toLowerCase();
+      const itemAction = (item.action || '').toLowerCase();
+      const matchesAction = selAction === 'all' || itemAction === selAction;
       const matchesRole = selectedRole === 'all' || item.actor_role === selectedRole;
       const matchesSearch =
-        (item.actor_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.action || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.resource_type || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.resource_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.ip || '').toLowerCase().includes(searchQuery.toLowerCase());
+        (item.actor_id || '').toLowerCase().includes(q) ||
+        itemAction.includes(q) ||
+        (item.resource_type || '').toLowerCase().includes(q) ||
+        (item.resource_id || '').toLowerCase().includes(q) ||
+        (item.ip || '').toLowerCase().includes(q);
       return matchesAction && matchesRole && matchesSearch;
     });
   }, [rawLogs, searchQuery, selectedAction, selectedRole]);

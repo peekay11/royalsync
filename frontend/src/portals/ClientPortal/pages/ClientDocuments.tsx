@@ -170,13 +170,14 @@ export const ClientDocuments = () => {
   }, [documents]);
 
   const filteredDocs = useMemo(() => {
+    const q = (searchQuery || '').toLowerCase().trim();
     return (documents || []).filter(doc => {
       const matchesCategory = selectedCategory === 'All' || (doc.category || 'General') === selectedCategory;
       const matchesSearch =
-        !searchQuery.trim() ||
-        doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.type?.toLowerCase().includes(searchQuery.toLowerCase());
+        !q ||
+        (doc.name || '').toLowerCase().includes(q) ||
+        (doc.category || '').toLowerCase().includes(q) ||
+        (doc.type || '').toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
   }, [documents, selectedCategory, searchQuery]);
