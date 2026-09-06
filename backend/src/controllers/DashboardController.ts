@@ -62,12 +62,29 @@ export class DashboardController extends BaseController {
     const totalPaid = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
     const totalGoalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
     const totalGoalCurrent = goals.reduce((s, g) => s + g.currentAmount, 0);
+    const goalsPercentage = totalGoalTarget ? Math.round((totalGoalCurrent / totalGoalTarget) * 100) : 0;
+
+    const premiumByTypeMap: Record<string, number> = {};
+    for (const p of policies) {
+      const t = p.type || 'General';
+      premiumByTypeMap[t] = (premiumByTypeMap[t] || 0) + p.premium;
+    }
+    const premiumByType = Object.entries(premiumByTypeMap).map(([name, value]) => ({ name, value }));
 
     return this.sendSuccess(res, {
+      activePolicyCount: policies.length,
       activePolicies: policies.length,
+      monthlyPremium: totalPremium,
       totalMonthlyPremium: totalPremium,
+      openClaims: claims.filter(c => !['settled', 'closed', 'rejected'].includes(c.status)).length,
       activeClaims: claims.filter(c => !['settled', 'closed', 'rejected'].includes(c.status)).length,
-      goalsProgress: totalGoalTarget ? Math.round((totalGoalCurrent / totalGoalTarget) * 100) : 0,
+      goals: {
+        target: totalGoalTarget,
+        current: totalGoalCurrent,
+        percentage: goalsPercentage
+      },
+      goalsProgress: goalsPercentage,
+      premiumByType,
       totalPaid,
       recentClaims: claims,
       policies: policies.map(p => ({

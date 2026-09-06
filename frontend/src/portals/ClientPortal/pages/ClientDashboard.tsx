@@ -288,7 +288,7 @@ export const ClientDashboard = () => {
             </div>
           </div>
           <div className="text-3xl font-extrabold text-gray-900 dark:text-white mt-2">
-            {data?.goals.percentage || profile?.goalCompletionRate || 68}%
+            {data?.goals?.percentage ?? profile?.goalCompletionRate ?? 68}%
           </div>
           <p className="text-[11px] text-gray-400 mt-1">Retirement milestone tracking</p>
         </div>
@@ -299,7 +299,7 @@ export const ClientDashboard = () => {
         <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 bg-white dark:bg-gray-800 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Monthly Premium by Cover Type</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Distribution of monthly insurance & investment premiums.</p>
-          {data?.premiumByType.length ? (
+          {data?.premiumByType?.length ? (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.premiumByType}>
