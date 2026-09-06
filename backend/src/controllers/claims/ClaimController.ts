@@ -15,16 +15,20 @@ export class ClaimController extends BaseController {
       orderBy: { createdAt: 'desc' },
       include: {
         client: { select: { firstName: true, lastName: true, mobile: true, email: true } },
-        policy: { select: { policyNumber: true, type: true, premium: true } },
+        policy: { include: { insurer: true } },
         claimNotes: { orderBy: { createdAt: 'asc' }, include: { claim: false } }
       }
     });
 
     const result = claims.map(c => ({
       ...c,
+      client: c.client ? `${c.client.firstName} ${c.client.lastName}` : 'Unknown',
       clientName: c.client ? `${c.client.firstName} ${c.client.lastName}` : 'Unknown',
       clientMobile: c.client?.mobile ?? '',
       clientEmail: c.client?.email ?? '',
+      insurer: c.policy?.insurer?.name || 'Santam',
+      insurerName: c.policy?.insurer?.name || 'Santam',
+      insurerDomain: c.policy?.insurer?.domain || 'santam.co.za',
       policyNumber: c.policy?.policyNumber ?? '',
       policyType: c.policy?.type ?? '',
       policyPremium: c.policy?.premium ?? 0

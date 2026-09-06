@@ -21,7 +21,7 @@ const DOMAIN_MAP: Record<string, string> = {
 };
 
 interface CompanyLogoProps {
-  name: string;
+  name?: string;
   domain?: string;
   size?: number;
   style?: StyleProp<ImageStyle>;
@@ -29,7 +29,7 @@ interface CompanyLogoProps {
 }
 
 export const CompanyLogo: React.FC<CompanyLogoProps> = ({
-  name,
+  name = 'Royal Square',
   domain,
   size = 36,
   style,
@@ -38,18 +38,21 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   const { colors, isDark } = useTheme();
   const [hasError, setHasError] = useState(false);
 
+  const safeName = (name && typeof name === 'string' && name.trim()) ? name.trim() : 'Royal Square';
+
   // Determine lookup path: domain or name
-  const targetDomain = domain || DOMAIN_MAP[name];
+  const targetDomain = domain || DOMAIN_MAP[safeName];
   const url = targetDomain
     ? `https://img.logo.dev/${encodeURIComponent(targetDomain)}?token=${LOGODEV_TOKEN}&format=png&retina=true&theme=${isDark ? 'dark' : 'light'}`
-    : `https://img.logo.dev/name/${encodeURIComponent(name)}?token=${LOGODEV_TOKEN}&format=png&retina=true&theme=${isDark ? 'dark' : 'light'}`;
+    : `https://img.logo.dev/name/${encodeURIComponent(safeName)}?token=${LOGODEV_TOKEN}&format=png&retina=true&theme=${isDark ? 'dark' : 'light'}`;
 
-  const monogram = name
+  const monogram = safeName
     .split(' ')
+    .filter(Boolean)
     .map(w => w[0])
     .join('')
     .substring(0, 2)
-    .toUpperCase();
+    .toUpperCase() || 'RS';
 
   const borderRadius = rounded ? size / 2 : 8;
 
