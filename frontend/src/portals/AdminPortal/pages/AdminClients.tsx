@@ -704,11 +704,11 @@ export const AdminClients = () => {
 
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-700">
-                          <span className="px-2 py-0.5 bg-gray-100 rounded-md" title="Policies">
-                            🛡️ {client._count?.policies ?? 0}
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-md flex items-center gap-1" title="Policies">
+                            <FiShield className="text-gray-500 text-xs" /> {client._count?.policies ?? 0}
                           </span>
-                          <span className="px-2 py-0.5 bg-gray-100 rounded-md" title="Claims">
-                            ⚡ {client._count?.claims ?? 0}
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-md flex items-center gap-1" title="Claims">
+                            <FiFileText className="text-gray-500 text-xs" /> {client._count?.claims ?? 0}
                           </span>
                         </div>
                       </td>

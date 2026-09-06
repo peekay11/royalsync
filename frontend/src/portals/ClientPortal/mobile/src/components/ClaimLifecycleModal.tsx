@@ -464,7 +464,7 @@ export const ClaimLifecycleModal: React.FC<ClaimLifecycleModalProps> = ({
                   style={[styles.closeClaimBtn, { backgroundColor: colors.success }]}
                   onPress={() => setActiveForm('review')}
                 >
-                  <Text style={styles.closeClaimBtnText}>★ Write Review & Close Claim</Text>
+                  <Text style={styles.closeClaimBtnText}>Write Review & Close Claim</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.inlineForm}>

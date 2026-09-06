@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 import { 
   FiShield, FiPlus, FiSearch, FiFilter, FiDollarSign, 
   FiCheckCircle, FiFileText, FiX, FiRefreshCw, FiClock,
-  FiChevronRight, FiInfo
+  FiChevronRight, FiInfo, FiTruck, FiHeart, FiHome,
+  FiActivity, FiUsers, FiTrendingUp, FiSmartphone
 } from 'react-icons/fi';
 import { useApi } from '../../../hooks/useApi';
 import { apiRequest } from '../../../lib/api';
@@ -13,7 +14,7 @@ import { CompanyLogo } from '../../../components/CompanyLogo';
 const COVER_CATEGORIES = [
   {
     type: 'Comprehensive Motor Vehicle',
-    icon: '🚗',
+    iconType: 'motor',
     desc: 'Full accidental, theft, third-party and roadside assistance cover.',
     defaultSum: '350000',
     estPremium: '1450',
@@ -21,7 +22,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Life Cover & Dread Disease',
-    icon: '❤️',
+    iconType: 'life',
     desc: 'Lump-sum payout for loved ones and critical illness protection.',
     defaultSum: '3000000',
     estPremium: '1850',
@@ -29,7 +30,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Building & Home Contents Cover',
-    icon: '🏠',
+    iconType: 'home',
     desc: 'Protection against fire, burst geysers, flood, storm damage and theft.',
     defaultSum: '1500000',
     estPremium: '980',
@@ -37,7 +38,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Medical Aid & Gap Cover',
-    icon: '🏥',
+    iconType: 'medical',
     desc: 'Hospitalisation tariff shortfalls, specialist co-payments and oncology.',
     defaultSum: '1000000',
     estPremium: '2400',
@@ -45,7 +46,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Family Funeral Plan',
-    icon: '🕊️',
+    iconType: 'funeral',
     desc: 'Guaranteed 24-48h burial payout with cash repatriation and tombstone benefits.',
     defaultSum: '80000',
     estPremium: '380',
@@ -53,7 +54,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Retirement Annuity & Wealth Builder',
-    icon: '📈',
+    iconType: 'retirement',
     desc: 'Tax-efficient investment with offshore & multi-asset market exposure.',
     defaultSum: '500000',
     estPremium: '2000',
@@ -61,7 +62,7 @@ const COVER_CATEGORIES = [
   },
   {
     type: 'Personal Valuables & All-Risk',
-    icon: '📱',
+    iconType: 'valuables',
     desc: 'Worldwide portable protection for laptops, cell phones, watches and jewellery.',
     defaultSum: '75000',
     estPremium: '290',
@@ -149,6 +150,27 @@ export const ClientInsurance = () => {
   const totalPolicies = policies?.length || 0;
   const totalMonthlyPremium = policies?.reduce((sum, p) => sum + (p.premium || 0), 0) || 0;
   const totalSumAssured = policies?.reduce((sum, p) => sum + (p.sumAssured || 0), 0) || 0;
+
+  const renderCategoryIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'motor':
+        return <FiTruck className="text-[#d92820] text-base" />;
+      case 'life':
+        return <FiHeart className="text-[#d92820] text-base" />;
+      case 'home':
+        return <FiHome className="text-[#d92820] text-base" />;
+      case 'medical':
+        return <FiActivity className="text-[#d92820] text-base" />;
+      case 'funeral':
+        return <FiUsers className="text-[#d92820] text-base" />;
+      case 'retirement':
+        return <FiTrendingUp className="text-[#d92820] text-base" />;
+      case 'valuables':
+        return <FiSmartphone className="text-[#d92820] text-base" />;
+      default:
+        return <FiShield className="text-[#d92820] text-base" />;
+    }
+  };
 
   if (loading) {
     return (
@@ -412,7 +434,9 @@ export const ClientInsurance = () => {
                         }`}
                       >
                         <div className="flex items-center gap-2.5 mb-1">
-                          <span className="text-xl">{cat.icon}</span>
+                          <span className="p-1 rounded-md bg-red-50 text-[#d92820] flex items-center justify-center">
+                            {renderCategoryIcon(cat.iconType)}
+                          </span>
                           <span className="font-bold text-gray-900 text-xs">{cat.type}</span>
                         </div>
                         <p className="text-[11px] text-gray-500 line-clamp-2">{cat.desc}</p>
