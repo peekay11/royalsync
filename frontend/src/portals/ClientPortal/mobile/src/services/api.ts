@@ -253,6 +253,43 @@ export const ApiService = {
       });
     } catch {}
   },
+
+  async getServiceRequests(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/service-requests`, { headers: await getHeaders() });
+      if (!res.ok) throw new Error('Failed to fetch service requests');
+      return unwrap(await res.json());
+    } catch {
+      return [];
+    }
+  },
+
+  async createServiceRequest(payload: any): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/service-requests`, {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to submit service request');
+      }
+      return unwrap(await res.json());
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async getFinancialStatement(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/service-requests/financial-statement`, { headers: await getHeaders() });
+      if (!res.ok) throw new Error('Failed to fetch financial statement');
+      return unwrap(await res.json());
+    } catch {
+      return null;
+    }
+  },
 };
 
 export const api = ApiService;

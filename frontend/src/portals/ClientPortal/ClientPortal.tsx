@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { 
   FiHome, FiShield, FiFileText, FiTarget, 
   FiFolder, FiDollarSign, FiMessageCircle, 
-  FiUser, FiSettings 
+  FiUser, FiSettings, FiCheckSquare 
 } from 'react-icons/fi';
 import { PortalLayout } from '../../components/layouts/PortalLayout';
 import { ClientDashboard } from './pages/ClientDashboard';
@@ -10,6 +10,7 @@ import { ClientInsurance } from './pages/ClientInsurance';
 import { ClientClaims } from './pages/ClientClaims';
 import { ClientGoals } from './pages/ClientGoals';
 import { ClientDocuments } from './pages/ClientDocuments';
+import { ClientTasks } from './pages/ClientTasks';
 import { ClientPayments } from './pages/ClientPayments';
 import { ClientAiInsights } from './pages/ClientAiInsights';
 import { ClientProfile } from './pages/ClientProfile';
@@ -18,6 +19,7 @@ import { ClientSettings } from './pages/ClientSettings';
 export const ClientPortal = () => {
   const links = [
     { name: 'Dashboard', path: '/client', icon: <FiHome /> },
+    { name: 'Tasks & Requests', path: '/client/tasks', icon: <FiCheckSquare /> },
     { name: 'Insurance', path: '/client/insurance', icon: <FiShield /> },
     { name: 'Claims', path: '/client/claims', icon: <FiFileText /> },
     { name: 'Goals', path: '/client/goals', icon: <FiTarget /> },
@@ -32,6 +34,7 @@ export const ClientPortal = () => {
     <PortalLayout title="Client Portal" links={links}>
       <Routes>
         <Route path="/" element={<ClientDashboard />} />
+        <Route path="/tasks" element={<ClientTasks />} />
         <Route path="/insurance" element={<ClientInsurance />} />
         <Route path="/claims" element={<ClientClaims />} />
         <Route path="/goals" element={<ClientGoals />} />

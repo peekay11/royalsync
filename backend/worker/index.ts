@@ -498,6 +498,162 @@ app.put('/api/workflow/tasks/:id/toggle', async c => {
   return c.json({ success: true, message: 'Task updated', data: updated });
 });
 genericPost('/api/workflow/tasks', 'tasks', ['SUPER_ADMIN', 'ADMIN', 'ADVISER']);
+
+app.get('/api/service-requests', async c => {
+  const user = c.get('user');
+  const list = await listRecords(c.env, 'service_requests', user, new URL(c.req.url));
+  return c.json({ success: true, message: 'Service requests retrieved', data: list });
+});
+
+app.get('/api/service-requests/financial-statement', async c => {
+  const user = c.get('user');
+  if (!user.clientId) return c.json({ success: false, error: 'Client account required' }, 403);
+  const rec = await c.env.DB.prepare('SELECT id, data, created_at, updated_at FROM records WHERE collection = ? AND client_id = ? ORDER BY created_at DESC LIMIT 1')
+    .bind('client_financial_statements', user.clientId).first<{ id: string; data: string; created_at: string; updated_at: string }>();
+  if (!rec) return c.json({ success: true, data: null });
+  return c.json({ success: true, data: { id: rec.id, ...JSON.parse(rec.data), created_at: rec.created_at, updated_at: rec.updated_at } });
+});
+
+app.post('/api/service-requests', async c => {
+  const user = c.get('user');
+  const body = await c.req.json<Record<string, any>>();
+  if (!body.taskType) return c.json({ success: false, error: 'Task type is required' }, 400);
+
+  const timestamp = now();
+  const requestId = id('sr');
+  const reference = `SR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  let title = body.title || 'Service Request';
+  const processedData: Record<string, any> = { ...body, id: requestId, reference, status: 'submitted', client_id: user.clientId || null, created_at: timestamp, updated_at: timestamp };
+
+  switch (body.taskType) {
+    case 'change_of_address':
+      title = `Change of Address: ${body.physicalAddress || body.newAddress || 'Residential'}`;
+      if (user.clientId && (body.physicalAddress || body.newAddress)) {
+        const addr = (body.physicalAddress || body.newAddress || '').trim();
+        const existing = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ id: string; data: string }>();
+        const prev = existing ? JSON.parse(existing.data) : {};
+        const updated = { ...prev, physicalAddress: addr, city: body.city || prev.city, province: body.province || prev.province, postalCode: body.postalCode || prev.postalCode, updated_at: timestamp };
+        if (existing) {
+          await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ?').bind(JSON.stringify(updated), timestamp, existing.id).run();
+        }
+      }
+      break;
+
+    case 'change_of_bank_details':
+      title = `Change of Bank Details: ${body.bankName || 'New Account'}`;
+      if (user.clientId && body.bankName) {
+        const existing = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ id: string; data: string }>();
+        const prev = existing ? JSON.parse(existing.data) : {};
+        const updated = {
+          ...prev,
+          bankName: body.bankName,
+          accountHolderName: body.accountHolderName || prev.accountHolderName,
+          accountNumber: body.accountNumber || prev.accountNumber,
+          accountType: body.accountType || prev.accountType,
+          branchCode: body.branchCode || prev.branchCode,
+          bankDetails: `${body.bankName} (${body.accountNumber})`,
+          updated_at: timestamp
+        };
+        if (existing) {
+          await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ?').bind(JSON.stringify(updated), timestamp, existing.id).run();
+        }
+      }
+      break;
+
+    case 'request_policy_document':
+      title = `Policy Document Request: ${body.documentType || 'Schedule'} (${body.provider || 'Policy'})`;
+      break;
+
+    case 'request_border_letter':
+      title = `Cross-Border Letter Request: ${body.destinationCountry || 'SADC'} (${body.vehicleReg || 'Vehicle'})`;
+      processedData.borderCertificateNumber = `CBL-RSF-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      processedData.authorizationStatus = 'Authorized Under FAIS 29370';
+      break;
+
+    case 'request_irp5_tax_certificate':
+      title = `IRP5 / IT3 Tax Certificate: ${body.investmentCompany || 'Investment'} (Tax Year ${body.taxYear || '2026'})`;
+      break;
+
+    case 'request_consultation':
+      title = `Adviser Consultation: ${body.consultationType || 'Financial Review'} on ${body.preferredDate || 'Upcoming'}`;
+      break;
+
+    case 'client_financial_statement': {
+      title = `Financial Statement & Balance Sheet (${body.financialYear || new Date().getFullYear()})`;
+      const totalAssets = Number(body.totalAssets || 0);
+      const totalLiabilities = Number(body.totalLiabilities || 0);
+      const netWorth = totalAssets - totalLiabilities;
+      const totalIncome = Number(body.totalIncome || 0);
+      const totalExpenses = Number(body.totalExpenses || 0);
+      const monthlySurplus = totalIncome - totalExpenses;
+
+      const statementRecord = {
+        id: id('stmt'),
+        client_id: user.clientId,
+        ...body,
+        totalAssets,
+        totalLiabilities,
+        netWorth,
+        netWorthFormatted: `R ${netWorth.toLocaleString()}`,
+        totalIncome,
+        totalExpenses,
+        monthlySurplus,
+        monthlySurplusFormatted: `R ${monthlySurplus.toLocaleString()}`,
+        status: 'verified',
+        created_at: timestamp,
+        updated_at: timestamp
+      };
+
+      if (user.clientId) {
+        await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(statementRecord.id, 'client_financial_statements', user.tenantId || null, user.clientId, JSON.stringify(statementRecord), timestamp, timestamp).run();
+
+        const profRec = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ id: string; data: string }>();
+        if (profRec) {
+          const profData = JSON.parse(profRec.data);
+          profData.totalNetWorthFormatted = `R ${netWorth.toLocaleString()}`;
+          profData.monthlyIncome = `R ${totalIncome.toLocaleString()}`;
+          await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ?').bind(JSON.stringify(profData), timestamp, profRec.id).run();
+        }
+      }
+      break;
+    }
+  }
+
+  processedData.title = title;
+  await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(requestId, 'service_requests', user.tenantId || null, user.clientId || null, JSON.stringify(processedData), timestamp, timestamp).run();
+
+  await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(id('tsk'), 'tasks', user.tenantId || null, user.clientId || null, JSON.stringify({
+      id: id('tsk'),
+      title: `Client Request: ${title}`,
+      priority: body.taskType === 'change_of_bank_details' || body.taskType === 'request_border_letter' ? 'high' : 'normal',
+      status: 'open',
+      taskType: body.taskType,
+      reference,
+      serviceRequestId: requestId,
+      clientName: body.clientName || `${user.email}`,
+      created_at: timestamp
+    }), timestamp, timestamp).run();
+
+  await writeAudit(c.env, user, 'create', 'service_requests', requestId, null, processedData, c.req.raw);
+  return c.json({ success: true, message: 'Service request submitted successfully', data: processedData }, 201);
+});
+
+app.put('/api/service-requests/:id/status', async c => {
+  const user = c.get('user');
+  if (!roleAllowed(user, ['SUPER_ADMIN', 'ADMIN', 'ADVISER'])) return c.json({ success: false, error: 'Insufficient permissions' }, 403);
+  const body = await c.req.json<{ status?: string; adviserNotes?: string; deliverableUrl?: string }>();
+  const record = await c.env.DB.prepare('SELECT id, data FROM records WHERE id = ? AND collection = ?').bind(c.req.param('id'), 'service_requests').first<{ id: string; data: string }>();
+  if (!record) return c.json({ success: false, error: 'Service request not found' }, 404);
+  const prev = JSON.parse(record.data);
+  const updated = { ...prev, ...body, updated_at: now() };
+  await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ? AND collection = ?').bind(JSON.stringify(updated), updated.updated_at, record.id, 'service_requests').run();
+  await writeAudit(c.env, user, 'status_update', 'service_requests', record.id, prev, updated, c.req.raw);
+  return c.json({ success: true, message: 'Status updated', data: updated });
+});
 app.get('/api/iam/users', async c => {
   const user = c.get('user');
   if (!roleAllowed(user, ['SUPER_ADMIN', 'ADMIN'])) return c.json({ success: false, error: 'Insufficient permissions' }, 403);

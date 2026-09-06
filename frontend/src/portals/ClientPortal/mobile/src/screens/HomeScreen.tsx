@@ -28,6 +28,7 @@ import { DocumentExpiryNotificationModal } from '../components/DocumentExpiryNot
 import { CompanyLogo } from '../components/CompanyLogo';
 import { SeniorHelpModal } from '../components/SeniorHelpModal';
 import { HoverableCard } from '../components/HoverableCard';
+import { ServiceTasksModal } from '../components/ServiceTasksModal';
 
 interface HomeScreenProps {
   onNavigateToClaims: () => void;
@@ -51,6 +52,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [expiryModalVisible, setExpiryModalVisible] = useState(false);
   const [seniorHelpModalVisible, setSeniorHelpModalVisible] = useState(false);
+  const [serviceTasksModalVisible, setServiceTasksModalVisible] = useState(false);
   const [expandedWealth, setExpandedWealth] = useState(false);
 
   const chartBars = [65, 72, 68, 78, 74, 82, 79, 86, 83, 91, 88, 100];
@@ -440,6 +442,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={styles.actionGrid}>
           <HoverableCard
             style={[styles.actionCard, easyMode && styles.actionCardLarge]}
+            onPress={() => setServiceTasksModalVisible(true)}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: colors.primaryAlpha }]}>
+              <DocumentTextIcon color={colors.primary} size={easyMode ? 24 : 20} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.text, fontSize: scaleFont(13) }]}>Service Tasks</Text>
+            <Text style={[styles.actionSub, { color: colors.textSecondary, fontSize: scaleFont(11) }]}>7 Real-time Actions</Text>
+          </HoverableCard>
+
+          <HoverableCard
+            style={[styles.actionCard, easyMode && styles.actionCardLarge]}
             onPress={onNavigateToClaims}
           >
             <View style={[styles.actionIconBox, { backgroundColor: colors.primaryAlpha }]}>
@@ -469,17 +482,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </View>
             <Text style={[styles.actionLabel, { color: colors.text, fontSize: scaleFont(13) }]}>Wealth Goals</Text>
             <Text style={[styles.actionSub, { color: colors.textSecondary, fontSize: scaleFont(11) }]}>Track progress</Text>
-          </HoverableCard>
-
-          <HoverableCard
-            style={[styles.actionCard, easyMode && styles.actionCardLarge]}
-            onPress={onNavigateToPortfolio}
-          >
-            <View style={[styles.actionIconBox, { backgroundColor: colors.primaryAlpha }]}>
-              <DocumentTextIcon color={colors.primary} size={easyMode ? 24 : 20} />
-            </View>
-            <Text style={[styles.actionLabel, { color: colors.text, fontSize: scaleFont(13) }]}>Tax IT3b Doc</Text>
-            <Text style={[styles.actionSub, { color: colors.textSecondary, fontSize: scaleFont(11) }]}>SARS certificate</Text>
           </HoverableCard>
         </View>
       </View>
@@ -579,6 +581,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         advisorPhone="+27 82 456 7890"
         onOpenClaims={onNavigateToClaims}
         onOpenPolicies={onNavigateToPortfolio}
+      />
+
+      {/* Service Tasks & Requests Modal */}
+      <ServiceTasksModal
+        visible={serviceTasksModalVisible}
+        onClose={() => setServiceTasksModalVisible(false)}
+        onTaskSubmitted={loadData}
       />
     </ScrollView>
   );
