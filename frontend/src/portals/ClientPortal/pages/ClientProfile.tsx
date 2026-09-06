@@ -59,6 +59,12 @@ interface ProfileData {
   totalNetWorthFormatted?: string;
   activePoliciesCount?: number;
   goalCompletionRate?: number;
+  privacyFramework?: 'POPIA' | 'GDPR' | 'HYBRID_EU';
+  dataProtectionJurisdiction?: string;
+  gdprConsentTimestamp?: string;
+  euRepresentativeContact?: string;
+  crossBorderTransferOptIn?: boolean;
+  legalJurisdictionLabel?: string;
   assignedAdvisor?: {
     name?: string;
     title?: string;
@@ -67,6 +73,23 @@ interface ProfileData {
     email?: string;
   };
 }
+
+const EU_COUNTRIES = [
+  'Germany',
+  'France',
+  'Netherlands',
+  'Ireland',
+  'Spain',
+  'Italy',
+  'Portugal',
+  'Belgium',
+  'Austria',
+  'Sweden',
+  'Denmark',
+  'Finland',
+  'Poland',
+  'Other EU / EEA Member State'
+];
 
 const SA_BANKS = [
   { name: 'First National Bank (FNB)', code: '250655' },
@@ -98,10 +121,13 @@ export const ClientProfile = () => {
   const { data: advisor } = useApi<any>('/user/advisor');
   const { data: documents } = useApi<any[]>('/workflow/documents');
 
-  const [activeTab, setActiveTab] = useState<'personal' | 'address' | 'banking' | 'emergency' | 'employment' | 'preferences'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'address' | 'banking' | 'emergency' | 'employment' | 'preferences' | 'legal'>('personal');
   const [saving, setSaving] = useState(false);
   const [darkMode, setDarkMode] = useState(localStorage.getItem('royalsync_web_theme') === 'dark');
   const [showWealthBreakdown, setShowWealthBreakdown] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
+  const [euCountry, setEuCountry] = useState('Germany');
+  const [crossBorderConsent, setCrossBorderConsent] = useState(true);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -170,6 +196,9 @@ export const ClientProfile = () => {
         emailNotifications: profile.emailNotifications ?? true,
         whatsappNotifications: profile.whatsappNotifications ?? true
       });
+      if (profile.privacyFramework) {
+        setPrivacyPolicy(profile.privacyFramework);
+      }
     }
   }, [profile]);
 
@@ -177,6 +206,27 @@ export const ClientProfile = () => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
     localStorage.setItem('royalsync_web_theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
+
+  const handleUpdatePrivacyPolicy = async (targetFramework: 'POPIA' | 'GDPR' | 'HYBRID_EU') => {
+    setSaving(true);
+    try {
+      const res = await apiRequest<{ success: boolean; message: string; data: any }>('/user/privacy-framework', {
+        method: 'PUT',
+        body: JSON.stringify({
+          framework: targetFramework,
+          crossBorderTransferOptIn: crossBorderConsent,
+          euCountry: targetFramework !== 'POPIA' ? euCountry : undefined
+        })
+      });
+      setPrivacyPolicy(targetFramework);
+      toast.success(res.message || `Data protection policy updated to ${targetFramework}!`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update privacy framework.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleBankChange = (bankName: string) => {
     const found = SA_BANKS.find(b => b.name === bankName);
@@ -516,6 +566,12 @@ export const ClientProfile = () => {
             onClick={() => setActiveTab('preferences')}
             icon={<FiLock className="w-4 h-4" />}
             label="Preferences & Security"
+          />
+          <TabButton
+            active={activeTab === 'legal'}
+            onClick={() => setActiveTab('legal')}
+            icon={<FiShield className="w-4 h-4 text-red-500" />}
+            label="Legal & Privacy (POPIA / GDPR)"
           />
         </div>
 
@@ -1010,6 +1066,205 @@ export const ClientProfile = () => {
                     description="High daylight contrast"
                     onClick={() => setDarkMode(false)}
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: Legal & Privacy Framework (POPIA / EU GDPR) */}
+          {activeTab === 'legal' && (
+            <div className="space-y-6">
+              <TabHeader
+                title="Legal & Data Protection Jurisdiction"
+                subtitle="Select your primary privacy framework to accompany European Union residents or South African law."
+                saving={saving}
+              />
+
+              {/* Status Highlight Banner */}
+              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center font-bold text-lg">
+                    {privacyPolicy === 'GDPR' ? '🇪🇺' : (privacyPolicy === 'HYBRID_EU' ? '🌍' : '🇿🇦')}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                      Current Active Framework:{' '}
+                      <span className="text-red-600">
+                        {privacyPolicy === 'GDPR' ? 'EU GDPR (Regulation 2016/679)' : (privacyPolicy === 'HYBRID_EU' ? 'Dual POPIA + EU GDPR Accord' : 'POPIA (Act 4 of 2013)')}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {privacyPolicy === 'GDPR'
+                        ? 'Full EU Chapter III Data Subject Rights and European Standard Contractual Clauses (SCC) active.'
+                        : (privacyPolicy === 'HYBRID_EU'
+                            ? 'Dual South African FAIS/FICA and European Union cross-border compliance active.'
+                            : 'Standard South African Information Regulator statutory protection active.')}
+                    </p>
+                  </div>
+                </div>
+
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 self-start sm:self-auto flex items-center gap-1">
+                  <FiCheckCircle size={13} /> Active & Audited
+                </span>
+              </div>
+
+              {/* Policy Selection Cards */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Switch or Update Policy Framework
+                </h4>
+
+                {/* POPIA Card */}
+                <div
+                  onClick={() => handleUpdatePrivacyPolicy('POPIA')}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                    privacyPolicy === 'POPIA'
+                      ? 'border-red-600 bg-red-50/30 dark:bg-red-950/20 shadow-xs'
+                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🇿🇦</span>
+                      <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        South Africa POPIA (Act 4 of 2013)
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300">
+                        Default Domestic
+                      </span>
+                    </div>
+                    {privacyPolicy === 'POPIA' && (
+                      <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs">
+                        <FiCheck />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 pl-6 leading-relaxed">
+                    Protection of Personal Information Act. Covers lawful processing of South African policyholders, FAIS statutory retention, and FICA client verification.
+                  </p>
+                </div>
+
+                {/* EU GDPR Card */}
+                <div
+                  onClick={() => handleUpdatePrivacyPolicy('GDPR')}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                    privacyPolicy === 'GDPR'
+                      ? 'border-red-600 bg-red-50/30 dark:bg-red-950/20 shadow-xs'
+                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🇪🇺</span>
+                      <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        European Union GDPR (Regulation (EU) 2016/679)
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                        For EU Expats & European Residents
+                      </span>
+                    </div>
+                    {privacyPolicy === 'GDPR' && (
+                      <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs">
+                        <FiCheck />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 pl-6 leading-relaxed">
+                    Full GDPR compliance accord. Unlocks European Data Subject Rights (Right to be Forgotten, Data Portability, 72h Breach Alert Protocol, and Standard Contractual Clauses for transborder data transfers).
+                  </p>
+                </div>
+
+                {/* Dual Accord Card */}
+                <div
+                  onClick={() => handleUpdatePrivacyPolicy('HYBRID_EU')}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                    privacyPolicy === 'HYBRID_EU'
+                      ? 'border-red-600 bg-red-50/30 dark:bg-red-950/20 shadow-xs'
+                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🌍</span>
+                      <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        Dual Accord (POPIA + EU GDPR Bridge)
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                        International Multi-Jurisdiction
+                      </span>
+                    </div>
+                    {privacyPolicy === 'HYBRID_EU' && (
+                      <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs">
+                        <FiCheck />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 pl-6 leading-relaxed">
+                    Seamless legal bridge for clients holding offshore assets or European citizenship alongside South African coverage.
+                  </p>
+                </div>
+              </div>
+
+              {/* EU Country & Transfer Details */}
+              {privacyPolicy !== 'POPIA' && (
+                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-700 space-y-3 animate-in fade-in duration-200">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                    European Union Accompanying Country
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] text-gray-500 block mb-1">Country of EU Residency / Citizenship</label>
+                      <select
+                        value={euCountry}
+                        onChange={e => setEuCountry(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500/20"
+                      >
+                        {EU_COUNTRIES.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-gray-500 block mb-1">EU Representative & DPO Point of Contact</label>
+                      <input
+                        type="text"
+                        disabled
+                        value="dpo-eu@royalsync.co.za (Dublin / Brussels)"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-xs text-gray-600 dark:text-gray-300 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 pt-2 border-t border-gray-200 dark:border-zinc-800">
+                    <input
+                      type="checkbox"
+                      id="cbConsent"
+                      checked={crossBorderConsent}
+                      onChange={e => setCrossBorderConsent(e.target.checked)}
+                      className="mt-0.5 accent-red-600 rounded"
+                    />
+                    <label htmlFor="cbConsent" className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                      Enforce EU Standard Contractual Clauses (SCC Article 46) for international insurer settlement data transfers.
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Data Subject Rights Accordion / Summary */}
+              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-700 text-xs space-y-2">
+                <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FiFileText className="text-red-600" /> Your Active Statutory Privacy Entitlements
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-gray-600 dark:text-gray-400">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700">
+                    <span className="font-bold text-gray-800 dark:text-gray-200 block text-[11px]">Right of Access & Portability</span>
+                    <span>Download all underwriting history in open JSON/CSV format.</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700">
+                    <span className="font-bold text-gray-800 dark:text-gray-200 block text-[11px]">Right to Erasure (Forgotten)</span>
+                    <span>Purge marketing and non-statutory auxiliary documents upon request.</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -293,10 +293,144 @@ app.get('/api/user/profile', async c => {
     whatsappNotifications: extendedData.whatsappNotifications ?? true,
     totalNetWorthFormatted: extendedData.totalNetWorthFormatted || 'R 450,000.00',
     activePoliciesCount: extendedData.activePoliciesCount || 2,
-    goalCompletionRate: extendedData.goalCompletionRate || 68
+    goalCompletionRate: extendedData.goalCompletionRate || 68,
+    // Legal & Data Protection Compliance Framework (POPIA / GDPR)
+    privacyFramework: extendedData.privacyFramework || 'POPIA',
+    dataProtectionJurisdiction: extendedData.dataProtectionJurisdiction || 'ZA',
+    gdprConsentTimestamp: extendedData.gdprConsentTimestamp || null,
+    euRepresentativeContact: extendedData.euRepresentativeContact || 'dpo-eu@royalsync.co.za',
+    crossBorderTransferOptIn: extendedData.crossBorderTransferOptIn ?? true,
+    legalJurisdictionLabel: extendedData.privacyFramework === 'GDPR'
+      ? 'EU General Data Protection Regulation (Regulation (EU) 2016/679)'
+      : (extendedData.privacyFramework === 'HYBRID_EU'
+          ? 'Dual POPIA (ZA) & EU GDPR Transborder Protection'
+          : 'Protection of Personal Information Act (Act 4 of 2013 - South Africa)')
   };
 
   return c.json({ success: true, message: 'Profile retrieved', data });
+});
+
+app.get('/api/legal/frameworks', async c => {
+  return c.json({
+    success: true,
+    message: 'Legal and privacy frameworks retrieved',
+    data: {
+      currentDefault: 'POPIA',
+      frameworks: [
+        {
+          id: 'POPIA',
+          name: 'POPIA (South Africa)',
+          fullName: 'Protection of Personal Information Act (Act No. 4 of 2013)',
+          jurisdiction: 'South Africa (Information Regulator ZA)',
+          badge: '🇿🇦 Statutory SA Standard',
+          description: 'Standard South African privacy compliance framework covering processing of personal information, data subject rights, and financial advisory data retention under FAIS/FICA.',
+          keyRights: [
+            'Right to be notified of personal data collection & purpose',
+            'Right to request access to personal records held (Section 23)',
+            'Right to request correction, destruction, or deletion (Section 24)',
+            'Right to object to processing on reasonable grounds (Section 11(3))',
+            'Protection against automated decision-making (Section 71)'
+          ],
+          dpoContact: 'popia-officer@royalsync.co.za'
+        },
+        {
+          id: 'GDPR',
+          name: 'EU GDPR (European Union)',
+          fullName: 'General Data Protection Regulation (Regulation (EU) 2016/679)',
+          jurisdiction: 'European Union / EEA Data Protection Authorities',
+          badge: '🇪🇺 EU & International Standard',
+          description: 'High-standard European Union regulatory framework designed for EU residents, expats, and cross-border European policyholders with enhanced consent controls and strict cross-border safeguards.',
+          keyRights: [
+            'Right of access by the data subject (Article 15)',
+            'Right to rectification & data completeness (Article 16)',
+            'Right to erasure / "Right to be forgotten" (Article 17)',
+            'Right to restriction of processing (Article 18)',
+            'Right to data portability in machine-readable format (Article 20)',
+            'Transborder transfer safeguards under EU Standard Contractual Clauses (Article 46)'
+          ],
+          dpoContact: 'dpo-eu@royalsync.co.za',
+          euRepresentative: 'RoyalSync European Data Protection Representative (Brussels / Dublin)'
+        },
+        {
+          id: 'HYBRID_EU',
+          name: 'Dual POPIA + EU GDPR Accord',
+          fullName: 'Comprehensive Transborder South Africa & EU Data Accord',
+          jurisdiction: 'Dual Jurisdiction (South Africa + European Union)',
+          badge: '🌍 Transborder Comprehensive',
+          description: 'Unified legal compliance framework harmonizing South African FSP regulatory requirements (FAIS, FICA, Insurance Act) with full European Union GDPR Articles 12-23 protections.',
+          keyRights: [
+            'All POPIA Section 11-25 statutory entitlements',
+            'All EU GDPR Chapter III Data Subject Rights',
+            'Standard Contractual Clauses (SCC) encryption for EU-ZA transborder data relays',
+            'Mandatory 72-hour breach notification protocols under GDPR Article 33'
+          ],
+          dpoContact: 'global-privacy@royalsync.co.za'
+        }
+      ]
+    }
+  });
+});
+
+app.put('/api/user/privacy-framework', async c => {
+  const user = c.get('user');
+  if (!user.clientId) return c.json({ success: false, error: 'Client profile not found' }, 404);
+  const body = await c.req.json<{ framework: 'POPIA' | 'GDPR' | 'HYBRID_EU'; crossBorderTransferOptIn?: boolean; euCountry?: string }>();
+
+  const framework = body.framework || 'POPIA';
+  if (!['POPIA', 'GDPR', 'HYBRID_EU'].includes(framework)) {
+    return c.json({ success: false, error: 'Invalid privacy framework selection' }, 400);
+  }
+
+  const timestamp = now();
+  const existingRecord = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ id: string; data: string }>();
+  const prevData = existingRecord ? JSON.parse(existingRecord.data) : {};
+
+  const updatedData = {
+    ...prevData,
+    privacyFramework: framework,
+    dataProtectionJurisdiction: framework === 'GDPR' ? 'EU' : (framework === 'HYBRID_EU' ? 'GLOBAL' : 'ZA'),
+    gdprConsentTimestamp: timestamp,
+    crossBorderTransferOptIn: body.crossBorderTransferOptIn ?? true,
+    euCountry: body.euCountry || prevData.euCountry || (framework !== 'POPIA' ? 'European Union' : undefined),
+    updated_at: timestamp
+  };
+
+  if (existingRecord) {
+    await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ?').bind(JSON.stringify(updatedData), timestamp, existingRecord.id).run();
+  } else {
+    await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(id('rec'), 'client_profiles', user.tenantId || null, user.clientId, JSON.stringify(updatedData), timestamp, timestamp).run();
+  }
+
+  // Add legal compliance confirmation notification
+  const frameworkName = framework === 'GDPR' ? 'EU GDPR (Regulation 2016/679)' : (framework === 'HYBRID_EU' ? 'Dual POPIA & EU GDPR Accord' : 'POPIA (Act 4 of 2013)');
+  const notifId = id('notif');
+  const notifData = {
+    title: 'Legal Privacy Policy Updated',
+    message: `Your account data protection framework has been successfully updated to ${frameworkName}. Your European Union transborder protections and data subject rights are active.`,
+    category: 'compliance',
+    type: 'legal_update',
+    badgeText: framework === 'GDPR' ? '🇪🇺 GDPR Active' : (framework === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA Active'),
+    read: false,
+    actionScreen: 'profile',
+    createdAt: timestamp
+  };
+
+  await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(notifId, 'notifications', user.tenantId || null, user.clientId, JSON.stringify(notifData), timestamp, timestamp).run();
+
+  await writeAudit(c.env, user, 'update_privacy_framework', 'legal_compliance', user.clientId, { previous: prevData.privacyFramework || 'POPIA' }, { updated: framework, timestamp }, c.req.raw);
+
+  return c.json({
+    success: true,
+    message: `Privacy policy successfully updated to ${frameworkName}`,
+    data: {
+      privacyFramework: framework,
+      dataProtectionJurisdiction: updatedData.dataProtectionJurisdiction,
+      gdprConsentTimestamp: timestamp,
+      crossBorderTransferOptIn: updatedData.crossBorderTransferOptIn
+    }
+  });
 });
 
 app.put('/api/user/profile', async c => {

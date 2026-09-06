@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { FiSettings, FiBell, FiX, FiCheck } from 'react-icons/fi';
+import { FiSettings, FiBell, FiX, FiCheck, FiShield } from 'react-icons/fi';
 import { useApi } from '../../hooks/useApi';
 import { apiRequest } from '../../lib/api';
+import { LegalPrivacyModal } from '../legal/LegalPrivacyModal';
 
 interface SidebarItem {
   name: string;
@@ -21,8 +22,17 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
   const location = useLocation();
   const portalRoot = `/${location.pathname.split('/')[1]}`;
   const { data: notifs, refetch } = useApi<any[]>('/notifications');
+  const { data: profile, refetch: refetchProfile } = useApi<any>('/user/profile');
   const [showNotifs, setShowNotifs] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [privacyFramework, setPrivacyFramework] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
   const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (profile?.privacyFramework) {
+      setPrivacyFramework(profile.privacyFramework);
+    }
+  }, [profile]);
 
   const notifications = notifs || [];
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -79,8 +89,24 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 flex items-center px-8 border-b border-gray-200 bg-white relative z-30">
-          <div className="ml-auto flex items-center gap-3">
+        <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white relative z-30">
+          {/* Visible Legal & Privacy Framework Selector Chip */}
+          <button
+            onClick={() => setLegalModalOpen(true)}
+            title="Click to view or switch legal data protection policy (POPIA / EU GDPR)"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-gray-200 hover:border-red-500 bg-gray-50/90 hover:bg-red-50/60 text-xs font-semibold text-gray-700 hover:text-red-700 transition-all cursor-pointer shadow-xs group"
+          >
+            <FiShield className="text-red-600 group-hover:scale-110 transition-transform shrink-0" size={15} />
+            <span>
+              Legal Policy:{' '}
+              <strong className="font-bold text-gray-900 group-hover:text-red-600">
+                {privacyFramework === 'GDPR' ? '🇪🇺 EU GDPR' : (privacyFramework === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA')}
+              </strong>
+            </span>
+            <span className="text-[10px] text-gray-400 font-normal">▾</span>
+          </button>
+
+          <div className="flex items-center gap-3">
             {/* Notification Bell with Dropdown */}
             <div className="relative" ref={notifRef}>
               <button
@@ -172,6 +198,17 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
           </div>
         </div>
       </main>
+
+      {/* Global Legal & Privacy Framework Selector Modal */}
+      <LegalPrivacyModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        currentFramework={privacyFramework}
+        onFrameworkUpdated={(fw) => {
+          setPrivacyFramework(fw);
+          refetchProfile();
+        }}
+      />
     </div>
   );
 };
