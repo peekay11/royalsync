@@ -10,19 +10,42 @@ import { PartnerPortal } from './portals/PartnerPortal';
 
 const AuthScreen = ({ portal: _portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean, useEmail?: boolean }) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleSendOtp = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!idNumber) return setError('Please enter your ID Number');
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+    try {
+      const res = await apiRequest<{ message: string }>('/auth/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ idNumber })
+      });
+      setOtpSent(true);
+      setSuccessMsg(res.message || 'OTP sent successfully!');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!otpSent) return;
     setLoading(true);
     setError('');
     try {
-      const result = await apiRequest<{ token: string; user: any }>('/auth/login', {
+      const result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ idNumber, code: otp })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
@@ -44,23 +67,35 @@ const AuthScreen = ({ portal: _portal, defaultRole, allowRegister }: { portal: s
             <span className="text-white font-bold text-lg">RS</span>
           </div>
           <h1 className="text-2xl font-normal text-gray-800">Welcome back</h1>
-          <p className="text-gray-500 text-sm mt-1">Sign in with your email and password</p>
+          <p className="text-gray-500 text-sm mt-1">Sign in with your ID number</p>
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Email address</label>
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
+          <label className="block text-sm text-gray-600 mb-1">ID Number</label>
+          <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
         </div>
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Password</label>
-          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
-        </div>
+        
+        {otpSent && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">OTP Code</label>
+            <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="Hint: 123456" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
+          </div>
+        )}
+
+        {!otpSent && (
+          <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 font-medium hover:bg-red-50 disabled:opacity-50 transition-colors">
+            {loading ? 'Sending...' : 'Send OTP via SMS'}
+          </button>
+        )}
 
         {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+        {successMsg && <p className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{successMsg}</p>}
 
-        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">
-          {loading ? 'Signing in...' : 'Sign in'}
-        </button>
+        {otpSent && (
+          <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
+        )}
 
         {allowRegister && (
           <p className="text-center text-sm mt-2">
@@ -69,20 +104,18 @@ const AuthScreen = ({ portal: _portal, defaultRole, allowRegister }: { portal: s
         )}
 
         <div className="pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">Demo credentials: super@royalsquare.co.za / Admin@12345</p>
+          <p className="text-xs text-gray-400 text-center">Demo credentials: 9001015000087 / 123456</p>
         </div>
       </form>
     </div>
   );
 };
-
 const RegisterScreen = ({ portal: _portal, defaultRole }: { portal: string, defaultRole: string }) => {
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [idNumber, setIdNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +126,7 @@ const RegisterScreen = ({ portal: _portal, defaultRole }: { portal: string, defa
     try {
       const result = await apiRequest<{ token: string; user: any }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ firstName, lastName, mobile, email, password, role: defaultRole })
+        body: JSON.stringify({ firstName, lastName, mobile, idNumber, role: defaultRole })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
@@ -125,16 +158,12 @@ const RegisterScreen = ({ portal: _portal, defaultRole }: { portal: string, defa
           </div>
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Email address</label>
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
+          <label className="block text-sm text-gray-600 mb-1">ID Number</label>
+          <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
         </div>
         <div>
           <label className="block text-sm text-gray-600 mb-1">Mobile number</label>
           <input required type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="082 000 0000" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Password</label>
-          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 8 characters" className="w-full border border-gray-300 rounded-lg p-3 text-sm" minLength={8} />
         </div>
         {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
         <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">{loading ? 'Registering...' : 'Create Account'}</button>
@@ -145,7 +174,6 @@ const RegisterScreen = ({ portal: _portal, defaultRole }: { portal: string, defa
     </div>
   );
 };
-
 const PortalSelector = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
