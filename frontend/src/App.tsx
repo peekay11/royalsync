@@ -22,6 +22,9 @@ import { LegalPrivacyModal } from './components/legal/LegalPrivacyModal';
 
 const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
   const navigate = useNavigate();
+  const [authMode, setAuthMode] = useState<'id' | 'password'>('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -43,7 +46,7 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
         body: JSON.stringify({ idNumber })
       });
       setOtpSent(true);
-      setSuccessMsg(res.message || 'OTP sent successfully to your registered mobile!');
+      setSuccessMsg(res.message || 'OTP sent successfully! (Demo PIN: 123456)');
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP');
     } finally {
@@ -53,14 +56,30 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!otpSent) return;
     setLoading(true);
     setError('');
+
     try {
-      const result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
-        method: 'POST',
-        body: JSON.stringify({ idNumber, code: otp })
-      });
+      let result: { token: string; user: any };
+
+      if (authMode === 'password') {
+        if (!email || !password) {
+          setError('Please enter your email and password');
+          setLoading(false);
+          return;
+        }
+        result = await apiRequest<{ token: string; user: any }>('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+      } else {
+        if (!otpSent) return;
+        result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
+          method: 'POST',
+          body: JSON.stringify({ idNumber, code: otp })
+        });
+      }
+
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
       const role: string = result.user?.role ?? defaultRole;
@@ -73,6 +92,13 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
     }
   };
 
+  const fillQuickDemo = (demoEmail: string, demoPass: string) => {
+    setAuthMode('password');
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    setError('');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-10">
       <div className="bg-white dark:bg-zinc-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-200/80 dark:border-zinc-800 max-w-md w-full space-y-6">
@@ -82,7 +108,7 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
             <FiShield size={28} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome to {portal}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Sign in securely using your South African ID & OTP</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to your RoyalSync operational workspace</p>
           
           {/* Prominent Legal Policy Switcher Pill */}
           <button
@@ -101,51 +127,123 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
           </button>
         </div>
 
-        <form onSubmit={submit} className="space-y-4">
-          {/* RSA ID Number Input */}
-          <div className="space-y-1.5 text-left">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
-              <span>South African ID Number</span>
-              <span className="text-[10px] text-gray-400 font-normal">13 Digits</span>
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
-                <FiCreditCard size={18} />
-              </span>
-              <input
-                required
-                type="text"
-                value={idNumber}
-                onChange={e => setIdNumber(e.target.value)}
-                placeholder="e.g. 9001015009087"
-                maxLength={13}
-                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-              />
-            </div>
-          </div>
+        {/* Auth Mode Tabs */}
+        <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1">
+          <button
+            type="button"
+            onClick={() => { setAuthMode('password'); setError(''); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              authMode === 'password'
+                ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+            }`}
+          >
+            Email & Password
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('id'); setError(''); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              authMode === 'id'
+                ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+            }`}
+          >
+            SA ID & OTP
+          </button>
+        </div>
 
-          {/* OTP Code Input (Conditional) */}
-          {otpSent && (
-            <div className="space-y-1.5 text-left animate-in fade-in slide-in-from-top-2 duration-200">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
-                <span>One-Time PIN (OTP)</span>
-                <span className="text-[10px] text-red-500 font-semibold">Demo PIN: 123456</span>
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
-                  <FiLock size={18} />
-                </span>
-                <input
-                  required
-                  type="text"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value)}
-                  placeholder="Enter 6-digit OTP code"
-                  maxLength={6}
-                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 tracking-widest focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-                />
+        <form onSubmit={submit} className="space-y-4">
+          {authMode === 'password' ? (
+            <>
+              {/* Email Input */}
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+                  Email Address
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                    <FiUser size={18} />
+                  </span>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder={defaultRole === 'SUPER_ADMIN' ? 'super@royalsquare.co.za' : defaultRole === 'ADMIN' ? 'admin@royalsquare.co.za' : 'client@royalsquare.co.za'}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                  />
+                </div>
               </div>
-            </div>
+
+              {/* Password Input */}
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+                  Password
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                    <FiLock size={18} />
+                  </span>
+                  <input
+                    required
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* RSA ID Number Input */}
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                  <span>South African ID Number</span>
+                  <span className="text-[10px] text-gray-400 font-normal">13 Digits</span>
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                    <FiCreditCard size={18} />
+                  </span>
+                  <input
+                    required
+                    type="text"
+                    value={idNumber}
+                    onChange={e => setIdNumber(e.target.value)}
+                    placeholder="e.g. 8501015800083"
+                    maxLength={13}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* OTP Code Input (Conditional) */}
+              {otpSent && (
+                <div className="space-y-1.5 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                    <span>One-Time PIN (OTP)</span>
+                    <span className="text-[10px] text-red-500 font-semibold">Demo PIN: 123456</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                      <FiLock size={18} />
+                    </span>
+                    <input
+                      required
+                      type="text"
+                      value={otp}
+                      onChange={e => setOtp(e.target.value)}
+                      placeholder="Enter 6-digit OTP code"
+                      maxLength={6}
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 tracking-widest focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Feedback Messages */}
@@ -163,7 +261,7 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
           )}
 
           {/* Action Buttons */}
-          {!otpSent ? (
+          {authMode === 'id' && !otpSent ? (
             <button
               type="button"
               onClick={handleSendOtp}
@@ -184,14 +282,46 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
             </button>
           )}
 
+          {/* Quick Demo Autofill Shortcuts */}
+          <div className="pt-2 border-t border-gray-100 dark:border-zinc-800">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2">Quick Demo Accounts</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => fillQuickDemo('super@royalsquare.co.za', 'Admin@12345')}
+                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md text-[11px] font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => fillQuickDemo('admin@royalsquare.co.za', 'Admin@12345')}
+                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md text-[11px] font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => fillQuickDemo('sipho@royalsquare.co.za', 'Admin@12345')}
+                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md text-[11px] font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Adviser
+              </button>
+              <button
+                type="button"
+                onClick={() => fillQuickDemo('lungelo@gmail.com', 'Client@1234')}
+                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-md text-[11px] font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Client
+              </button>
+            </div>
+          </div>
+
           {allowRegister && (
             <div className="pt-2 text-center border-t border-gray-100 dark:border-zinc-800">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Don't have an account?{' '}
-                <Link
-                  to={`/${defaultRole.toLowerCase().replace('_', '-')}/register`}
-                  className="font-semibold text-red-600 dark:text-red-400 hover:underline inline-flex items-center gap-1"
-                >
+                <Link to={`/${portal.toLowerCase().includes('client') ? 'client' : 'admin'}/register`} className="font-semibold text-red-600 hover:text-red-700 hover:underline">
                   Register here
                 </Link>
               </p>
