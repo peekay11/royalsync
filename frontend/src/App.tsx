@@ -92,10 +92,10 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
             <span>
               Data Protection:{' '}
               <strong className="text-gray-900 dark:text-white">
-                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}
+                {privacyPolicy === 'GDPR' ? 'EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? 'Dual Accord (POPIA + GDPR)' : 'POPIA (SA)')}
               </strong>
             </span>
-            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch to EU ▾</span>
+            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch Framework ▾</span>
           </button>
         </div>
 
@@ -260,10 +260,10 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
             <span>
               Data Protection:{' '}
               <strong className="text-gray-900 dark:text-white">
-                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}
+                {privacyPolicy === 'GDPR' ? 'EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? 'Dual Accord (POPIA + GDPR)' : 'POPIA (SA)')}
               </strong>
             </span>
-            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch to EU ▾</span>
+            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch Framework ▾</span>
           </button>
         </div>
 

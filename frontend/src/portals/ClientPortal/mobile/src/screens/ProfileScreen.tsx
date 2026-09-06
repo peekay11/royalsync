@@ -326,7 +326,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
             <Text style={[styles.appointmentTitle, { color: colors.text }]}>Legal & Data Privacy Policy</Text>
             <View style={[styles.digitalActivePill, { backgroundColor: colors.successAlpha }]}>
               <Text style={[styles.digitalActiveText, { color: colors.success }]}>
-                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR' : (privacyPolicy === 'HYBRID_EU' ? '🌍 DUAL ACCORD' : '🇿🇦 POPIA ACTIVE')}
+                {privacyPolicy === 'GDPR' ? 'EU GDPR ACTIVE' : (privacyPolicy === 'HYBRID_EU' ? 'DUAL ACCORD ACTIVE' : 'POPIA ACTIVE')}
               </Text>
             </View>
           </View>

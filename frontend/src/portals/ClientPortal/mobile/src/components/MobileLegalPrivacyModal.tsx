@@ -106,7 +106,9 @@ export const MobileLegalPrivacyModal: React.FC<MobileLegalPrivacyModalProps> = (
               activeOpacity={0.8}
             >
               <View style={styles.cardTop}>
-                <Text style={styles.flag}>🇿🇦</Text>
+                <View style={[styles.badgeBox, { backgroundColor: isDark ? '#37303c' : '#e2e8f0' }]}>
+                  <Text style={[styles.badgeText, { color: isDark ? '#ffffff' : '#334155' }]}>ZA</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.cardTitle, { color: colors.text }]}>POPIA (South Africa)</Text>
                   <Text style={[styles.cardSub, { color: colors.textMuted }]}>Protection of Personal Information Act (Act 4 of 2013)</Text>
@@ -135,7 +137,9 @@ export const MobileLegalPrivacyModal: React.FC<MobileLegalPrivacyModalProps> = (
               activeOpacity={0.8}
             >
               <View style={styles.cardTop}>
-                <Text style={styles.flag}>🇪🇺</Text>
+                <View style={[styles.badgeBox, { backgroundColor: isDark ? '#1e3a8a' : '#dbeafe' }]}>
+                  <Text style={[styles.badgeText, { color: isDark ? '#93c5fd' : '#1e40af' }]}>EU</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.cardTitle, { color: colors.text }]}>EU GDPR (Europe)</Text>
@@ -169,7 +173,9 @@ export const MobileLegalPrivacyModal: React.FC<MobileLegalPrivacyModalProps> = (
               activeOpacity={0.8}
             >
               <View style={styles.cardTop}>
-                <Text style={styles.flag}>🌍</Text>
+                <View style={[styles.badgeBox, { backgroundColor: isDark ? '#4c1d95' : '#f3e8ff' }]}>
+                  <Text style={[styles.badgeText, { color: isDark ? '#d8b4fe' : '#7e22ce' }]}>GL</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.cardTitle, { color: colors.text }]}>Dual Accord (POPIA + EU GDPR)</Text>
                   <Text style={[styles.cardSub, { color: colors.textMuted }]}>Transborder Dual Protection Accord</Text>
@@ -211,7 +217,7 @@ export const MobileLegalPrivacyModal: React.FC<MobileLegalPrivacyModalProps> = (
 
                 <View style={styles.sccBox}>
                   <Text style={[styles.sccText, { color: colors.textSecondary }]}>
-                    ✓ EU Standard Contractual Clauses (SCC Article 46) active for encrypted cross-border insurance telemetry.
+                    Standard Contractual Clauses (SCC Article 46) active for encrypted cross-border insurance telemetry.
                   </Text>
                   <Text style={[styles.dpoText, { color: colors.textMuted }]}>
                     EU DPO Point of Contact: dpo-eu@royalsync.co.za
@@ -245,7 +251,7 @@ export const MobileLegalPrivacyModal: React.FC<MobileLegalPrivacyModalProps> = (
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 <Text style={styles.saveBtnText}>
-                  Apply {selectedFramework === 'GDPR' ? '🇪🇺 EU GDPR' : (selectedFramework === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA')}
+                  Apply {selectedFramework === 'GDPR' ? 'EU GDPR' : (selectedFramework === 'HYBRID_EU' ? 'Dual Accord' : 'POPIA')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -327,8 +333,17 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 6,
   },
-  flag: {
-    fontSize: 22,
+  badgeBox: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    fontFamily: 'monospace',
   },
   cardTitle: {
     fontSize: 14,

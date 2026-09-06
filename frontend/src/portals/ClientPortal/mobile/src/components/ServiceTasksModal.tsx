@@ -19,6 +19,11 @@ import {
   CalendarIcon,
   UserIcon,
   IdCardIcon,
+  HomeIcon,
+  CarIcon,
+  BriefcaseIcon,
+  AnalyticsIcon,
+  GroupIcon,
 } from './GrommetIcons';
 
 interface ServiceTasksModalProps {
@@ -151,49 +156,49 @@ export const ServiceTasksModal: React.FC<ServiceTasksModalProps> = ({
       title: 'Change of Address',
       sub: 'Update residential, postal, & FICA proof of address',
       tag: 'FAIS / FICA Compliant',
-      icon: '🏠',
+      iconComponent: <HomeIcon color={colors.primary} size={20} />,
     },
     {
       id: 'change_of_bank_details',
       title: 'Change of Bank Details',
       sub: 'Update debit order & claims payout mandate',
       tag: 'Direct Banking Sync',
-      icon: '💳',
+      iconComponent: <IdCardIcon color={colors.primary} size={20} />,
     },
     {
       id: 'request_policy_document',
       title: 'Request Policy Document',
       sub: 'Download policy schedules, endorsements & pack',
       tag: 'Instant Certificate',
-      icon: '📄',
+      iconComponent: <DocumentTextIcon color={colors.primary} size={20} />,
     },
     {
       id: 'request_border_letter',
       title: 'Request Border Letter',
       sub: 'Cross-border SADC vehicle travel insurance certificate',
       tag: 'Customs Ready',
-      icon: '🚗',
+      iconComponent: <CarIcon color={colors.primary} size={20} />,
     },
     {
       id: 'request_irp5',
       title: 'Request IRP5 / IT3 Tax Pack',
       sub: 'SARS tax certificate for RA & endowments',
       tag: 'eFiling Compliant',
-      icon: '📑',
+      iconComponent: <BriefcaseIcon color={colors.primary} size={20} />,
     },
     {
       id: 'request_consultation',
       title: 'Request a Consultation',
       sub: 'Book one-on-one session with your certified adviser',
       tag: 'Direct Calendar',
-      icon: '🤝',
+      iconComponent: <GroupIcon color={colors.primary} size={20} />,
     },
     {
       id: 'client_financial_statement',
       title: 'Balance Sheet & Income Statement',
       sub: 'Comprehensive net worth, asset & cashflow statement',
       tag: 'Wealth Analytics',
-      icon: '📊',
+      iconComponent: <AnalyticsIcon color={colors.primary} size={20} />,
     },
   ];
 
@@ -235,7 +240,7 @@ export const ServiceTasksModal: React.FC<ServiceTasksModalProps> = ({
                     onPress={() => setActiveScreen('view_history')}
                   >
                     <Text style={[styles.historyPillText, { color: colors.primary }]}>
-                      📋 View My Request History ({pastRequests.length})
+                      View My Request History ({pastRequests.length})
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -248,7 +253,7 @@ export const ServiceTasksModal: React.FC<ServiceTasksModalProps> = ({
                       onPress={() => setActiveScreen(item.id as TaskType)}
                     >
                       <View style={styles.taskCardTop}>
-                        <Text style={styles.taskIcon}>{item.icon}</Text>
+                        <View style={styles.taskIconWrapper}>{item.iconComponent}</View>
                         <View style={[styles.tagBadge, { backgroundColor: colors.primaryAlpha }]}>
                           <Text style={[styles.tagText, { color: colors.primary }]}>{item.tag}</Text>
                         </View>
@@ -990,8 +995,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  taskIcon: {
-    fontSize: 22,
+  taskIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tagBadge: {
     paddingHorizontal: 8,

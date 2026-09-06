@@ -15,7 +15,8 @@ import {
   FiFileText,
   FiAlertCircle,
   FiRefreshCw,
-  FiCheckCircle
+  FiCheckCircle,
+  FiGlobe
 } from 'react-icons/fi';
 import { useApi } from '../../../hooks/useApi';
 import { apiRequest } from '../../../lib/api';
@@ -1083,8 +1084,14 @@ export const ClientProfile = () => {
               {/* Status Highlight Banner */}
               <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center font-bold text-lg">
-                    {privacyPolicy === 'GDPR' ? '🇪🇺' : (privacyPolicy === 'HYBRID_EU' ? '🌍' : '🇿🇦')}
+                  <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center font-bold text-sm">
+                    {privacyPolicy === 'GDPR' ? (
+                      <span className="font-mono text-xs font-black">EU</span>
+                    ) : (privacyPolicy === 'HYBRID_EU' ? (
+                      <FiGlobe size={18} />
+                    ) : (
+                      <span className="font-mono text-xs font-black">ZA</span>
+                    ))}
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-gray-900 dark:text-white">
@@ -1125,7 +1132,9 @@ export const ClientProfile = () => {
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">🇿🇦</span>
+                      <span className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-[10px] font-mono font-bold text-zinc-800 dark:text-zinc-200">
+                        ZA
+                      </span>
                       <span className="font-bold text-sm text-gray-900 dark:text-white">
                         South Africa POPIA (Act 4 of 2013)
                       </span>
@@ -1155,7 +1164,9 @@ export const ClientProfile = () => {
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">🇪🇺</span>
+                      <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-mono font-bold">
+                        EU
+                      </span>
                       <span className="font-bold text-sm text-gray-900 dark:text-white">
                         European Union GDPR (Regulation (EU) 2016/679)
                       </span>
@@ -1185,7 +1196,9 @@ export const ClientProfile = () => {
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">🌍</span>
+                      <span className="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold">
+                        GLOBAL
+                      </span>
                       <span className="font-bold text-sm text-gray-900 dark:text-white">
                         Dual Accord (POPIA + EU GDPR Bridge)
                       </span>

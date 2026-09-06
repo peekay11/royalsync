@@ -322,7 +322,7 @@ app.get('/api/legal/frameworks', async c => {
           name: 'POPIA (South Africa)',
           fullName: 'Protection of Personal Information Act (Act No. 4 of 2013)',
           jurisdiction: 'South Africa (Information Regulator ZA)',
-          badge: '🇿🇦 Statutory SA Standard',
+          badge: 'Statutory SA Standard',
           description: 'Standard South African privacy compliance framework covering processing of personal information, data subject rights, and financial advisory data retention under FAIS/FICA.',
           keyRights: [
             'Right to be notified of personal data collection & purpose',
@@ -338,7 +338,7 @@ app.get('/api/legal/frameworks', async c => {
           name: 'EU GDPR (European Union)',
           fullName: 'General Data Protection Regulation (Regulation (EU) 2016/679)',
           jurisdiction: 'European Union / EEA Data Protection Authorities',
-          badge: '🇪🇺 EU & International Standard',
+          badge: 'EU International Standard',
           description: 'High-standard European Union regulatory framework designed for EU residents, expats, and cross-border European policyholders with enhanced consent controls and strict cross-border safeguards.',
           keyRights: [
             'Right of access by the data subject (Article 15)',
@@ -356,7 +356,7 @@ app.get('/api/legal/frameworks', async c => {
           name: 'Dual POPIA + EU GDPR Accord',
           fullName: 'Comprehensive Transborder South Africa & EU Data Accord',
           jurisdiction: 'Dual Jurisdiction (South Africa + European Union)',
-          badge: '🌍 Transborder Comprehensive',
+          badge: 'Transborder Comprehensive',
           description: 'Unified legal compliance framework harmonizing South African FSP regulatory requirements (FAIS, FICA, Insurance Act) with full European Union GDPR Articles 12-23 protections.',
           keyRights: [
             'All POPIA Section 11-25 statutory entitlements',
@@ -410,7 +410,7 @@ app.put('/api/user/privacy-framework', async c => {
     message: `Your account data protection framework has been successfully updated to ${frameworkName}. Your European Union transborder protections and data subject rights are active.`,
     category: 'compliance',
     type: 'legal_update',
-    badgeText: framework === 'GDPR' ? '🇪🇺 GDPR Active' : (framework === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA Active'),
+    badgeText: framework === 'GDPR' ? 'GDPR Active' : (framework === 'HYBRID_EU' ? 'Dual Accord' : 'POPIA Active'),
     read: false,
     actionScreen: 'profile',
     createdAt: timestamp

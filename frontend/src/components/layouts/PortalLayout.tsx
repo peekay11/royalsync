@@ -100,7 +100,7 @@ export const PortalLayout = ({ title, links, children }: PortalLayoutProps) => {
             <span>
               Legal Policy:{' '}
               <strong className="font-bold text-gray-900 group-hover:text-red-600">
-                {privacyFramework === 'GDPR' ? '🇪🇺 EU GDPR' : (privacyFramework === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA')}
+                {privacyFramework === 'GDPR' ? 'EU GDPR' : (privacyFramework === 'HYBRID_EU' ? 'Dual Accord' : 'POPIA')}
               </strong>
             </span>
             <span className="text-[10px] text-gray-400 font-normal">▾</span>

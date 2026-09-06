@@ -78,9 +78,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
         >
           <ShieldIcon color={colors.primary} size={14} />
           <Text style={[styles.legalPolicyText, { color: colors.text }]}>
-            Data Policy: <Text style={{ fontWeight: '800', color: colors.primary }}>{privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}</Text>
+            Data Policy: <Text style={{ fontWeight: '800', color: colors.primary }}>{privacyPolicy === 'GDPR' ? 'EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? 'Dual Accord (POPIA + GDPR)' : 'POPIA (SA)')}</Text>
           </Text>
-          <Text style={[styles.legalPolicyChange, { color: colors.primary }]}>· Switch to EU ▾</Text>
+          <Text style={[styles.legalPolicyChange, { color: colors.primary }]}>· Switch Framework ▾</Text>
         </TouchableOpacity>
       </View>
 

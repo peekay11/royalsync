@@ -157,7 +157,7 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">🇿🇦</span>
+                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 font-mono">ZA</span>
                     <span className="font-bold text-sm text-gray-900 dark:text-white">
                       POPIA — Protection of Personal Information Act
                     </span>
@@ -168,7 +168,7 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 pl-6">
+                <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
                   Statutory South African standard (Act No. 4 of 2013). Governs local FAIS financial advisory, FICA KYC record-keeping, and local Insurer underwriting.
                 </p>
               </div>
@@ -184,11 +184,11 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">🇪🇺</span>
+                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono">EU</span>
                     <span className="font-bold text-sm text-gray-900 dark:text-white">
                       EU GDPR — General Data Protection Regulation
                     </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
                       Recommended for EU Expats & Residents
                     </span>
                   </div>
@@ -198,7 +198,7 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 pl-6">
+                <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
                   European Union Regulation (EU) 2016/679. Provides EU Chapter III rights (Right to Erasure / Right to be Forgotten, Right to Data Portability, 72-hour breach alerts, and EU Representative oversight).
                 </p>
               </div>
@@ -214,7 +214,7 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">🌍</span>
+                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono">GLOBAL</span>
                     <span className="font-bold text-sm text-gray-900 dark:text-white">
                       Dual Accord — POPIA (ZA) + EU GDPR International Bridge
                     </span>
@@ -225,7 +225,7 @@ export const LegalPrivacyModal: React.FC<LegalPrivacyModalProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 pl-6">
+                <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
                   Unified dual protection package for international policyholders with dual citizenship or multi-jurisdictional assets.
                 </p>
               </div>
