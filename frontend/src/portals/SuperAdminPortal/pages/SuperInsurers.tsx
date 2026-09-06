@@ -22,7 +22,7 @@ export const SuperInsurers = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await apiRequest('/insurers', { method: 'POST', body: JSON.stringify(form) });
+      await apiRequest('/insurers', { method: 'POST', body: JSON.stringify({ ...form, status: 'active' }) });
       toast.success(`${form.name} added to platform`);
       setShowForm(false);
       setForm({ name: '', domain: '', category: 'short-term', contactEmail: '' });

@@ -375,6 +375,18 @@ app.get('/api/tenants', async c => {
   return c.json({ success: true, message: 'Tenants retrieved', data: tenants });
 });
 
+app.get('/api/insurers', async c => {
+  const user = c.get('user');
+  if (!roleAllowed(user, ['SUPER_ADMIN', 'ADMIN'])) return c.json({ success: false, error: 'Insufficient permissions' }, 403);
+  const records = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? ORDER BY created_at DESC').bind('insurers').all<{ id: string; data: string }>();
+  const insurers = await Promise.all(records.results.map(async r => {
+    const data = JSON.parse(r.data);
+    const policiesCount = await c.env.DB.prepare('SELECT COUNT(*) as count FROM records WHERE collection = ? AND (json_extract(data, \'$.insurerId\') = ? OR json_extract(data, \'$.insurer\') = ?)').bind('policies', r.id, r.id).first<{count: number}>();
+    return { id: r.id, ...data, policyCount: policiesCount?.count || 0 };
+  }));
+  return c.json({ success: true, message: 'Insurers retrieved', data: insurers });
+});
+
 for (const [path, collection] of Object.entries(collectionForPath)) {
   genericGet(`/api/${path}`, collection, path === 'audit' ? ['SUPER_ADMIN'] : undefined);
   if (['notifications', 'insurers', 'tenants', 'templates', 'settings'].includes(collection)) genericPost(`/api/${path}`, collection);
