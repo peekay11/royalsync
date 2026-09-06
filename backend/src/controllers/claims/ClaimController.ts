@@ -40,14 +40,15 @@ export class ClaimController extends BaseController {
   public createClaim = async (req: AuthRequest, res: Response) => {
     const { type, amount, description, policyId, incidentDate } = req.body as Record<string, string | undefined>;
     if (!description) return this.sendError(res, 'Description is required');
-    if (!req.user?.clientId) return this.sendError(res, 'Client account required', 403);
-    const tenantId = await this.getUserTenantId(req.user.id);
+    const targetClientId = req.user?.clientId || (req.body as Record<string, string | undefined>).clientId;
+    if (!targetClientId) return this.sendError(res, 'Client ID is required', 400);
+    const tenantId = await this.getUserTenantId(req.user?.id);
     if (!tenantId) return this.sendError(res, 'Tenant not found', 400);
     const reference = `CLM-${Date.now().toString().slice(-8)}`;
     const claim = await prisma.claim.create({
       data: {
         tenantId,
-        clientId: req.user.clientId,
+        clientId: targetClientId,
         policyId: policyId || null,
         reference,
         type: type || 'General',

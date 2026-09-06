@@ -52,12 +52,13 @@ export class ClientDataController extends BaseController {
   };
 
   public createGoal = async (req: AuthRequest, res: Response) => {
-    if (!req.user?.clientId) return this.sendError(res, 'Client account required', 403);
+    const targetClientId = req.user?.clientId || (req.body as Record<string, string | undefined>).clientId;
+    if (!targetClientId) return this.sendError(res, 'Client ID is required', 400);
     const { name, targetAmount, currentAmount, targetDate, contributionAmount, contributionFrequency } = req.body as Record<string, string | undefined>;
     if (!name || !targetAmount) return this.sendError(res, 'Name and target amount are required');
     const goal = await prisma.goal.create({
       data: {
-        clientId: req.user.clientId,
+        clientId: targetClientId,
         name,
         targetAmount: parseFloat(targetAmount),
         currentAmount: currentAmount ? parseFloat(currentAmount) : 0,

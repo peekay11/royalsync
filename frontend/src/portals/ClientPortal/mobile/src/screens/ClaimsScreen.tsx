@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -67,7 +67,7 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
   {
     id: 'car_accident',
     title: 'Car Accident & Collision',
-    subtitle: 'Motor vehicle collision, bumper bash, or multi-car crash',
+    subtitle: 'Motor collision, bumper bash, or multi-car crash',
     tag: 'MOTOR',
     iconType: 'car',
     defaultClaimType: 'Motor — Collision & Accident',
@@ -181,18 +181,10 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
       },
       {
         id: 'cause_of_death',
-        label: 'Attending Doctor / Specialist Cause of Death Clinical Summary',
+        label: 'Attending Doctor / Specialist Cause of Death Summary',
         type: 'text',
         iconType: 'document',
-        placeholder: 'e.g. Natural causes / illness under Dr. K. Naidoo at Morningside Clinic',
-      },
-      {
-        id: 'police_report_death',
-        label: 'Police Accident / Inquest Report (if unnatural cause or accident)',
-        type: 'image',
-        iconType: 'document',
-        uploadButtonText: 'Upload Police Inquest / AR Docket (optional)',
-        defaultSampleFile: { filename: 'saps_inquest_report.pdf', size: '1.9 MB' },
+        placeholder: 'e.g. Natural causes under Dr. K. Naidoo at Morningside Clinic',
       },
     ],
   },
@@ -239,14 +231,6 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
         uploadButtonText: 'Upload Crime Scene & Entry Point Photos',
         defaultSampleFile: { filename: 'forced_gate_lock_damage_photos.jpg', size: '3.2 MB' },
       },
-      {
-        id: 'purchase_invoices',
-        label: 'Proof of purchase, serial numbers, or valuation receipts',
-        type: 'image',
-        iconType: 'document',
-        uploadButtonText: 'Upload Valuation & Invoices (PDF / JPG)',
-        defaultSampleFile: { filename: 'original_purchase_receipts_valuations.pdf', size: '2.5 MB' },
-      },
     ],
   },
   {
@@ -285,18 +269,11 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
         uploadButtonText: 'Upload Invoices & Tariff Statements',
         defaultSampleFile: { filename: 'itemised_anaesthetist_hospital_invoice.pdf', size: '1.6 MB' },
       },
-      {
-        id: 'medical_aid_membership',
-        label: 'Medical aid membership certificate or pre-authorisation code',
-        type: 'text',
-        iconType: 'id',
-        placeholder: 'e.g. Discovery Health # DH-5542109 · Pre-Auth Ref: AUTH-992014',
-      },
     ],
   },
   {
     id: 'building_geyser',
-    title: 'Building, Geyser & Storm Damage',
+    title: 'Building & Geyser Damage',
     subtitle: 'Geyser burst, ceiling water leak, hail, or storm damage',
     tag: 'PROPERTY',
     iconType: 'home',
@@ -324,24 +301,17 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
       },
       {
         id: 'plumber_quote',
-        label: 'Professional Plumber / Electrician Compliance Report & Quote',
+        label: 'Plumber / Electrician Compliance Report & Quote',
         type: 'image',
         iconType: 'document',
         uploadButtonText: 'Upload Plumber Invoice & PIRB Certificate',
         defaultSampleFile: { filename: 'plumber_pirb_replacement_invoice.pdf', size: '1.2 MB' },
       },
-      {
-        id: 'damage_description_home',
-        label: 'Description of damage & affected electrical/household contents',
-        type: 'text',
-        iconType: 'document',
-        placeholder: 'e.g. 200L Kwikot geyser burst causing ceiling collapse in hallway & timber floor damage.',
-      },
     ],
   },
   {
     id: 'gadgets_allrisk',
-    title: 'Phone, Laptop & All-Risk Valuables',
+    title: 'Tech, Mobile & Valuables',
     subtitle: 'Cracked phone screen, water damaged laptop, or lost jewellery',
     tag: 'ALL-RISK',
     iconType: 'phone',
@@ -375,29 +345,31 @@ export const CLAIM_CATEGORIES: ClaimCategoryConfig[] = [
         uploadButtonText: 'Upload Till Slip / Purchase Invoice',
         defaultSampleFile: { filename: 'istore_tax_invoice_receipt.pdf', size: '1.1 MB' },
       },
-      {
-        id: 'repair_assessment_quote',
-        label: 'Authorised service centre diagnostic & repair quotation',
-        type: 'image',
-        iconType: 'document',
-        uploadButtonText: 'Upload Repair Assessment Quote',
-        defaultSampleFile: { filename: 'digicape_repair_quote.pdf', size: '1.3 MB' },
-      },
     ],
   },
 ];
 
-const PROVIDERS = ['King Price', 'Santam', 'Discovery Health', 'Liberty', 'Sanlam', 'Old Mutual', 'Momentum', 'Allan Gray'];
+const PROVIDERS = [
+  { name: 'Santam', desc: 'Short-term & Commercial' },
+  { name: 'King Price', desc: 'Agreed Value & Motor' },
+  { name: 'Discovery Health', desc: 'Medical Aid & Vitality' },
+  { name: 'Old Mutual', desc: 'Life, Funeral & Wealth' },
+  { name: 'Sanlam', desc: 'Life Cover & Investments' },
+  { name: 'Momentum', desc: 'Multiply & Comprehensive' },
+  { name: 'Liberty', desc: 'Life & Risk Protection' },
+  { name: 'Allan Gray', desc: 'Offshore & Portfolios' },
+];
 
 export const ClaimsScreen: React.FC = () => {
   const { colors, isDark } = useTheme();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [flow, setFlow] = useState<ClaimFlow>('idle');
+  const [activeStatusFilter, setActiveStatusFilter] = useState<'all' | 'active' | 'closed'>('all');
 
   // Active Category configuration
   const [selectedCategory, setSelectedCategory] = useState<ClaimCategoryConfig>(CLAIM_CATEGORIES[0]);
 
-  // Checklist state: checked statuses, text responses for word items, file uploads for image items
+  // Checklist state
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({
     road_photos: true,
     address: true,
@@ -417,9 +389,9 @@ export const ClaimsScreen: React.FC = () => {
   });
 
   // Claim details form state
-  const [selectedInsurer, setSelectedInsurer] = useState('King Price');
+  const [selectedInsurer, setSelectedInsurer] = useState('Santam');
   const [claimType, setClaimType] = useState('Motor — Collision & Accident');
-  const [incidentDate, setIncidentDate] = useState('2025-03-01');
+  const [incidentDate, setIncidentDate] = useState('2026-09-06');
   const [policeCase, setPoliceCase] = useState('');
   const [description, setDescription] = useState('');
   const [submittedId, setSubmittedId] = useState('');
@@ -428,10 +400,13 @@ export const ClaimsScreen: React.FC = () => {
   const [selectedClaimForLifecycle, setSelectedClaimForLifecycle] = useState<any>(null);
   const [lifecycleModalVisible, setLifecycleModalVisible] = useState(false);
 
+  // File preview modal
+  const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
+
   const fetchClaims = async () => {
     try {
       const data = await ApiService.getClaims();
-      setClaims(data);
+      setClaims(data || []);
     } catch (e) {
       console.log('Failed to fetch claims', e);
     }
@@ -451,14 +426,12 @@ export const ClaimsScreen: React.FC = () => {
     setSelectedCategory(cat);
     setClaimType(cat.defaultClaimType);
 
-    // Seed default checked state for the category's first 2 items
     const newChecked: Record<string, boolean> = {};
     cat.checklist.slice(0, 2).forEach(item => {
       newChecked[item.id] = true;
     });
     setCheckedItems(newChecked);
 
-    // Auto seed one sample upload for image items
     const newUploads: Record<string, UploadedFile[]> = {};
     const firstImg = cat.checklist.find(i => i.type === 'image');
     if (firstImg && firstImg.defaultSampleFile) {
@@ -472,12 +445,8 @@ export const ClaimsScreen: React.FC = () => {
       ];
     }
     setItemUploads(newUploads);
-
     setFlow('scene');
   };
-
-  // Active preview modal state
-  const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
 
   const toggleCheck = (id: string) => {
     setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
@@ -491,7 +460,6 @@ export const ClaimsScreen: React.FC = () => {
   };
 
   const handleAddUpload = (item: ChecklistItemConfig) => {
-    // Check if running in Web / Browser environment
     if (typeof document !== 'undefined') {
       const input = document.createElement('input');
       input.type = 'file';
@@ -534,7 +502,6 @@ export const ClaimsScreen: React.FC = () => {
       document.body.appendChild(input);
       input.click();
     } else {
-      // Native fallback
       const defaultFile = item.defaultSampleFile || {
         filename: `${item.id}_evidence_${Date.now().toString().slice(-4)}.jpg`,
         size: `${(1.2 + Math.random() * 2.0).toFixed(1)} MB`,
@@ -593,19 +560,19 @@ export const ClaimsScreen: React.FC = () => {
         documents: allUploadedFileNames.length > 0 ? allUploadedFileNames : ['claim_evidence_package.pdf'],
       });
 
-      setSubmittedId(newClaim.id);
+      setSubmittedId(newClaim.id || `CLM-2026-${Math.floor(1000 + Math.random() * 9000)}`);
       setClaims(prev => [newClaim, ...prev]);
       setFlow('done');
     } catch (e) {
       console.log('Error submitting claim', e);
-      setSubmittedId(`CLM-2025-${Math.floor(100 + Math.random() * 900)}`);
+      setSubmittedId(`CLM-2026-${Math.floor(1000 + Math.random() * 9000)}`);
       setFlow('done');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const renderCategoryIcon = (iconType: string, size = 20, color = colors.primary) => {
+  const renderCategoryIcon = (iconType: string, size = 20, color = '#d92820') => {
     switch (iconType) {
       case 'car':
         return <CarIcon color={color} size={size} />;
@@ -625,15 +592,29 @@ export const ClaimsScreen: React.FC = () => {
   const renderChecklistIcon = (type: string) => {
     switch (type) {
       case 'camera':
-        return <CameraIcon color={colors.primary} size={16} />;
+        return <CameraIcon color="#d92820" size={14} />;
       case 'id':
-        return <IdCardIcon color={colors.primary} size={16} />;
+        return <IdCardIcon color="#d92820" size={14} />;
       default:
-        return <DocumentTextIcon color={colors.primary} size={16} />;
+        return <DocumentTextIcon color="#d92820" size={14} />;
     }
   };
 
-  // ── Main Claims Dashboard (idle) ──
+  // Filtered claims for dashboard
+  const filteredClaims = useMemo(() => {
+    if (activeStatusFilter === 'active') {
+      return claims.filter(c => !c.stage10_claimClosed && c.status?.toLowerCase() !== 'settled' && c.status?.toLowerCase() !== 'closed');
+    }
+    if (activeStatusFilter === 'closed') {
+      return claims.filter(c => c.stage10_claimClosed || c.status?.toLowerCase() === 'settled' || c.status?.toLowerCase() === 'closed');
+    }
+    return claims;
+  }, [claims, activeStatusFilter]);
+
+  const activeClaimsCount = claims.filter(c => !c.stage10_claimClosed && c.status?.toLowerCase() !== 'settled' && c.status?.toLowerCase() !== 'closed').length;
+  const closedClaimsCount = claims.length - activeClaimsCount;
+
+  // ─── DASHBOARD (flow === 'idle') ───────────────────────────────────────────
   if (flow === 'idle') {
     return (
       <ScrollView
@@ -641,38 +622,44 @@ export const ClaimsScreen: React.FC = () => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d92820" />
         }
       >
-        <Text style={[styles.title, { color: colors.text }]}>Claims</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Manage & lodge insurance claims</Text>
+        {/* Header Title */}
+        <View style={styles.headerTitleRow}>
+          <View>
+            <Text style={[styles.title, { color: colors.text }]}>Claims & Assistance</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              Lodge incident claims, track workshop progress & view settlements
+            </Text>
+          </View>
+        </View>
 
-        {/* Start Wizard CTA */}
+        {/* Hero CTA Button */}
         <TouchableOpacity
-          style={[
-            styles.ctaButton,
-            {
-              backgroundColor: colors.card,
-            },
-          ]}
+          style={[styles.ctaButton, { backgroundColor: colors.card, borderColor: isDark ? '#333' : '#eee' }]}
           onPress={() => setFlow('category')}
           activeOpacity={0.88}
         >
-          <View style={[styles.ctaIconBox, { backgroundColor: colors.primaryAlpha }]}>
-            <ShieldIcon color={colors.primary} size={22} />
+          <View style={styles.ctaIconBox}>
+            <ShieldIcon color="#ffffff" size={22} />
           </View>
           <View style={styles.ctaInfo}>
-            <Text style={[styles.ctaTitle, { color: colors.text }]}>Report a New Claim</Text>
-            <Text style={[styles.ctaSub, { color: colors.textSecondary }]}>Select category (Car, Death, Theft, Medical, etc.)</Text>
+            <Text style={[styles.ctaTitle, { color: colors.text }]}>Report a New Incident</Text>
+            <Text style={[styles.ctaSub, { color: colors.textSecondary }]}>
+              Fast-track claim wizard with instant underwriter notice
+            </Text>
           </View>
-          <Text style={[styles.ctaArrow, { color: colors.primary }]}>→</Text>
+          <View style={styles.ctaArrowCircle}>
+            <Text style={styles.ctaArrow}>→</Text>
+          </View>
         </TouchableOpacity>
 
-        {/* Select Claim Category Quick Grid */}
+        {/* Category Grid Section */}
         <View style={styles.categorySectionHeader}>
-          <Text style={[styles.sectionHeading, { color: colors.textMuted }]}>SELECT CLAIM CATEGORY</Text>
+          <Text style={[styles.sectionHeading, { color: colors.textMuted }]}>CLAIM INCIDENT CATEGORIES</Text>
           <TouchableOpacity onPress={() => setFlow('category')}>
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>View All →</Text>
+            <Text style={styles.seeAllText}>View All ({CLAIM_CATEGORIES.length}) →</Text>
           </TouchableOpacity>
         </View>
 
@@ -684,76 +671,180 @@ export const ClaimsScreen: React.FC = () => {
                 styles.categoryCard,
                 {
                   backgroundColor: colors.card,
+                  borderColor: isDark ? '#262626' : '#f0f0f0',
                 },
               ]}
               onPress={() => handleSelectCategory(cat)}
-              activeOpacity={0.8}
+              activeOpacity={0.78}
             >
-              <View style={[styles.categoryIconCircle, { backgroundColor: colors.primaryAlpha }]}>
-                {renderCategoryIcon(cat.iconType, 20, colors.primary)}
-              </View>
-              <View style={styles.categoryCardBody}>
-                <View style={[styles.categoryTagPill, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                  <Text style={[styles.categoryTagText, { color: colors.textMuted }]}>{cat.tag}</Text>
+              <View style={styles.categoryCardTop}>
+                <View style={styles.categoryIconCircle}>
+                  {renderCategoryIcon(cat.iconType, 18, '#d92820')}
                 </View>
-                <Text style={[styles.categoryCardTitle, { color: colors.text }]} numberOfLines={1}>{cat.title}</Text>
-                <Text style={[styles.categoryCardSub, { color: colors.textSecondary }]} numberOfLines={2}>{cat.subtitle}</Text>
+                <View style={[styles.categoryTagPill, { backgroundColor: isDark ? '#2a1a1a' : '#fee2e2' }]}>
+                  <Text style={styles.categoryTagText}>{cat.tag}</Text>
+                </View>
               </View>
+              <Text style={[styles.categoryCardTitle, { color: colors.text }]} numberOfLines={1}>
+                {cat.title}
+              </Text>
+              <Text style={[styles.categoryCardSub, { color: colors.textSecondary }]} numberOfLines={2}>
+                {cat.subtitle}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Recent Claims List */}
-        <Text style={[styles.sectionHeading, { color: colors.textMuted, marginTop: 24 }]}>RECENT CLAIMS</Text>
-        <View style={styles.claimsList}>
-          {claims.map((c, i) => (
+        {/* Recent Claims Section */}
+        <View style={[styles.categorySectionHeader, { marginTop: 24, marginBottom: 12 }]}>
+          <Text style={[styles.sectionHeading, { color: colors.textMuted }]}>MY CLAIMS PORTFOLIO</Text>
+          <View style={styles.filterPillsRow}>
             <TouchableOpacity
-              key={i}
-              activeOpacity={0.8}
-              onPress={() => {
-                setSelectedClaimForLifecycle(c);
-                setLifecycleModalVisible(true);
-              }}
-              style={[
-                styles.claimCard,
-                {
-                  backgroundColor: colors.card,
-                },
-              ]}
+              style={[styles.filterPill, activeStatusFilter === 'all' && styles.filterPillActive]}
+              onPress={() => setActiveStatusFilter('all')}
             >
-              <View style={styles.claimHeaderRow}>
-                <CompanyLogo name={c.insurer} size={36} />
-                <View style={styles.claimMainInfo}>
-                  <Text style={[styles.claimType, { color: colors.text }]}>{c.type}</Text>
-                  <Text style={[styles.claimMeta, { color: colors.textSecondary }]}>
-                    {c.client} · {c.insurer}
-                  </Text>
-                </View>
-                <View
+              <Text style={[styles.filterPillText, activeStatusFilter === 'all' && styles.filterPillTextActive]}>
+                All ({claims.length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterPill, activeStatusFilter === 'active' && styles.filterPillActive]}
+              onPress={() => setActiveStatusFilter('active')}
+            >
+              <Text style={[styles.filterPillText, activeStatusFilter === 'active' && styles.filterPillTextActive]}>
+                Active ({activeClaimsCount})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterPill, activeStatusFilter === 'closed' && styles.filterPillActive]}
+              onPress={() => setActiveStatusFilter('closed')}
+            >
+              <Text style={[styles.filterPillText, activeStatusFilter === 'closed' && styles.filterPillTextActive]}>
+                Settled ({closedClaimsCount})
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {filteredClaims.length === 0 ? (
+          <View style={[styles.emptyClaimsCard, { backgroundColor: colors.card, borderColor: isDark ? '#262626' : '#f0f0f0' }]}>
+            <ShieldIcon color="#9ca3af" size={32} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Claims in this View</Text>
+            <Text style={[styles.emptySub, { color: colors.textMuted }]}>
+              {activeStatusFilter === 'active'
+                ? 'You have no active claims currently in assessment or repair.'
+                : 'No claims recorded on file. Tap Report a New Incident to submit.'}
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyActionBtn}
+              onPress={() => setFlow('category')}
+            >
+              <Text style={styles.emptyActionText}>+ Lodge New Claim</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.claimsList}>
+            {filteredClaims.map((c, i) => {
+              const currentStage = c.currentStageIndex || 1;
+              const isSettled = c.stage10_claimClosed || c.status?.toLowerCase() === 'settled' || c.status?.toLowerCase() === 'closed';
+
+              return (
+                <TouchableOpacity
+                  key={c.id || i}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setSelectedClaimForLifecycle(c);
+                    setLifecycleModalVisible(true);
+                  }}
                   style={[
-                    styles.statusBadge,
+                    styles.claimCard,
                     {
-                      backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.04)',
+                      backgroundColor: colors.card,
+                      borderColor: isDark ? '#262626' : '#f0f0f0',
                     },
                   ]}
                 >
-                  <Text style={[styles.statusText, { color: c.statusColor }]}>{c.status}</Text>
-                </View>
-              </View>
+                  {/* Top Row */}
+                  <View style={styles.claimHeaderRow}>
+                    <CompanyLogo name={c.insurer || 'Santam'} size={38} />
+                    <View style={styles.claimMainInfo}>
+                      <View style={styles.claimTypeRow}>
+                        <Text style={[styles.claimType, { color: colors.text }]} numberOfLines={1}>
+                          {c.type}
+                        </Text>
+                      </View>
+                      <Text style={[styles.claimMeta, { color: colors.textSecondary }]}>
+                        {c.insurer || 'Underwriter'} · {c.reference || c.id}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor: isSettled
+                            ? (isDark ? '#14301d' : '#dcfce7')
+                            : (isDark ? '#2d2412' : '#fef3c7'),
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color: isSettled ? '#16a34a' : '#d97706',
+                          },
+                        ]}
+                      >
+                        {isSettled ? 'Settled' : c.status || 'In Assessment'}
+                      </Text>
+                    </View>
+                  </View>
 
-              <View style={styles.claimFooterRow}>
-                <Text style={[styles.claimId, { color: colors.textMuted }]}>{c.id}</Text>
-                <Text style={[styles.claimAmount, { color: colors.gold }]}>{c.amount}</Text>
-              </View>
-              <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: isDark ? '#222' : '#f0f0f0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '700' }}>
-                  Stage {c.currentStageIndex || 1}/10: Track Lifecycle →
-                </Text>
-                <Text style={{ fontSize: 10, color: colors.textMuted }}>Live Workshop Feed</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+                  {/* Middle Row */}
+                  <View style={styles.claimMiddleRow}>
+                    <View>
+                      <Text style={[styles.claimFieldLabel, { color: colors.textMuted }]}>CLAIM AMOUNT</Text>
+                      <Text style={styles.claimAmount}>
+                        {c.amount ? (String(c.amount).startsWith('R') ? String(c.amount) : `R ${c.amount}`) : 'R 0.00'}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={[styles.claimFieldLabel, { color: colors.textMuted }]}>INCIDENT DATE</Text>
+                      <Text style={[styles.claimDateText, { color: colors.textSecondary }]}>
+                        {c.incidentDate ? new Date(c.incidentDate).toLocaleDateString() : 'Recent'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Lifecycle 10-Stage Mini Visual Bar */}
+                  <View style={[styles.claimProgressBox, { backgroundColor: isDark ? '#171717' : '#f9fafb' }]}>
+                    <View style={styles.claimProgressTop}>
+                      <Text style={styles.claimStageTitle}>
+                        {isSettled ? '✓ Lifecycle Completed' : `Stage ${currentStage}/10: Process Active`}
+                      </Text>
+                      <Text style={styles.claimStageLink}>Track Live Workshop Feed →</Text>
+                    </View>
+
+                    {/* Visual Segment Bar */}
+                    <View style={styles.miniProgressBarTrack}>
+                      <View
+                        style={[
+                          styles.miniProgressBarFill,
+                          {
+                            width: isSettled ? '100%' : `${Math.max(10, currentStage * 10)}%`,
+                            backgroundColor: isSettled ? '#16a34a' : '#d92820',
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         <ClaimLifecycleModal
           visible={lifecycleModalVisible}
@@ -765,32 +856,32 @@ export const ClaimsScreen: React.FC = () => {
     );
   }
 
-  // ── Step 1: Category Picker (if flow === 'category') ──
+  // ─── STEP 1: CATEGORY SELECTION (flow === 'category') ──────────────────────
   if (flow === 'category') {
     return (
       <View style={[styles.wizardContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.wizardHeader, { backgroundColor: colors.backgroundElevated }]}>
+        <View style={[styles.wizardHeader, { backgroundColor: colors.card, borderBottomColor: isDark ? '#262626' : '#f0f0f0' }]}>
           <TouchableOpacity
-            style={[styles.wizardBackBtn, { backgroundColor: colors.card }]}
+            style={[styles.wizardBackBtn, { backgroundColor: isDark ? '#262626' : '#f5f5f5' }]}
             onPress={() => setFlow('idle')}
           >
             <Text style={[styles.wizardBackText, { color: colors.text }]}>✕</Text>
           </TouchableOpacity>
           <View style={styles.wizardProgressArea}>
-            <Text style={[styles.wizardStepText, { color: colors.textMuted }]}>New Claim · Step 1 of 3 (Select Category)</Text>
-            <View style={[styles.wizardProgressTrack, { backgroundColor: isDark ? '#252525' : '#e0e4e8' }]}>
-              <View style={[styles.wizardProgressFill, { width: '33.3%', backgroundColor: colors.primary }]} />
+            <Text style={[styles.wizardStepText, { color: colors.textMuted }]}>Step 1 of 3 · Incident Type</Text>
+            <View style={[styles.wizardProgressTrack, { backgroundColor: isDark ? '#252525' : '#e5e7eb' }]}>
+              <View style={[styles.wizardProgressFill, { width: '33.3%', backgroundColor: '#d92820' }]} />
             </View>
           </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.wizardContent} showsVerticalScrollIndicator={false}>
           <Text style={[styles.wizardTitle, { color: colors.text }]}>What happened?</Text>
-          <Text style={[styles.wizardSub, { color: colors.textMuted, marginBottom: 20 }]}>
-            Select the claim category below to load the required statutory forms & evidence checklist.
+          <Text style={[styles.wizardSub, { color: colors.textMuted, marginBottom: 18 }]}>
+            Select the incident category to load the exact statutory evidence checklist & forms.
           </Text>
 
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: 10 }}>
             {CLAIM_CATEGORIES.map(cat => {
               const isChosen = selectedCategory.id === cat.id;
               return (
@@ -799,28 +890,29 @@ export const ClaimsScreen: React.FC = () => {
                   style={[
                     styles.categoryChooserCard,
                     {
-                      backgroundColor: isChosen ? colors.hoverBackground : colors.card,
+                      backgroundColor: colors.card,
+                      borderColor: isChosen ? '#d92820' : (isDark ? '#262626' : '#f0f0f0'),
                     },
                   ]}
                   onPress={() => handleSelectCategory(cat)}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.categoryIconCircleLarge, { backgroundColor: isChosen ? colors.primary : colors.primaryAlpha }]}>
-                    {renderCategoryIcon(cat.iconType, 24, isChosen ? '#ffffff' : colors.primary)}
+                  <View style={[styles.categoryIconCircleLarge, { backgroundColor: isDark ? '#2a1414' : '#fee2e2' }]}>
+                    {renderCategoryIcon(cat.iconType, 22, '#d92820')}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                       <Text style={[styles.categoryChooserTitle, { color: colors.text }]}>{cat.title}</Text>
-                      <View style={[styles.categoryTagPill, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}>
-                        <Text style={[styles.categoryTagText, { color: colors.primary }]}>{cat.tag}</Text>
+                      <View style={[styles.categoryTagPill, { backgroundColor: isDark ? '#2a1a1a' : '#fee2e2' }]}>
+                        <Text style={styles.categoryTagText}>{cat.tag}</Text>
                       </View>
                     </View>
                     <Text style={[styles.categoryChooserSub, { color: colors.textSecondary }]}>{cat.subtitle}</Text>
-                    <Text style={[styles.checklistCountSub, { color: colors.gold }]}>
-                      {cat.checklist.length} checklist items · {cat.policeNotice.required ? 'SAPS Report required' : 'Direct underwriter payout'}
+                    <Text style={styles.checklistCountSub}>
+                      {cat.checklist.length} checklist items · {cat.policeNotice.required ? 'SAPS Report required' : 'Direct underwriter claim'}
                     </Text>
                   </View>
-                  <Text style={[styles.ctaArrow, { color: colors.primary }]}>→</Text>
+                  <Text style={styles.chooserArrow}>→</Text>
                 </TouchableOpacity>
               );
             })}
@@ -830,17 +922,17 @@ export const ClaimsScreen: React.FC = () => {
     );
   }
 
-  // ── Multi-Step Claim Wizard (Checklist / Register / Done) ──
-  const currentStepNumber = flow === 'scene' ? 2 : flow === 'register' ? 3 : 3;
+  // ─── MULTI-STEP WIZARD (flow === 'scene' | 'register' | 'done') ─────────────
+  const currentStepNumber = flow === 'scene' ? 2 : 3;
   const totalSteps = 3;
   const completedChecklistCount = selectedCategory.checklist.filter(item => checkedItems[item.id]).length;
 
   return (
     <View style={[styles.wizardContainer, { backgroundColor: colors.background }]}>
       {/* Wizard Header */}
-      <View style={[styles.wizardHeader, { backgroundColor: colors.backgroundElevated }]}>
+      <View style={[styles.wizardHeader, { backgroundColor: colors.card, borderBottomColor: isDark ? '#262626' : '#f0f0f0' }]}>
         <TouchableOpacity
-          style={[styles.wizardBackBtn, { backgroundColor: colors.card }]}
+          style={[styles.wizardBackBtn, { backgroundColor: isDark ? '#262626' : '#f5f5f5' }]}
           onPress={() => {
             if (flow === 'register') setFlow('scene');
             else if (flow === 'scene') setFlow('category');
@@ -851,15 +943,15 @@ export const ClaimsScreen: React.FC = () => {
         </TouchableOpacity>
         <View style={styles.wizardProgressArea}>
           <Text style={[styles.wizardStepText, { color: colors.textMuted }]}>
-            {flow === 'done' ? 'Claim Submitted' : `${selectedCategory.title} · Step ${currentStepNumber} of ${totalSteps}`}
+            {flow === 'done' ? 'Claim Logged' : `${selectedCategory.title} · Step ${currentStepNumber} of ${totalSteps}`}
           </Text>
-          <View style={[styles.wizardProgressTrack, { backgroundColor: isDark ? '#252525' : '#e0e4e8' }]}>
+          <View style={[styles.wizardProgressTrack, { backgroundColor: isDark ? '#252525' : '#e5e7eb' }]}>
             <View
               style={[
                 styles.wizardProgressFill,
                 {
                   width: flow === 'done' ? '100%' : `${(currentStepNumber / totalSteps) * 100}%`,
-                  backgroundColor: colors.primary,
+                  backgroundColor: '#d92820',
                 },
               ]}
             />
@@ -875,17 +967,17 @@ export const ClaimsScreen: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.wizardTitle, { color: colors.text }]}>{selectedCategory.title}</Text>
                 <Text style={[styles.wizardSub, { color: colors.textMuted }]}>
-                  Upload evidence & statutory forms for {selectedCategory.tag.toLowerCase()} claim
+                  Upload evidence & required documentation for claim approval
                 </Text>
               </View>
-              <View style={[styles.countBadge, { backgroundColor: colors.primaryAlpha }]}>
-                <Text style={[styles.countBadgeText, { color: colors.primary }]}>
-                  {completedChecklistCount}/{selectedCategory.checklist.length} Ready
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>
+                  {completedChecklistCount}/{selectedCategory.checklist.length} Complete
                 </Text>
               </View>
             </View>
 
-            {/* Checklist items with inline Image Upload Boxes and Word Response Boxes */}
+            {/* Checklist Items */}
             <View style={styles.checklistContainer}>
               {selectedCategory.checklist.map((item) => {
                 const isChecked = !!checkedItems[item.id];
@@ -899,11 +991,12 @@ export const ClaimsScreen: React.FC = () => {
                     style={[
                       styles.itemCard,
                       {
-                        backgroundColor: isChecked ? colors.hoverBackground : colors.card,
+                        backgroundColor: colors.card,
+                        borderColor: isChecked ? '#d92820' : (isDark ? '#262626' : '#f0f0f0'),
                       },
                     ]}
                   >
-                    {/* Item Header with Checkbox & Label */}
+                    {/* Header with Checkbox */}
                     <TouchableOpacity
                       style={styles.itemHeader}
                       onPress={() => toggleCheck(item.id)}
@@ -913,7 +1006,7 @@ export const ClaimsScreen: React.FC = () => {
                         style={[
                           styles.checkbox,
                           {
-                            backgroundColor: isChecked ? colors.primary : (isDark ? '#2a2a2a' : '#e0e4e8'),
+                            backgroundColor: isChecked ? '#d92820' : (isDark ? '#2a2a2a' : '#e5e7eb'),
                           },
                         ]}
                       >
@@ -921,42 +1014,31 @@ export const ClaimsScreen: React.FC = () => {
                       </View>
 
                       <View style={styles.itemHeaderInfo}>
-                        <Text
-                          style={[
-                            styles.itemLabel,
-                            { color: isChecked ? colors.text : colors.textSecondary },
-                          ]}
-                        >
+                        <Text style={[styles.itemLabel, { color: colors.text }]}>
                           {item.label}
                         </Text>
                         <View style={styles.itemBadgeRow}>
-                          <View
-                            style={[
-                              styles.typeBadge,
-                              {
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                              },
-                            ]}
-                          >
+                          <View style={[styles.typeBadge, { backgroundColor: isDark ? '#222' : '#f5f5f5' }]}>
                             {renderChecklistIcon(item.iconType)}
                             <Text style={[styles.typeBadgeText, { color: colors.textMuted }]}>
-                              {item.type === 'image' ? 'DOCUMENT / PHOTO UPLOAD' : item.type === 'text' ? 'TEXT RESPONSE' : 'UPLOAD + DETAILS'}
+                              {item.type === 'image' ? 'PHOTO / DOC UPLOAD' : item.type === 'text' ? 'TEXT DETAILS' : 'UPLOAD + DETAILS'}
                             </Text>
                           </View>
                         </View>
                       </View>
                     </TouchableOpacity>
 
-                    {/* Inline Word Response Box */}
+                    {/* Word Response Field */}
                     {(item.type === 'text' || item.type === 'image_text') && (
                       <View style={styles.responseBoxContainer}>
-                        <Text style={[styles.boxLabel, { color: colors.textMuted }]}>ENTER DETAILS / REPORT:</Text>
+                        <Text style={[styles.boxLabel, { color: colors.textMuted }]}>DETAILS / STATEMENT:</Text>
                         <TextInput
                           style={[
                             styles.responseInput,
                             {
-                              backgroundColor: colors.inputBackground,
+                              backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
                               color: colors.text,
+                              borderColor: isDark ? '#333' : '#e5e7eb',
                             },
                           ]}
                           value={textVal}
@@ -968,12 +1050,12 @@ export const ClaimsScreen: React.FC = () => {
                       </View>
                     )}
 
-                    {/* Inline Image Upload Box */}
+                    {/* Document & Image Upload Area */}
                     {(item.type === 'image' || item.type === 'image_text') && (
                       <View style={styles.uploadBoxContainer}>
-                        <Text style={[styles.boxLabel, { color: colors.textMuted }]}>ATTACHED DOCUMENTS & PHOTOS:</Text>
+                        <Text style={[styles.boxLabel, { color: colors.textMuted }]}>ATTACHED EVIDENCE:</Text>
 
-                        {/* List of uploaded image chips */}
+                        {/* Uploaded Chips */}
                         {hasImages && (
                           <View style={styles.uploadedFilesList}>
                             {uploads.map((file) => (
@@ -982,7 +1064,8 @@ export const ClaimsScreen: React.FC = () => {
                                 style={[
                                   styles.fileChip,
                                   {
-                                    backgroundColor: isDark ? '#1a221c' : '#f0f9f4',
+                                    backgroundColor: isDark ? '#1a221c' : '#f0fdf4',
+                                    borderColor: isDark ? '#234a2e' : '#bbf7d0',
                                   },
                                 ]}
                               >
@@ -993,7 +1076,7 @@ export const ClaimsScreen: React.FC = () => {
                                     resizeMode="cover"
                                   />
                                 ) : (
-                                  <CameraIcon color={colors.success} size={14} />
+                                  <CameraIcon color="#16a34a" size={14} />
                                 )}
 
                                 <TouchableOpacity
@@ -1005,40 +1088,41 @@ export const ClaimsScreen: React.FC = () => {
                                     {file.filename}
                                   </Text>
                                   <Text style={[styles.fileSizeText, { color: colors.textMuted }]}>({file.size})</Text>
-                                  <Text style={[styles.previewHint, { color: colors.primary }]}>Preview</Text>
+                                  <Text style={styles.previewHint}>Preview</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                   onPress={() => handleRemoveUpload(item.id, file.id)}
                                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                 >
-                                  <Text style={[styles.removeFileBtn, { color: colors.primary }]}>✕</Text>
+                                  <Text style={styles.removeFileBtn}>✕</Text>
                                 </TouchableOpacity>
                               </View>
                             ))}
                           </View>
                         )}
 
-                        {/* Upload Trigger Box */}
+                        {/* Upload Drop Button */}
                         <TouchableOpacity
                           style={[
                             styles.uploadDropBox,
                             {
-                              backgroundColor: colors.inputBackground,
+                              backgroundColor: isDark ? '#1a1a1a' : '#f9fafb',
+                              borderColor: isDark ? '#333' : '#e5e7eb',
                             },
                           ]}
                           onPress={() => handleAddUpload(item)}
                           activeOpacity={0.7}
                         >
-                          <View style={[styles.uploadIconCircle, { backgroundColor: colors.primaryAlpha }]}>
-                            <CameraIcon color={colors.primary} size={16} />
+                          <View style={styles.uploadIconCircle}>
+                            <CameraIcon color="#d92820" size={15} />
                           </View>
                           <View style={{ flex: 1 }}>
-                            <Text style={[styles.uploadDropText, { color: colors.primary }]}>
+                            <Text style={styles.uploadDropText}>
                               {item.uploadButtonText || '+ Upload Evidence / Document'}
                             </Text>
                             <Text style={[styles.uploadDropSub, { color: colors.textSubtle }]}>
-                              Tap to select from camera or gallery (JPG, PNG, PDF)
+                              Tap to select from files or camera (JPG, PNG, PDF)
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -1049,18 +1133,11 @@ export const ClaimsScreen: React.FC = () => {
               })}
             </View>
 
-            {/* Notice banner */}
-            <View
-              style={[
-                styles.alertNotice,
-                {
-                  backgroundColor: colors.primaryAlpha,
-                },
-              ]}
-            >
+            {/* Police / Statutory Notice */}
+            <View style={[styles.alertNotice, { backgroundColor: isDark ? '#2a1a1a' : '#fef2f2', borderColor: '#fca5a5' }]}>
               <View style={styles.alertHeaderRow}>
-                <AlertIcon color={colors.primary} size={18} />
-                <Text style={[styles.alertHeading, { color: colors.primary }]}>{selectedCategory.policeNotice.heading}</Text>
+                <AlertIcon color="#d92820" size={18} />
+                <Text style={styles.alertHeading}>{selectedCategory.policeNotice.heading}</Text>
               </View>
               <Text style={[styles.alertText, { color: colors.textSecondary }]}>
                 {selectedCategory.policeNotice.text}
@@ -1069,66 +1146,76 @@ export const ClaimsScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Step 3: Register Details & Select Underwriter */}
+        {/* Step 3: Registration & Insurer */}
         {flow === 'register' && (
           <View>
-            <Text style={[styles.wizardTitle, { color: colors.text }]}>Claim Registration</Text>
+            <Text style={[styles.wizardTitle, { color: colors.text }]}>Underwriter & Details</Text>
             <Text style={[styles.wizardSub, { color: colors.textMuted }]}>
-              Confirm underwriter and summary details for {selectedCategory.title}
+              Confirm underwriter and incident circumstances for {selectedCategory.title}
             </Text>
 
-            {/* Insurer Selector with Logo.dev */}
-            <Text style={[styles.fieldLabel, { color: colors.textMuted, marginTop: 16 }]}>SELECT UNDERWRITER / INSURER</Text>
-            <View style={styles.providersWrap}>
-              {PROVIDERS.map(p => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.providerBtn,
-                    {
-                      backgroundColor: selectedInsurer === p ? colors.hoverBackground : colors.card,
-                    },
-                  ]}
-                  onPress={() => setSelectedInsurer(p)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <CompanyLogo name={p} size={22} rounded={false} />
-                    <Text
-                      style={[
-                        styles.providerBtnText,
-                        { color: selectedInsurer === p ? colors.primary : colors.textSecondary },
-                        selectedInsurer === p && styles.providerBtnTextActive,
-                      ]}
-                    >
-                      {p}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+            {/* Insurer Selector Grid */}
+            <Text style={[styles.fieldLabel, { color: colors.textMuted, marginTop: 18 }]}>SELECT UNDERWRITER / INSURER</Text>
+            <View style={styles.providersGrid}>
+              {PROVIDERS.map(p => {
+                const isSelected = selectedInsurer === p.name;
+                return (
+                  <TouchableOpacity
+                    key={p.name}
+                    style={[
+                      styles.providerCard,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: isSelected ? '#d92820' : (isDark ? '#262626' : '#f0f0f0'),
+                      },
+                    ]}
+                    onPress={() => setSelectedInsurer(p.name)}
+                    activeOpacity={0.8}
+                  >
+                    <CompanyLogo name={p.name} size={30} />
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Text style={[styles.providerNameText, { color: colors.text, fontWeight: isSelected ? '800' : '600' }]}>
+                        {p.name}
+                      </Text>
+                      <Text style={[styles.providerDescText, { color: colors.textMuted }]} numberOfLines={1}>
+                        {p.desc}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <View style={styles.providerSelectedCheck}>
+                        <CheckmarkIcon color="#ffffff" size={10} strokeWidth={3} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            {/* Insurer direct badge info */}
-            <View
-              style={[
-                styles.directSubmitBanner,
-                {
-                  backgroundColor: colors.card,
-                },
-              ]}
-            >
+            {/* Direct Submit Banner */}
+            <View style={[styles.directSubmitBanner, { backgroundColor: colors.card, borderColor: isDark ? '#262626' : '#f0f0f0' }]}>
               <View style={styles.directSubmitHeader}>
-                <CompanyLogo name={selectedInsurer} size={32} />
-                <Text style={[styles.directSubmitTitle, { color: colors.text }]}>Direct Submission to {selectedInsurer}</Text>
+                <CompanyLogo name={selectedInsurer} size={28} />
+                <Text style={[styles.directSubmitTitle, { color: colors.text }]}>
+                  Direct Submission to {selectedInsurer}
+                </Text>
               </View>
               <Text style={[styles.directSubmitSub, { color: colors.textSecondary }]}>
-                Your {selectedCategory.title.toLowerCase()} evidence checklist ({completedChecklistCount} items) will be bundled and sent directly to {selectedInsurer} claims department.
+                Your {selectedCategory.title.toLowerCase()} evidence ({completedChecklistCount} items) will be formatted into an official underwriter docket and assigned to a claims handler.
               </Text>
             </View>
 
+            {/* Date Input */}
             <View style={styles.inputGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>DATE OF INCIDENT / LOSS</Text>
               <TextInput
-                style={[styles.textInput, { backgroundColor: colors.inputBackground, color: colors.text }]}
+                style={[
+                  styles.textInput,
+                  {
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                    borderColor: isDark ? '#262626' : '#e5e7eb',
+                  },
+                ]}
                 value={incidentDate}
                 onChangeText={setIncidentDate}
                 placeholder="YYYY-MM-DD"
@@ -1136,23 +1223,40 @@ export const ClaimsScreen: React.FC = () => {
               />
             </View>
 
+            {/* SAPS Case # */}
             {selectedCategory.policeNotice.required && (
               <View style={styles.inputGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>SAPS POLICE CASE / AR NUMBER (IF APPLICABLE)</Text>
                 <TextInput
-                  style={[styles.textInput, { backgroundColor: colors.inputBackground, color: colors.text }]}
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      borderColor: isDark ? '#262626' : '#e5e7eb',
+                    },
+                  ]}
                   value={policeCase}
                   onChangeText={setPoliceCase}
-                  placeholder="e.g. CAS 421/01/2025 (Sandton Police Station)"
+                  placeholder="e.g. CAS 421/09/2026 (Sandton Police Station)"
                   placeholderTextColor={colors.textSubtle}
                 />
               </View>
             )}
 
+            {/* Additional Notes */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>ADDITIONAL INCIDENT NOTES (OPTIONAL)</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>ADDITIONAL INCIDENT NOTES</Text>
               <TextInput
-                style={[styles.textInput, styles.textArea, { backgroundColor: colors.inputBackground, color: colors.text }]}
+                style={[
+                  styles.textInput,
+                  styles.textArea,
+                  {
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                    borderColor: isDark ? '#262626' : '#e5e7eb',
+                  },
+                ]}
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Describe any other relevant circumstances…"
@@ -1164,47 +1268,47 @@ export const ClaimsScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Step 4: Submission Done */}
+        {/* Step 4: Done Confirmation */}
         {flow === 'done' && (
           <View style={styles.doneContainer}>
-            <View style={[styles.doneIconBox, { backgroundColor: colors.successAlpha }]}>
-              <CheckmarkIcon color={colors.success} size={40} strokeWidth={3} />
+            <View style={styles.doneIconBox}>
+              <CheckmarkIcon color="#ffffff" size={36} strokeWidth={3} />
             </View>
-            <Text style={[styles.doneTitle, { color: colors.text }]}>Claim Submitted!</Text>
+            <Text style={[styles.doneTitle, { color: colors.text }]}>Claim Logged Successfully!</Text>
             <Text style={[styles.doneSub, { color: colors.textSecondary }]}>
-              Your {selectedCategory.title} claim has been logged with {selectedInsurer} and your adviser Qiniso Ntuli.
+              Your {selectedCategory.title} claim has been transmitted to {selectedInsurer} claims desk and your broker adviser.
             </Text>
 
-            <View style={[styles.refBox, { backgroundColor: colors.card }]}>
-              <CompanyLogo name={selectedInsurer} size={40} style={{ marginBottom: 8 }} />
+            <View style={[styles.refBox, { backgroundColor: colors.card, borderColor: isDark ? '#262626' : '#f0f0f0' }]}>
+              <CompanyLogo name={selectedInsurer} size={36} style={{ marginBottom: 6 }} />
               <Text style={[styles.refLabel, { color: colors.textMuted }]}>OFFICIAL CLAIM TRACKING REF</Text>
-              <Text style={[styles.doneIdText, { color: colors.gold }]}>{submittedId}</Text>
-              <Text style={[styles.refStatus, { color: colors.success }]}>● In Review by {selectedInsurer} Claims Desk</Text>
+              <Text style={styles.doneIdText}>{submittedId}</Text>
+              <Text style={styles.refStatus}>● In Review by {selectedInsurer} Assessor</Text>
             </View>
 
             <Text style={[styles.doneNote, { color: colors.textMuted }]}>
-              An assessor will be assigned within 24 hours. You will receive updates via SMS and push notifications.
+              An assessor will review your uploaded evidence within 24-48 hours. Live workshop and claim milestone alerts will be sent to your app.
             </Text>
           </View>
         )}
       </ScrollView>
 
-      {/* Wizard Bottom Navigation Buttons */}
-      <View style={[styles.wizardFooter, { backgroundColor: colors.backgroundElevated }]}>
+      {/* Wizard Bottom Buttons */}
+      <View style={[styles.wizardFooter, { backgroundColor: colors.card, borderTopColor: isDark ? '#262626' : '#f0f0f0' }]}>
         {flow === 'scene' && (
           <View style={styles.wizardFooterRow}>
             <TouchableOpacity
-              style={[styles.wizardBackNavBtn, { backgroundColor: colors.card }]}
+              style={[styles.wizardBackNavBtn, { backgroundColor: isDark ? '#262626' : '#f5f5f5' }]}
               onPress={() => setFlow('category')}
             >
               <Text style={[styles.wizardBackNavText, { color: colors.textSecondary }]}>← Categories</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.wizardNextBtn, { backgroundColor: colors.primary }]}
+              style={styles.wizardNextBtn}
               onPress={() => setFlow('register')}
             >
-              <Text style={styles.wizardNextText}>Next: Select Insurer →</Text>
+              <Text style={styles.wizardNextText}>Next: Choose Insurer →</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1212,14 +1316,14 @@ export const ClaimsScreen: React.FC = () => {
         {flow === 'register' && (
           <View style={styles.wizardFooterRow}>
             <TouchableOpacity
-              style={[styles.wizardBackNavBtn, { backgroundColor: colors.card }]}
+              style={[styles.wizardBackNavBtn, { backgroundColor: isDark ? '#262626' : '#f5f5f5' }]}
               onPress={() => setFlow('scene')}
             >
-              <Text style={[styles.wizardBackNavText, { color: colors.textSecondary }]}>← Checklist</Text>
+              <Text style={[styles.wizardBackNavText, { color: colors.textSecondary }]}>← Evidence</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.wizardNextBtn, { backgroundColor: colors.primary }]}
+              style={styles.wizardNextBtn}
               onPress={handleSubmitClaim}
               disabled={submitting}
             >
@@ -1234,7 +1338,7 @@ export const ClaimsScreen: React.FC = () => {
 
         {flow === 'done' && (
           <TouchableOpacity
-            style={[styles.doneDismissBtn, { backgroundColor: colors.primary }]}
+            style={styles.doneDismissBtn}
             onPress={() => {
               setFlow('idle');
               setDescription('');
@@ -1246,7 +1350,7 @@ export const ClaimsScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Interactive Evidence / Document Preview Modal */}
+      {/* File Preview Modal */}
       <Modal
         visible={previewFile !== null}
         transparent
@@ -1255,7 +1359,6 @@ export const ClaimsScreen: React.FC = () => {
       >
         <View style={styles.previewModalOverlay}>
           <View style={[styles.previewModalContainer, { backgroundColor: colors.card }]}>
-            {/* Preview Modal Header */}
             <View style={styles.previewModalHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.previewModalTitle, { color: colors.text }]} numberOfLines={1}>
@@ -1266,14 +1369,13 @@ export const ClaimsScreen: React.FC = () => {
                 </Text>
               </View>
               <TouchableOpacity
-                style={[styles.previewCloseBtn, { backgroundColor: colors.backgroundElevated }]}
+                style={[styles.previewCloseBtn, { backgroundColor: isDark ? '#333' : '#eee' }]}
                 onPress={() => setPreviewFile(null)}
               >
                 <Text style={[styles.previewCloseText, { color: colors.text }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Preview Content Area */}
             <View style={[styles.previewContentArea, { backgroundColor: isDark ? '#141414' : '#f0f2f5' }]}>
               {previewFile?.uri && (previewFile.uri.startsWith('data:image') || previewFile.filename.match(/\.(jpg|jpeg|png|webp|gif)$/i)) ? (
                 <Image
@@ -1283,19 +1385,18 @@ export const ClaimsScreen: React.FC = () => {
                 />
               ) : (
                 <View style={styles.docPreviewPlaceholder}>
-                  <DocumentTextIcon color={colors.primary} size={64} />
+                  <DocumentTextIcon color="#d92820" size={56} />
                   <Text style={[styles.docPreviewName, { color: colors.text }]}>{previewFile?.filename}</Text>
-                  <View style={[styles.verifiedDocBadge, { backgroundColor: colors.successAlpha }]}>
-                    <Text style={[styles.verifiedDocText, { color: colors.success }]}>✓ Validated Document ({previewFile?.size})</Text>
+                  <View style={styles.verifiedDocBadge}>
+                    <Text style={styles.verifiedDocText}>✓ Validated Document ({previewFile?.size})</Text>
                   </View>
                 </View>
               )}
             </View>
 
-            {/* Preview Modal Footer */}
             <View style={styles.previewModalFooter}>
               <TouchableOpacity
-                style={[styles.previewDoneBtn, { backgroundColor: colors.primary }]}
+                style={styles.previewDoneBtn}
                 onPress={() => setPreviewFile(null)}
               >
                 <Text style={styles.previewDoneBtnText}>Close Preview</Text>
@@ -1313,31 +1414,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 32,
+    paddingBottom: 40,
+  },
+  headerTitleRow: {
+    marginBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    marginBottom: 18,
+    fontSize: 12,
+    marginTop: 3,
+    lineHeight: 16,
   },
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 18,
+    borderWidth: 1,
     padding: 16,
-    gap: 14,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 22,
   },
   ctaIconBox: {
-    width: 46,
-    height: 46,
+    width: 44,
+    height: 44,
     borderRadius: 14,
+    backgroundColor: '#d92820',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1351,10 +1458,20 @@ const styles = StyleSheet.create({
   ctaSub: {
     fontSize: 11,
     marginTop: 2,
+    lineHeight: 15,
+  },
+  ctaArrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ctaArrow: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '800',
+    color: '#d92820',
   },
   categorySectionHeader: {
     flexDirection: 'row',
@@ -1364,98 +1481,132 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.1,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   seeAllText: {
     fontSize: 11,
     fontWeight: '700',
+    color: '#d92820',
+  },
+  filterPillsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  filterPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  filterPillActive: {
+    backgroundColor: '#d92820',
+  },
+  filterPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6b7280',
+  },
+  filterPillTextActive: {
+    color: '#ffffff',
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    rowGap: 10,
   },
   categoryCard: {
     width: '48.5%',
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
   },
-  categoryIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  categoryCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
-  categoryCardBody: {
-    flex: 1,
+  categoryIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryTagPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 4,
+    borderRadius: 5,
   },
   categoryTagText: {
     fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    color: '#d92820',
+    letterSpacing: 0.4,
   },
   categoryCardTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     marginBottom: 2,
   },
   categoryCardSub: {
     fontSize: 10,
-    lineHeight: 14,
+    lineHeight: 13,
   },
-  categoryChooserCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  emptyClaimsCard: {
     borderRadius: 18,
-    padding: 16,
-    gap: 14,
-  },
-  categoryIconCircleLarge: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    borderWidth: 1,
+    padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 8,
   },
-  categoryChooserTitle: {
+  emptyTitle: {
     fontSize: 14,
-    fontWeight: '800',
-  },
-  categoryChooserSub: {
-    fontSize: 11,
-    marginTop: 1,
-  },
-  checklistCountSub: {
-    fontSize: 10,
     fontWeight: '700',
+    marginTop: 8,
+  },
+  emptySub: {
+    fontSize: 11,
+    textAlign: 'center',
     marginTop: 4,
+    maxWidth: 260,
+    lineHeight: 16,
+  },
+  emptyActionBtn: {
+    backgroundColor: '#d92820',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 14,
+  },
+  emptyActionText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   claimsList: {
     gap: 10,
-    marginTop: 10,
   },
   claimCard: {
     borderRadius: 18,
-    padding: 16,
+    borderWidth: 1,
+    padding: 14,
   },
   claimHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
+    gap: 10,
   },
   claimMainInfo: {
     flex: 1,
+  },
+  claimTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   claimType: {
     fontSize: 13,
@@ -1463,7 +1614,7 @@ const styles = StyleSheet.create({
   },
   claimMeta: {
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -1471,22 +1622,65 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'capitalize',
   },
-  claimFooterRow: {
+  claimMiddleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 6,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.04)',
   },
-  claimId: {
-    fontSize: 11,
+  claimFieldLabel: {
+    fontSize: 9,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   claimAmount: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
+    color: '#d92820',
+    marginTop: 1,
+  },
+  claimDateText: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  claimProgressBox: {
+    borderRadius: 10,
+    padding: 8,
+    marginTop: 10,
+  },
+  claimProgressTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  claimStageTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#d92820',
+  },
+  claimStageLink: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6b7280',
+  },
+  miniProgressBarTrack: {
+    height: 4,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  miniProgressBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   wizardContainer: {
     flex: 1,
@@ -1494,21 +1688,22 @@ const styles = StyleSheet.create({
   wizardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 14,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
     gap: 12,
   },
   wizardBackBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   wizardBackText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   wizardProgressArea: {
     flex: 1,
@@ -1528,45 +1723,84 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   wizardContent: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 16,
+    paddingBottom: 36,
+  },
+  wizardTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  wizardSub: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  categoryChooserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
+    gap: 12,
+  },
+  categoryIconCircleLarge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryChooserTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  categoryChooserSub: {
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 1,
+  },
+  checklistCountSub: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#d92820',
+    marginTop: 3,
+  },
+  chooserArrow: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#d92820',
   },
   stepTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 18,
+    marginBottom: 16,
     gap: 10,
   },
   countBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: '#fee2e2',
   },
   countBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-  },
-  wizardTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  wizardSub: {
-    fontSize: 12,
-    marginTop: 3,
+    color: '#d92820',
   },
   checklistContainer: {
-    gap: 12,
-    marginBottom: 20,
+    gap: 10,
+    marginBottom: 16,
   },
   itemCard: {
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
   },
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 10,
   },
   checkbox: {
     width: 22,
@@ -1574,15 +1808,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    marginTop: 1,
   },
   itemHeaderInfo: {
     flex: 1,
   },
   itemLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   itemBadgeRow: {
     flexDirection: 'row',
@@ -1592,35 +1826,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   typeBadgeText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   boxLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 0.8,
+    marginBottom: 4,
   },
   responseBoxContainer: {
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 10,
+    paddingTop: 8,
   },
   responseInput: {
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 13,
-    minHeight: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12,
+    minHeight: 40,
   },
   uploadBoxContainer: {
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 10,
+    paddingTop: 8,
   },
   uploadedFilesList: {
     gap: 6,
@@ -1630,211 +1865,238 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  fileThumbnail: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
   },
   fileNameText: {
-    flex: 1,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   fileSizeText: {
-    fontSize: 10,
+    fontSize: 9,
+  },
+  previewHint: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#d92820',
   },
   removeFileBtn: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
+    color: '#ef4444',
     paddingHorizontal: 4,
   },
   uploadDropBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    padding: 10,
   },
   uploadIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#fee2e2',
     alignItems: 'center',
     justifyContent: 'center',
   },
   uploadDropText: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#d92820',
   },
   uploadDropSub: {
-    fontSize: 10,
+    fontSize: 9,
     marginTop: 1,
   },
   alertNotice: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginTop: 4,
   },
   alertHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    gap: 6,
+    marginBottom: 4,
   },
   alertHeading: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
+    color: '#d92820',
   },
   alertText: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 16,
   },
   fieldLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.1,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
     marginBottom: 8,
   },
-  providersWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  providersGrid: {
     gap: 8,
     marginBottom: 16,
   },
-  providerBtn: {
+  providerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderWidth: 1.5,
+    padding: 12,
   },
-  providerBtnText: {
+  providerNameText: {
     fontSize: 12,
-    fontWeight: '600',
   },
-  providerBtnTextActive: {
-    fontWeight: '800',
+  providerDescText: {
+    fontSize: 10,
+    marginTop: 1,
+  },
+  providerSelectedCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#d92820',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   directSubmitBanner: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 16,
   },
   directSubmitHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 6,
+    gap: 8,
+    marginBottom: 4,
   },
   directSubmitTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
   },
   directSubmitSub: {
     fontSize: 11,
-    lineHeight: 16,
+    lineHeight: 15,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   textInput: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 70,
     textAlignVertical: 'top',
   },
   doneContainer: {
     alignItems: 'center',
-    paddingTop: 30,
+    paddingTop: 24,
   },
   doneIconBox: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#16a34a',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   doneTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     marginBottom: 6,
+    textAlign: 'center',
   },
   doneSub: {
-    fontSize: 13,
+    fontSize: 12,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    lineHeight: 17,
   },
   refBox: {
     width: '100%',
-    borderRadius: 18,
+    borderRadius: 16,
+    borderWidth: 1,
     padding: 16,
     alignItems: 'center',
-    marginVertical: 18,
+    marginVertical: 16,
   },
   refLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '800',
     letterSpacing: 1,
     marginBottom: 4,
   },
   doneIdText: {
     fontSize: 18,
     fontWeight: '800',
+    color: '#d92820',
     marginVertical: 4,
   },
   refStatus: {
     fontSize: 11,
     fontWeight: '700',
+    color: '#16a34a',
   },
   doneNote: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: 'center',
-    paddingHorizontal: 20,
-    lineHeight: 17,
+    paddingHorizontal: 16,
+    lineHeight: 16,
   },
   wizardFooter: {
-    padding: 16,
+    padding: 14,
+    borderTopWidth: 1,
   },
   wizardFooterRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   wizardBackNavBtn: {
     flex: 1,
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 13,
     alignItems: 'center',
   },
   wizardBackNavText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   wizardNextBtn: {
     flex: 2,
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#d92820',
+    paddingVertical: 13,
     alignItems: 'center',
   },
   wizardNextText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   doneDismissBtn: {
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#d92820',
+    paddingVertical: 13,
     alignItems: 'center',
-  },
-  fileThumbnail: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-  },
-  previewHint: {
-    fontSize: 10,
-    fontWeight: '700',
-    paddingHorizontal: 4,
   },
   previewModalOverlay: {
     flex: 1,
@@ -1845,81 +2107,84 @@ const styles = StyleSheet.create({
   },
   previewModalContainer: {
     width: '100%',
-    maxWidth: 440,
-    maxHeight: '85%',
-    borderRadius: 24,
+    maxWidth: 400,
+    maxHeight: '80%',
+    borderRadius: 20,
     overflow: 'hidden',
   },
   previewModalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 10,
   },
   previewModalTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   previewModalSub: {
-    fontSize: 11,
+    fontSize: 10,
     marginTop: 2,
   },
   previewCloseBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewCloseText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
   },
   previewContentArea: {
     width: '100%',
-    height: 320,
+    height: 280,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 10,
   },
   fullPreviewImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   docPreviewPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    gap: 12,
+    padding: 16,
+    gap: 10,
   },
   docPreviewName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     textAlign: 'center',
   },
   verifiedDocBadge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
+    backgroundColor: '#dcfce7',
   },
   verifiedDocText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
+    color: '#16a34a',
   },
   previewModalFooter: {
-    padding: 16,
+    padding: 14,
   },
   previewDoneBtn: {
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#d92820',
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewDoneBtnText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 });
