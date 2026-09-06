@@ -18,12 +18,29 @@ export const apiRequest = async <T>(endpoint: string, options: RequestInit = {})
   return body.data;
 };
 
-export const uploadDocument = async (file: File, category: string = 'General', expiryDate?: string) => {
+export const scanDocument = async (file: File, expectedCategory: string = 'General', expiryDate?: string) => {
+  const token = localStorage.getItem('royalsync_token');
+  const form = new FormData();
+  form.append('file', file);
+  form.append('expectedCategory', expectedCategory);
+  if (expiryDate) form.append('expiryDate', expiryDate);
+  const response = await fetch(`${API_BASE}/documents/scan`, {
+    method: 'POST',
+    body: form,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  const body = (await response.json()) as ApiEnvelope<any>;
+  if (!response.ok || !body.success) throw new Error(body.error || 'Document scan failed');
+  return body.data;
+};
+
+export const uploadDocument = async (file: File, category: string = 'General', expiryDate?: string, scanReport?: any) => {
   const token = localStorage.getItem('royalsync_token');
   const form = new FormData();
   form.append('file', file);
   form.append('category', category);
   if (expiryDate) form.append('expiryDate', expiryDate);
+  if (scanReport) form.append('scanReport', JSON.stringify(scanReport));
   const response = await fetch(`${API_BASE}/documents/upload`, { method: 'POST', body: form, headers: token ? { Authorization: `Bearer ${token}` } : undefined });
   const body = await response.json() as ApiEnvelope<unknown>;
   if (!response.ok || !body.success) throw new Error(body.error || 'Upload failed');
