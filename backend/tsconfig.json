@@ -6,5 +6,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/index.ts", "src/app.ts", "src/controllers/**/*", "src/middleware/**/*", "src/lib/**/*", "src/types/**/*"],
+  "exclude": ["node_modules", "src/auth", "src/audit", "src/automation", "src/ai", "src/claims", "src/clients", "src/common", "src/financials", "src/goals", "src/integrations", "src/models", "src/routes", "src/service_requests", "src/tenants"]
 }

@@ -1,5 +1,6 @@
 import { useApi } from '../../../hooks/useApi';
 import { ClipLoader } from 'react-spinners';
+import { CompanyLogo } from '../../../components/CompanyLogo';
 
 export const AdminPolicies = () => {
   const { data: policies, loading } = useApi<any[]>('/policies');
@@ -32,12 +33,7 @@ export const AdminPolicies = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={`https://img.logo.dev/${p.providerDomain}?token=pk_E5Q3o_qKTZ21mFwN5j4Ggw`} 
-                      alt={p.provider} 
-                      className="w-8 h-8 rounded-full border border-gray-200 bg-white object-contain p-1"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
+                    <CompanyLogo name={p.provider} domain={p.providerDomain} size={32} />
                     <span className="font-medium text-gray-900">{p.provider}</span>
                   </div>
                 </td>

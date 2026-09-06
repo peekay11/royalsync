@@ -1,58 +1,100 @@
 import { Request, Response } from 'express';
 import { BaseController } from '../BaseController';
-import { db, saveDb } from '../../db';
+import { prisma } from '../../lib/prisma';
 import { createToken, hashPassword, verifyPassword } from '../../middleware/auth';
-import type { AuthUser } from '../../types/auth';
+import type { AuthUser, Role } from '../../types/auth';
 
 export class AuthController extends BaseController {
-  public login = (req: Request, res: Response) => {
+  public login = async (req: Request, res: Response) => {
     const { email, password } = req.body as { email?: string; password?: string };
-    const user = db.users.find(item => item.email.toLowerCase() === email?.toLowerCase());
-    if (!user || !password || !user.passwordHash || !verifyPassword(password, user.passwordHash)) {
+    if (!email || !password) return this.sendError(res, 'Email and password are required');
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (!user || !verifyPassword(password, user.passwordHash)) {
       return this.sendError(res, 'Invalid email or password', 401);
     }
-    const authUser: AuthUser = { id: user.id, email: user.email, role: user.role as AuthUser['role'], clientId: user.clientId };
+    if (user.status === 'deactivated') return this.sendError(res, 'Account has been deactivated', 403);
+    const client = await prisma.client.findUnique({ where: { userId: user.id } });
+    const authUser: AuthUser = {
+      id: user.id,
+      email: user.email,
+      role: user.role as Role,
+      clientId: client?.id
+    };
     return this.sendSuccess(res, { token: createToken(authUser), user: authUser }, 'Login successful');
   };
 
-  public loginById = (req: Request, res: Response) => {
-    const { idNumber, code } = req.body as { idNumber?: string; code?: string };
-    const user = db.users.find(item => item.idNumber === idNumber);
-    if (!user || !code) return this.sendError(res, 'Invalid identity or verification code', 401);
-    return this.sendError(res, 'Identity login is unavailable until an OTP provider is configured', 503);
+  public loginById = async (req: Request, res: Response) => {
+    return this.sendError(res, 'OTP login is unavailable until an SMS provider is configured', 503);
   };
 
-  public sendOtp = (req: Request, res: Response) => {
-    const { idNumber } = req.body as { idNumber?: string };
-    const user = db.users.find(item => item.idNumber === idNumber);
-    if (!user) return this.sendError(res, 'Identity not found', 404);
-    return this.sendError(res, 'OTP delivery is unavailable until an OTP provider is configured', 503);
+  public sendOtp = async (req: Request, res: Response) => {
+    return this.sendError(res, 'OTP delivery is unavailable until an SMS provider is configured', 503);
   };
 
-  public register = (req: Request, res: Response) => {
-    const { email, password, firstName, lastName, mobile } = req.body as Record<string, string | undefined>;
-    if (!email || !password || password.length < 12 || !firstName || !lastName || !mobile) return this.sendError(res, 'Email, 12-character password, name and mobile are required');
-    if (db.users.some(item => item.email.toLowerCase() === email.toLowerCase())) return this.sendError(res, 'Email is already registered', 409);
-    const clientId = `cli_${Date.now()}`;
-    const user = { id: `usr_${Date.now()}`, email, role: 'CLIENT' as const, clientId, passwordHash: hashPassword(password), idNumber: undefined };
-    db.users.unshift(user);
-    db.clients.unshift({ id: clientId, firstName, lastName, mobile, kycStatus: 'pending', riskProfile: 'Unknown' });
-    saveDb();
-    const authUser: AuthUser = { id: user.id, email: user.email, role: user.role, clientId };
+  public register = async (req: Request, res: Response) => {
+    const { email, password, firstName, lastName, mobile, idNumber } = req.body as Record<string, string | undefined>;
+    if (!email || !password || !firstName || !lastName || !mobile) {
+      return this.sendError(res, 'Email, password, name and mobile are required');
+    }
+    if (password.length < 8) return this.sendError(res, 'Password must be at least 8 characters');
+    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (existing) return this.sendError(res, 'Email is already registered', 409);
+
+    // Use first tenant or create a default one
+    let tenant = await prisma.tenant.findFirst();
+    if (!tenant) {
+      tenant = await prisma.tenant.create({ data: { name: 'Royal Square Financial', slug: 'royal-square' } });
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        passwordHash: hashPassword(password),
+        role: 'CLIENT',
+        firstName,
+        lastName,
+        idNumber,
+        tenantId: tenant.id
+      }
+    });
+    const client = await prisma.client.create({
+      data: {
+        tenantId: tenant.id,
+        userId: user.id,
+        firstName,
+        lastName,
+        mobile,
+        email: email.toLowerCase(),
+        idNumber,
+        kycStatus: 'pending',
+        riskProfile: 'Unknown'
+      }
+    });
+
+    const authUser: AuthUser = { id: user.id, email: user.email, role: 'CLIENT', clientId: client.id };
     return this.sendSuccess(res, { token: createToken(authUser), user: authUser }, 'Registration successful', 201);
   };
 
-  public bootstrapAdmin = (req: Request, res: Response) => {
+  public bootstrapAdmin = async (req: Request, res: Response) => {
     const configuredToken = process.env.BOOTSTRAP_TOKEN;
     if (!configuredToken || req.header('x-bootstrap-token') !== configuredToken) {
       return this.sendError(res, 'Bootstrap authorization failed', 401);
     }
-    if (db.users.length > 0) return this.sendError(res, 'Bootstrap is disabled after the first account exists', 409);
+    const count = await prisma.user.count();
+    if (count > 0) return this.sendError(res, 'Bootstrap is disabled after the first account exists', 409);
     const { email, password } = req.body as { email?: string; password?: string };
-    if (!email || !password || password.length < 12) return this.sendError(res, 'Email and a 12-character password are required');
-    const user = { id: `usr_${Date.now()}`, email: email.toLowerCase(), role: 'SUPER_ADMIN' as const, passwordHash: hashPassword(password) };
-    db.users.push(user);
-    saveDb();
+    if (!email || !password || password.length < 8) return this.sendError(res, 'Email and password (min 8 chars) are required');
+    const tenant = await prisma.tenant.create({ data: { name: 'Royal Square Financial', slug: 'royal-square' } });
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        passwordHash: hashPassword(password),
+        role: 'SUPER_ADMIN',
+        firstName: 'Super',
+        lastName: 'Admin',
+        tenantId: tenant.id
+      }
+    });
     return this.sendSuccess(res, { id: user.id, email: user.email, role: user.role }, 'Initial administrator created', 201);
   };
 }

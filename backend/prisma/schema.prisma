@@ -8,218 +8,280 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  users     User[]
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  status      String   @default("active")
+  plan        String   @default("professional")
+  createdAt   DateTime @default(now())
+  users       User[]
+  clients     Client[]
+  leads       Lead[]
+  applications Application[]
+  policies    Policy[]
+  claims      Claim[]
+  tasks       Task[]
+  insurers    TenantInsurer[]
+  auditEvents AuditEvent[]
+  commissions Commission[]
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
   passwordHash String
-  tenantId     String
-  tenant       Tenant      @relation(fields: [tenantId], references: [id])
-  createdAt    DateTime    @default(now())
-  roles        UserRole[]
+  role         String   @default("CLIENT")
+  status       String   @default("active")
+  firstName    String   @default("")
+  lastName     String   @default("")
+  idNumber     String?
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   client       Client?
-}
-
-model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique
-  permissions RolePermission[]
-  users       UserRole[]
-}
-
-model UserRole {
-  userId String
-  roleId String
-  user   User   @relation(fields: [userId], references: [id])
-  role   Role   @relation(fields: [roleId], references: [id])
-  @@id([userId, roleId])
-}
-
-model Permission {
-  id       String           @id @default(uuid())
-  resource String
-  action   String
-  roles    RolePermission[]
-  @@unique([resource, action])
-}
-
-model RolePermission {
-  roleId       String
-  permissionId String
-  role         Role       @relation(fields: [roleId], references: [id])
-  permission   Permission @relation(fields: [permissionId], references: [id])
-  @@id([roleId, permissionId])
+  actorEvents  AuditEvent[] @relation("AuditActor")
 }
 
 model Client {
-  id                String     @id @default(uuid())
-  userId            String     @unique
-  tenantId          String
-  firstName         String
-  lastName          String
-  assignedAdviserId String?
-  user              User       @relation(fields: [userId], references: [id])
-  addresses         Address[]
-  assets            Asset[]
-  liabilities       Liability[]
-  incomes           Income[]
-  expenses          Expense[]
-  goals             Goal[]   @relation("GoalOwner")
-  participatingIn   GoalParticipant[]
-  serviceRequests   ServiceRequest[]
-  policies          Policy[]
-  reminders         Reminder[]
-  claims            Claim[]
-  conversations     Conversation[]
+  id                 String   @id @default(uuid())
+  tenantId           String
+  tenant             Tenant   @relation(fields: [tenantId], references: [id])
+  userId             String?  @unique
+  user               User?    @relation(fields: [userId], references: [id])
+  firstName          String
+  lastName           String
+  mobile             String
+  email              String?
+  idNumber           String?
+  kycStatus          String   @default("pending")
+  riskProfile        String   @default("Unknown")
+  assignedAdviserId  String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  policies           Policy[]
+  claims             Claim[]
+  goals              Goal[]
+  documents          Document[]
+  payments           Payment[]
+  applications       Application[]
+  reminders          Reminder[]
+  conversations      Conversation[]
 }
 
-model Address {
-  id             String    @id @default(uuid())
-  clientId       String
-  client         Client    @relation(fields: [clientId], references: [id])
-  line1          String
-  effectiveFrom  DateTime  @default(now())
-  effectiveTo    DateTime?
-  isCurrent      Boolean   @default(true)
+model Lead {
+  id         String     @id @default(uuid())
+  tenantId   String
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  firstName  String
+  lastName   String
+  email      String?
+  mobile     String?
+  interest   String     @default("General Insurance")
+  status     String     @default("New")
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  leadNotes  LeadNote[]
 }
 
-model Asset {
-  id       String  @id @default(uuid())
-  clientId String
-  client   Client  @relation(fields: [clientId], references: [id])
-  name     String
-  value    Float
+model Application {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  productType String
+  insurerId   String?
+  insurer     Insurer? @relation(fields: [insurerId], references: [id])
+  premium     Float    @default(0)
+  sumAssured  Float    @default(0)
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Liability {
-  id       String  @id @default(uuid())
-  clientId String
-  client   Client  @relation(fields: [clientId], references: [id])
-  name     String
-  value    Float
+model Policy {
+  id                    String   @id @default(uuid())
+  tenantId              String
+  tenant                Tenant   @relation(fields: [tenantId], references: [id])
+  clientId              String
+  client                Client   @relation(fields: [clientId], references: [id])
+  insurerId             String?
+  insurer               Insurer? @relation(fields: [insurerId], references: [id])
+  policyNumber          String
+  type                  String
+  premium               Float
+  sumAssured            Float    @default(0)
+  status                String   @default("active")
+  inceptionDate         DateTime @default(now())
+  expiryDate            DateTime?
+  createdAt             DateTime @default(now())
+  claims                Claim[]
 }
 
-model Income {
-  id        String  @id @default(uuid())
-  clientId  String
-  client    Client  @relation(fields: [clientId], references: [id])
-  source    String
-  amount    Float
-  frequency String  // e.g. "MONTHLY", "ANNUALLY"
+model Claim {
+  id           String      @id @default(uuid())
+  tenantId     String
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
+  clientId     String
+  client       Client      @relation(fields: [clientId], references: [id])
+  policyId     String?
+  policy       Policy?     @relation(fields: [policyId], references: [id])
+  reference    String      @unique
+  type         String      @default("General")
+  status       String      @default("submitted")
+  incidentDate DateTime
+  description  String
+  amount       Float       @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  claimNotes   ClaimNote[]
 }
 
-model Expense {
-  id        String  @id @default(uuid())
-  clientId  String
-  client    Client  @relation(fields: [clientId], references: [id])
-  category  String
-  amount    Float
-  frequency String
+model Task {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  title       String
+  description String?
+  priority    String   @default("normal")
+  status      String   @default("open")
+  assigneeId  String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Goal {
-  id                    String     @id @default(uuid())
-  tenantId              String
+  id                    String   @id @default(uuid())
+  clientId              String
+  client                Client   @relation(fields: [clientId], references: [id])
   name                  String
-  description           String?
   targetAmount          Float
-  currentAmount         Float      @default(0)
+  currentAmount         Float    @default(0)
   targetDate            DateTime?
   contributionAmount    Float?
   contributionFrequency String?
-  status                String     @default("ACTIVE")
-  ownerId               String
-  owner                 Client     @relation("GoalOwner", fields: [ownerId], references: [id])
-  participants          GoalParticipant[]
+  status                String   @default("active")
+  createdAt             DateTime @default(now())
 }
 
-model GoalParticipant {
-  goalId   String
-  clientId String
-  goal     Goal   @relation(fields: [goalId], references: [id])
-  client   Client @relation(fields: [clientId], references: [id])
-  @@id([goalId, clientId])
+model Document {
+  id          String   @id @default(uuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  name        String
+  type        String
+  url         String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
 }
 
-model ServiceRequest {
-  id        String   @id @default(uuid())
-  tenantId  String
-  clientId  String
-  type      String
-  status    String   @default("SUBMITTED")
-  payload   String   // JSON string
-  createdAt DateTime @default(now())
-  client    Client   @relation(fields: [clientId], references: [id])
+model Payment {
+  id          String   @id @default(uuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  policyId    String?
+  amount      Float
+  status      String   @default("paid")
+  method      String   @default("debit_order")
+  date        DateTime
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model Reminder {
+  id          String   @id @default(uuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  title       String
+  dueDate     DateTime?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+model Insurer {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  domain        String?
+  category      String   @default("short-term")
+  status        String   @default("active")
+  apiStatus     String   @default("active")
+  contactEmail  String?
+  createdAt     DateTime @default(now())
+  policies      Policy[]
+  applications  Application[]
+  tenantLinks   TenantInsurer[]
+}
+
+model TenantInsurer {
+  tenantId   String
+  insurerId  String
+  tenant     Tenant  @relation(fields: [tenantId], references: [id])
+  insurer    Insurer @relation(fields: [insurerId], references: [id])
+  approvedAt DateTime @default(now())
+  @@id([tenantId, insurerId])
+}
+
+model Commission {
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  adviserId  String?
+  amount     Float
+  type       String   @default("new_business")
+  status     String   @default("paid")
+  policyId   String?
+  month      String
+  createdAt  DateTime @default(now())
 }
 
 model AuditEvent {
   id          String   @id @default(uuid())
-  actor       String
-  tenantId    String
+  actorId     String?
+  actor       User?    @relation("AuditActor", fields: [actorId], references: [id])
+  actorRole   String?
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
   action      String
   resource    String
-  beforeState String?  // JSON string
-  afterState  String?  // JSON string
+  resourceId  String?
+  description String?
+  ipAddress   String?
   createdAt   DateTime @default(now())
 }
 
-model Policy {
-  id                    String     @id @default(uuid())
-  tenantId              String
-  clientId              String
-  type                  String
-  certificateExpiryDate DateTime
-  client                Client     @relation(fields: [clientId], references: [id])
-  claims                Claim[]
-}
-
-model Reminder {
-  id                  String    @id @default(uuid())
-  tenantId            String
-  clientId            String
-  relatedEntityType   String
-  relatedEntityId     String
-  title               String
-  triggerDate         DateTime?
-  dueDate             DateTime?
-  status              String    @default("PENDING")
-  completedAt         DateTime?
-  client              Client    @relation(fields: [clientId], references: [id])
-}
-
-model Claim {
-  id           String       @id @default(uuid())
-  tenantId     String
-  clientId     String
-  policyId     String
-  status       String       @default("SUBMITTED")
-  incidentDate DateTime
-  description  String
-  claimNumber  String?
-  createdAt    DateTime     @default(now())
-  client       Client       @relation(fields: [clientId], references: [id])
-  policy       Policy       @relation(fields: [policyId], references: [id])
-  events       ClaimEvent[]
-}
-
-model ClaimEvent {
+model Notification {
   id        String   @id @default(uuid())
-  claimId   String
-  eventType String
+  tenantId  String?
+  clientId  String?
+  title     String
+  body      String
+  channel   String   @default("in_app")
+  status    String   @default("unread")
   createdAt DateTime @default(now())
-  claim     Claim    @relation(fields: [claimId], references: [id])
 }
 
-model IntegrationOperation {
+model Template {
+  id        String   @id @default(uuid())
+  tenantId  String?
+  name      String
+  type      String
+  format    String   @default("communication") // communication | document
+  channel   String   @default("email")
+  company   String?  // insurer/broker this document template is designed for
+  subject   String?  // email subject, or document title for document templates
+  body      String   // plain text for comms, HTML (with {{merge}} fields) for documents
+  isGlobal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SystemConfig {
   id        String   @id @default(uuid())
   key       String   @unique
-  result    String   // JSON string
-  createdAt DateTime @default(now())
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model Conversation {
@@ -227,15 +289,33 @@ model Conversation {
   tenantId  String
   clientId  String
   createdAt DateTime  @default(now())
-  messages  Message[]
   client    Client    @relation(fields: [clientId], references: [id])
+  messages  Message[]
 }
 
 model Message {
   id             String       @id @default(uuid())
   conversationId String
-  role           String       // 'user' | 'assistant'
+  role           String       // 'adviser' | 'client'
   content        String
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model LeadNote {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  authorId  String?
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model ClaimNote {
+  id        String   @id @default(uuid())
+  claimId   String
+  claim     Claim    @relation(fields: [claimId], references: [id])
+  authorId  String?
+  content   String
+  createdAt DateTime @default(now())
 }

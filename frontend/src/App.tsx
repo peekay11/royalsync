@@ -8,48 +8,27 @@ import { AdminPortal } from './portals/AdminPortal/AdminPortal';
 import { SuperAdminPortal } from './portals/SuperAdminPortal/SuperAdminPortal';
 import { PartnerPortal } from './portals/PartnerPortal';
 
-const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
+const AuthScreen = ({ portal: _portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean, useEmail?: boolean }) => {
   const navigate = useNavigate();
-  const [idNumber, setIdNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleSendOtp = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!idNumber) return setError('Please enter your ID Number');
-    setError('');
-    setSuccessMsg('');
-    setLoading(true);
-    try {
-      const res = await apiRequest<{ message: string }>('/auth/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ idNumber })
-      });
-      setOtpSent(true);
-      setSuccessMsg(res.message || 'OTP sent successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!otpSent) return;
     setLoading(true);
     setError('');
     try {
-      const result = await apiRequest<{ token: string; user: any }>('/auth/login-id', {
+      const result = await apiRequest<{ token: string; user: any }>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ idNumber, code: otp })
+        body: JSON.stringify({ email, password })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
-      navigate(`/${defaultRole.toLowerCase().replace('_', '-')}`);
+      const role: string = result.user?.role ?? defaultRole;
+      const path = role === 'SUPER_ADMIN' ? '/super-admin' : role === 'ADMIN' || role === 'ADVISER' ? '/admin' : role === 'PARTNER' ? '/partner' : '/client';
+      navigate(path);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Login failed');
     } finally {
@@ -60,44 +39,50 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
-        <p className="text-center text-gray-500 text-sm mb-4">Sign in to continue</p>
-        
-        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
-        
-        {otpSent && (
-          <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="OTP Code (Hint: 123456)" className="w-full border rounded-lg p-3" />
-        )}
-        
-        {!otpSent && (
-          <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 hover:bg-red-50 disabled:opacity-50">
-            {loading ? 'Sending...' : 'Send OTP via SMS'}
-          </button>
-        )}
+        <div className="text-center mb-2">
+          <div className="w-12 h-12 bg-red-600 rounded-xl mx-auto mb-3 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">RS</span>
+          </div>
+          <h1 className="text-2xl font-normal text-gray-800">Welcome back</h1>
+          <p className="text-gray-500 text-sm mt-1">Sign in with your email and password</p>
+        </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {successMsg && <p className="text-sm text-green-600">{successMsg}</p>}
-        
-        {otpSent && (
-          <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign in'}</button>
-        )}
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Email address</label>
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Password</label>
+          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-red-400" />
+        </div>
+
+        {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+
+        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">
+          {loading ? 'Signing in...' : 'Sign in'}
+        </button>
 
         {allowRegister && (
-          <p className="text-center text-sm mt-4">
+          <p className="text-center text-sm mt-2">
             Don't have an account? <Link to={`/${defaultRole.toLowerCase().replace('_', '-')}/register`} className="text-red-600 hover:underline">Register here</Link>
           </p>
         )}
+
+        <div className="pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-400 text-center">Demo credentials: super@royalsquare.co.za / Admin@12345</p>
+        </div>
       </form>
     </div>
   );
 };
 
-const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: string }) => {
+const RegisterScreen = ({ portal: _portal, defaultRole }: { portal: string, defaultRole: string }) => {
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [idNumber, setIdNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -108,7 +93,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
     try {
       const result = await apiRequest<{ token: string; user: any }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ firstName, lastName, mobile, idNumber, role: defaultRole })
+        body: JSON.stringify({ firstName, lastName, mobile, email, password, role: defaultRole })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
@@ -123,17 +108,37 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
-        <p className="text-center text-gray-500 text-sm mb-4">Create your account to continue</p>
-        <div className="grid grid-cols-2 gap-4">
-          <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full border rounded-lg p-3" />
-          <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full border rounded-lg p-3" />
+        <div className="text-center mb-2">
+          <div className="w-12 h-12 bg-red-600 rounded-xl mx-auto mb-3 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">RS</span>
+          </div>
+          <h1 className="text-2xl font-normal text-gray-800">Create your account</h1>
         </div>
-        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
-        <input required type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile Number" className="w-full border rounded-lg p-3" />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Registering...' : 'Register'}</button>
-        <p className="text-center text-sm mt-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">First Name</label>
+            <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Last Name</label>
+            <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Email address</label>
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Mobile number</label>
+          <input required type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="082 000 0000" className="w-full border border-gray-300 rounded-lg p-3 text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Password</label>
+          <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 8 characters" className="w-full border border-gray-300 rounded-lg p-3 text-sm" minLength={8} />
+        </div>
+        {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">{loading ? 'Registering...' : 'Create Account'}</button>
+        <p className="text-center text-sm mt-2">
           Already have an account? <Link to={`/${defaultRole.toLowerCase().replace('_', '-')}/login`} className="text-red-600 hover:underline">Sign in here</Link>
         </p>
       </form>
