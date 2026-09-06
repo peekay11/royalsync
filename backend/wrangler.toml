@@ -11,7 +11,7 @@ BOOTSTRAP_TOKEN = "bootstrap123"
 [[d1_databases]]
 binding = "DB"
 database_name = "royalsync"
-database_id = "1cd61de7-cdc0-475d-8754-5d16bc020e09"
+database_id = "aafce2b2-d2b5-475a-a739-6162fdf8ec8c"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
@@ -23,11 +23,13 @@ name = "royalsync-api-production"
 
 [env.production.vars]
 CORS_ORIGINS = "*"
+AUTH_SECRET = "supersecretjwtkey"
+BOOTSTRAP_TOKEN = "bootstrap123"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "royalsync"
-database_id = "1cd61de7-cdc0-475d-8754-5d16bc020e09"
+database_id = "aafce2b2-d2b5-475a-a739-6162fdf8ec8c"
 migrations_dir = "migrations"
 
 [[env.production.r2_buckets]]

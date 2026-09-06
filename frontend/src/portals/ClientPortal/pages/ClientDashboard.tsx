@@ -12,6 +12,7 @@ import {
   FiGlobe
 } from 'react-icons/fi';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { IncidentCountdownTimer } from '../../../components/claims/IncidentCountdownTimer';
 
 interface ClientDashboardData {
   activePolicyCount: number;
@@ -54,6 +55,12 @@ export const ClientDashboard = () => {
           <FiCheckCircle className="w-3.5 h-3.5" /> FICA / KYC Compliant
         </span>
       </div>
+
+      {/* ACTIVE INCIDENT ISSUE & 48-HOUR DOCUMENT REPORTING COUNTDOWN */}
+      <IncidentCountdownTimer
+        incidentType="Car Collision"
+        incidentTitle="2024 Mercedes-Benz C200 AMG Line (Reg: JH 88 GP)"
+      />
 
       {/* TOTAL PORTFOLIO & WEALTH VALUE (Expandable Hero Card) */}
       <section className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-700/60 relative overflow-hidden transition-all">

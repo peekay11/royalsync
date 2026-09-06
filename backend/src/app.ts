@@ -41,9 +41,9 @@ export const createApp = () => {
 
   app.use('/api', requireAuth);
   app.get('/api/iam/users', requireRole('SUPER_ADMIN', 'ADMIN'), users.getUsers);
-  app.get('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), resources.list('applications'));
-  app.post('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), resources.create('applications'));
-  app.put('/api/sales/applications/:id', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), resources.update('applications'));
+  app.get('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'PARTNER'), resources.list('applications'));
+  app.post('/api/sales/applications', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'PARTNER'), resources.create('applications'));
+  app.put('/api/sales/applications/:id', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'PARTNER'), resources.update('applications'));
   app.get('/api/crm/clients', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), clients.getClients);
   app.post('/api/crm/clients', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), clients.createClient);
   app.get('/api/crm/leads', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), leads.getLeads);
@@ -51,7 +51,8 @@ export const createApp = () => {
   app.get('/api/policies', policies.getPolicies);
   app.get('/api/claims', claims.getClaims);
   app.post('/api/claims', claims.createClaim);
-  app.get('/api/workflow/tasks', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), tasks.getTasks);
+  app.get('/api/workflow/tasks', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), tasks.getTasks);
+  app.post('/api/workflow/tasks', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), resources.create('tasks'));
   app.put('/api/workflow/tasks/:id/toggle', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), tasks.toggleTask);
   app.get('/api/user/profile', clientData.getProfile);
   app.put('/api/user/profile', clientData.updateProfile);

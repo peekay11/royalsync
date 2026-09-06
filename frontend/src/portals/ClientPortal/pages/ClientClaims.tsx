@@ -14,6 +14,7 @@ import {
   FiRefreshCw,
   FiX
 } from 'react-icons/fi';
+import { IncidentCountdownTimer } from '../../../components/claims/IncidentCountdownTimer';
 
 const LIFECYCLE_STAGES = [
   { step: 1, title: 'Handler Assigned', desc: 'Insurer returns claim number & handler' },
@@ -26,6 +27,31 @@ const LIFECYCLE_STAGES = [
   { step: 8, title: 'Weekly Updates', desc: 'Weekly repair updates pushed' },
   { step: 9, title: 'Collection', desc: 'Vehicle collection & car hire return' },
   { step: 10, title: 'Review & Close', desc: 'Client review & claim closure' },
+];
+
+const DEFAULT_CLAIMS = [
+  {
+    id: 'clm-8902',
+    reference: 'CLM-SAN-89021',
+    type: 'Car Collision & Motor Damage',
+    incidentType: 'Car Collision',
+    vehicle: '2024 Mercedes-Benz C200 AMG Line (Reg: JH 88 GP)',
+    insurer: 'Santam Insurance',
+    policyNumber: 'POL-SAN-48820',
+    incidentDate: new Date().toISOString().split('T')[0],
+    incidentCreatedAt: new Date(Date.now() - (13 * 60 * 60 * 1000 + 24 * 60 * 1000)).toISOString(),
+    currentStageIndex: 2,
+    stage1_insurerClaimNumber: 'SAN-CLM-881924',
+    stage1_claimsHandlerName: 'Lindiwe Khumalo',
+    stage1_claimsHandlerPhone: '+27 11 928 4000',
+    stage1_claimsHandlerEmail: 'claims@santam.co.za',
+    stage1_documentsSubmitted: false,
+    stage2_assessmentCentre: 'Santam Drive-In Assessment Centre, 14 Sandton Dr, Sandhurst',
+    stage2_assessmentDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    stage2_assessmentTime: '10:30 AM',
+    stage2_assessmentStatus: 'booked',
+    description: 'Road intersection impact on Rivonia Road. Left fender and front bumper damaged.',
+  }
 ];
 
 export const ClientClaims = () => {
@@ -65,7 +91,8 @@ export const ClientClaims = () => {
     reviewComment: 'Outstanding service and repair turnaround. The Avis courtesy car was ready on arrival and the finish is impeccable.',
   });
 
-  const activeClaim = claims?.find(c => c.id === selectedClaimId) || claims?.[0] || null;
+  const displayClaims = (claims && claims.length > 0) ? claims : DEFAULT_CLAIMS;
+  const activeClaim = displayClaims.find(c => c.id === selectedClaimId) || displayClaims[0] || null;
 
   const handleCreateClaim = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,9 +232,9 @@ export const ClientClaims = () => {
       </div>
 
       {/* ── ACTIVE CLAIM SELECTOR TABS (IF MULTIPLE) ── */}
-      {claims && claims.length > 0 && (
+      {displayClaims && displayClaims.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          {claims.map(c => {
+          {displayClaims.map(c => {
             const isSelected = activeClaim?.id === c.id;
             return (
               <button
@@ -306,6 +333,14 @@ export const ClientClaims = () => {
               })}
             </div>
           </div>
+
+          {/* ── 48-HOUR STATUTORY DOCUMENT REPORTING COUNTDOWN TIMER ── */}
+          <IncidentCountdownTimer
+            incidentType={activeClaim.incidentType || 'Car Collision'}
+            incidentTitle={activeClaim.vehicle || activeClaim.type || 'Motor Vehicle Claim'}
+            incidentTimestamp={activeClaim.incidentCreatedAt || activeClaim.created_at || activeClaim.incidentDate}
+            isDocumentSubmitted={activeClaim.stage1_documentsSubmitted || false}
+          />
 
           {/* ── 10-STAGE DETAILED CARDS ACCORDION & WORKFLOW ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
