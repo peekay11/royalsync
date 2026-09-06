@@ -79,6 +79,36 @@ export class AuthController extends BaseController {
     }, 'OTP sent successfully');
   };
 
+  public checkId = async (req: Request, res: Response) => {
+    const idNumber = (req.params['idNumber'] || req.query['idNumber'] || req.body?.idNumber) as string | undefined;
+    if (!idNumber || !idNumber.trim()) {
+      return this.sendError(res, 'ID Number is required', 400);
+    }
+
+    const cleanId = idNumber.trim();
+    const client = await prisma.client.findFirst({ where: { idNumber: cleanId } });
+    const user = !client ? await prisma.user.findFirst({ where: { idNumber: cleanId } }) : null;
+
+    if (client || user) {
+      const first = client?.firstName || user?.firstName || '';
+      const last = client?.lastName || user?.lastName || '';
+      const maskedName = first && last ? `${first[0]}*** ${last[0]}***` : 'Existing Client';
+
+      return this.sendSuccess(res, {
+        exists: true,
+        idNumber: cleanId,
+        maskedName,
+        message: 'An account with this ID number already exists.'
+      }, 'ID number check complete');
+    }
+
+    return this.sendSuccess(res, {
+      exists: false,
+      idNumber: cleanId,
+      message: 'ID number is available for registration.'
+    }, 'ID number is available');
+  };
+
   public register = async (req: Request, res: Response) => {
     const { email, password, firstName, lastName, mobile, phone, idNumber } = req.body as Record<string, string | undefined>;
     const resolvedMobile = mobile || phone;
@@ -95,52 +125,55 @@ export class AuthController extends BaseController {
 
     const resolvedPassword = (password && password.length >= 8) ? password : 'Client@1234';
 
+    // 1. Strict Duplicate Check on ID Number
+    if (idNumber && idNumber.trim()) {
+      const cleanId = idNumber.trim();
+      const existingClientWithId = await prisma.client.findFirst({ where: { idNumber: cleanId } });
+      const existingUserWithId = await prisma.user.findFirst({ where: { idNumber: cleanId } });
+      if (existingClientWithId || existingUserWithId) {
+        return this.sendError(res, 'An account with this ID number already exists. Please sign in instead.', 409);
+      }
+    }
+
+    // 2. Strict Duplicate Check on Email if explicit
+    if (email && email.trim()) {
+      const existingEmail = await prisma.user.findUnique({ where: { email: resolvedEmail } });
+      if (existingEmail) {
+        return this.sendError(res, 'An account with this email address already exists. Please sign in instead.', 409);
+      }
+    }
+
     // Use first tenant or create a default one
     let tenant = await prisma.tenant.findFirst();
     if (!tenant) {
       tenant = await prisma.tenant.create({ data: { name: 'Royal Square Financial', slug: 'royal-square' } });
     }
 
-    // Check if user already exists
-    let user = await prisma.user.findUnique({ where: { email: resolvedEmail } });
-    if (!user && idNumber) {
-      user = await prisma.user.findFirst({ where: { idNumber } });
-    }
+    const user = await prisma.user.create({
+      data: {
+        email: resolvedEmail,
+        passwordHash: hashPassword(resolvedPassword),
+        role: 'CLIENT',
+        firstName,
+        lastName,
+        idNumber: idNumber?.trim() || null,
+        tenantId: tenant.id
+      }
+    });
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: resolvedEmail,
-          passwordHash: hashPassword(resolvedPassword),
-          role: 'CLIENT',
-          firstName,
-          lastName,
-          idNumber,
-          tenantId: tenant.id
-        }
-      });
-    }
-
-    let client = await prisma.client.findFirst({ where: { userId: user.id } });
-    if (!client && idNumber) {
-      client = await prisma.client.findFirst({ where: { idNumber } });
-    }
-
-    if (!client) {
-      client = await prisma.client.create({
-        data: {
-          tenantId: tenant.id,
-          userId: user.id,
-          firstName,
-          lastName,
-          mobile: resolvedMobile,
-          email: resolvedEmail,
-          idNumber,
-          kycStatus: 'pending',
-          riskProfile: 'Unknown'
-        }
-      });
-    }
+    const client = await prisma.client.create({
+      data: {
+        tenantId: tenant.id,
+        userId: user.id,
+        firstName,
+        lastName,
+        mobile: resolvedMobile,
+        email: resolvedEmail,
+        idNumber: idNumber?.trim() || null,
+        kycStatus: 'pending',
+        riskProfile: 'Unknown'
+      }
+    });
 
     const authUser: AuthUser = { id: user.id, email: user.email, role: 'CLIENT', clientId: client.id };
     return this.sendSuccess(res, { token: createToken(authUser), user: authUser }, 'Registration successful', 201);

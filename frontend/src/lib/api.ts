@@ -148,3 +148,8 @@ export const login = (email: string, password: string) => apiRequest<{ token: st
   method: 'POST',
   body: JSON.stringify({ email, password })
 });
+
+export const checkId = (idNumber: string) => apiRequest<{ exists: boolean; maskedName?: string; message: string }>('/auth/check-id', {
+  method: 'POST',
+  body: JSON.stringify({ idNumber })
+});

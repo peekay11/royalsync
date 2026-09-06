@@ -179,6 +179,20 @@ export const ApiService = {
     }
   },
 
+  async checkId(idNumber: string): Promise<{ exists: boolean; maskedName?: string; message: string }> {
+    try {
+      const res = await fetchWithFallback('/auth/check-id', {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify({ idNumber }),
+      });
+      const json = await res.json();
+      return unwrap(json);
+    } catch (e) {
+      throw e;
+    }
+  },
+
   async register(form: any): Promise<{ token: string; user: User }> {
     try {
       const res = await fetchWithFallback('/auth/register', {

@@ -77,6 +77,8 @@ export const createApp = () => {
   app.post('/api/auth/login', auth.login);
   app.post('/api/auth/login-id', auth.loginById);
   app.post('/api/auth/send-otp', auth.sendOtp);
+  app.post('/api/auth/check-id', auth.checkId);
+  app.get('/api/auth/check-id/:idNumber', auth.checkId);
   app.post('/api/auth/register', auth.register);
   app.post('/api/auth/bootstrap-admin', auth.bootstrapAdmin);
 
