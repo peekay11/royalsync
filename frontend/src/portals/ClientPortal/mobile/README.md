@@ -2,6 +2,9 @@
 
 Cross-platform React Native mobile application for Royal Square Financial wealth management, advisor client overview, goal tracking, and accident/loss claims.
 
+n## Live Preview
+- **Web App**: [https://royalsync-mobile.pages.dev/](https://royalsync-mobile.pages.dev/)
+
 ## Key Features
 - **Luxury Brand Aesthetic**: Crimson (`#c0181a`), Gold (`#c9a84c`), and sleek dark UI tokens.
 - **Splash & Dynamic Onboarding**: Animated entrance and interactive carousel.
