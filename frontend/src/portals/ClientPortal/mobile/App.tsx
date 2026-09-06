@@ -16,6 +16,8 @@ import { BottomNav } from './src/components/BottomNav';
 import { PushNotificationBanner } from './src/components/PushNotificationBanner';
 import { NotificationCenterModal, INITIAL_NOTIFICATIONS } from './src/components/NotificationCenterModal';
 
+import { api } from './src/services/api';
+
 function MainApp() {
   const { colors, isDark } = useTheme();
   const [stage, setStage] = useState<AppStage>('splash');
@@ -24,10 +26,27 @@ function MainApp() {
   const [activePush, setActivePush] = useState<AppNotification | null>(null);
   const [notifModalVisible, setNotifModalVisible] = useState(false);
 
+  React.useEffect(() => {
+    if (stage === 'app') {
+      api.getNotifications().then(liveNotifs => {
+        if (liveNotifs && liveNotifs.length > 0) {
+          setNotifications(liveNotifs);
+          const urgentAlert = liveNotifs.find(n => !n.read && (n.badgeText?.includes('URGENT') || n.badgeText?.includes('ALERT')));
+          if (urgentAlert) {
+            setActivePush(urgentAlert);
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [stage]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleMarkAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    notifications.forEach(n => {
+      if (!n.read) api.markNotificationAsRead(n.id);
+    });
   };
 
   const handleSelectNotification = (notif: AppNotification) => {

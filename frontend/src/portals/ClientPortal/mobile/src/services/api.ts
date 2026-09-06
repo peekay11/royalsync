@@ -1,4 +1,4 @@
-import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User } from '../types';
+import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User, AppNotification } from '../types';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
@@ -206,4 +206,36 @@ export const ApiService = {
       throw e;
     }
   },
+
+  async getNotifications(): Promise<AppNotification[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications`, { headers: await getHeaders() });
+      if (!res.ok) throw new Error('Failed to fetch notifications');
+      const data = unwrap<any[]>(await res.json());
+      return (data || []).map((item, idx) => ({
+        id: item.id || `notif_${idx}`,
+        title: item.title || item.name || 'Admin Update',
+        message: item.message || item.body || item.text || 'New alert from Royal Square administrator',
+        timestamp: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
+        category: (item.category || 'system') as any,
+        read: Boolean(item.read),
+        badgeText: item.priority ? `${item.priority.toUpperCase()} ALERT` : 'FROM ADMIN',
+        actionText: item.actionText || 'View Details',
+        actionScreen: item.actionScreen || undefined,
+      }));
+    } catch {
+      return [];
+    }
+  },
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    try {
+      await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: await getHeaders(),
+      });
+    } catch {}
+  },
 };
+
+export const api = ApiService;
