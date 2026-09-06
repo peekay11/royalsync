@@ -27,6 +27,7 @@ import {
   PhoneIcon,
 } from '../components/GrommetIcons';
 import { CompanyLogo } from '../components/CompanyLogo';
+import { ClaimLifecycleModal } from '../components/ClaimLifecycleModal';
 
 export interface UploadedFile {
   id: string;
@@ -424,6 +425,8 @@ export const ClaimsScreen: React.FC = () => {
   const [submittedId, setSubmittedId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedClaimForLifecycle, setSelectedClaimForLifecycle] = useState<any>(null);
+  const [lifecycleModalVisible, setLifecycleModalVisible] = useState(false);
 
   const fetchClaims = async () => {
     try {
@@ -704,8 +707,13 @@ export const ClaimsScreen: React.FC = () => {
         <Text style={[styles.sectionHeading, { color: colors.textMuted, marginTop: 24 }]}>RECENT CLAIMS</Text>
         <View style={styles.claimsList}>
           {claims.map((c, i) => (
-            <View
+            <TouchableOpacity
               key={i}
+              activeOpacity={0.8}
+              onPress={() => {
+                setSelectedClaimForLifecycle(c);
+                setLifecycleModalVisible(true);
+              }}
               style={[
                 styles.claimCard,
                 {
@@ -737,9 +745,22 @@ export const ClaimsScreen: React.FC = () => {
                 <Text style={[styles.claimId, { color: colors.textMuted }]}>{c.id}</Text>
                 <Text style={[styles.claimAmount, { color: colors.gold }]}>{c.amount}</Text>
               </View>
-            </View>
+              <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: isDark ? '#222' : '#f0f0f0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '700' }}>
+                  Stage {c.currentStageIndex || 1}/10: Track Lifecycle →
+                </Text>
+                <Text style={{ fontSize: 10, color: colors.textMuted }}>Live Workshop Feed</Text>
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
+
+        <ClaimLifecycleModal
+          visible={lifecycleModalVisible}
+          claim={selectedClaimForLifecycle}
+          onClose={() => setLifecycleModalVisible(false)}
+          onRefresh={fetchClaims}
+        />
       </ScrollView>
     );
   }

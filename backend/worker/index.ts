@@ -337,22 +337,328 @@ app.put('/api/user/profile', async c => {
 });
 
 app.get('/api/policies', async c => c.json({ success: true, message: 'Policies retrieved', data: await listRecords(c.env, 'policies', c.get('user')) }));
-app.get('/api/claims', async c => c.json({ success: true, message: 'Claims retrieved', data: await listRecords(c.env, 'claims', c.get('user')) }));
+app.get('/api/claims', async c => {
+  const user = c.get('user');
+  let claims = await listRecords(c.env, 'claims', user);
+  
+  // If no claims exist yet for this client, provision an active demonstration claim with rich 10-stage lifecycle data
+  if (claims.length === 0 && user.clientId) {
+    const demoClaim = {
+      id: id('clm'),
+      reference: 'CLM-SAN-2026-88912',
+      insurer: 'Santam Insurance',
+      policyNumber: 'POL-SAN-48820',
+      type: 'Comprehensive Motor Vehicle Claim',
+      claimType: 'Motor — Collision & Accident',
+      vehicle: '2024 Mercedes-Benz C200 AMG Line (Reg: JH 88 GP)',
+      incidentDate: '2026-08-28',
+      incidentDescription: 'Third-party rear-end collision at Sandton Dr & Rivonia Rd intersection. Bumper, tailgate skin, and parking sensor cluster damage.',
+      amount: 'R 48,500.00',
+      currentStageIndex: 8,
+      status: 'in_repairs',
+      client_id: user.clientId,
+      
+      // Stage 1: Insurer returns claim number & handler
+      stage1_insurerClaimNumber: 'SAN-CLM-881924',
+      stage1_claimsHandlerName: 'Lindiwe Khumalo',
+      stage1_claimsHandlerEmail: 'lindiwe.khumalo@santam.co.za',
+      stage1_claimsHandlerPhone: '+27 11 928 4000 (Ext. 4821)',
+      stage1_assignedAt: '2026-08-29T08:30:00Z',
+      stage1_notes: 'Claim registered with Santam central claims desk. Senior motor assessor Johan allocated.',
+
+      // Stage 2: Assessment center booking
+      stage2_assessmentCentre: 'Santam Drive-In Assessment Centre, 14 Sandton Dr, Sandhurst',
+      stage2_assessmentDate: '2026-08-30',
+      stage2_assessmentTime: '10:30 AM',
+      stage2_assessmentStatus: 'completed',
+      stage2_assessorName: 'Johan Van Der Merwe (Cert #ASS-771)',
+
+      // Stage 3: Assessment report to insurer & broker
+      stage3_assessmentReportUrl: 'https://documents.royalsync.co.za/reports/SAN-CLM-881924-ASSESSMENT.pdf',
+      stage3_damageAssessedAmount: 'R 48,500.00',
+      stage3_damageScope: 'Rear bumper cover replacement, rear tailgate skin repair, parking sensor recalibration, paint blend left & right rear quarter panels.',
+      stage3_structuralDamage: 'No structural chassis deformation. Safe to drive until scheduled workshop check-in date.',
+      stage3_assessedAt: '2026-08-30T14:15:00Z',
+
+      // Stage 4: Repair quotes submitted to insurer
+      stage4_quotes: [
+        { repairerName: 'Precision Auto Body Sandton (SAMBRA Major Structural)', amount: 'R 48,500.00', estimatedDays: 8, status: 'Approved' },
+        { repairerName: 'Renew-It Sandton (Factory Accredited)', amount: 'R 52,300.00', estimatedDays: 10, status: 'Alternative' }
+      ],
+      stage4_selectedRepairer: 'Precision Auto Body Sandton',
+      stage4_quotesSubmittedAt: '2026-08-31T11:00:00Z',
+
+      // Stage 5: Insurer authorises repairs & excess
+      stage5_repairAuthorisationNumber: 'AUTH-SAN-2026-9021',
+      stage5_authorisedAmount: 'R 48,500.00',
+      stage5_excessAmount: 'R 3,500.00',
+      stage5_excessStatus: 'excess_waiver_applied',
+      stage5_authorisedAt: '2026-09-01T09:45:00Z',
+      stage5_notes: 'OEM Mercedes-Benz parts approved. 3-Year SAMBRA Golden Shield paint warranty endorsed.',
+
+      // Stage 6: Client picks vehicle drop-off date
+      stage6_dropOffDate: '2026-09-04',
+      stage6_dropOffTime: '08:00 AM',
+      stage6_repairerAddress: 'Precision Auto Body, 5 Daisy St, Sandown, Sandton',
+      stage6_dropOffConfirmed: true,
+
+      // Stage 7: Courtesy car hire arranged & delivered
+      stage7_carHireCompany: 'Avis Rent a Car',
+      stage7_carHireClass: 'Group B — VW Polo Vivo 1.4 Automatic',
+      stage7_carHireVoucher: 'AVIS-RS-992014',
+      stage7_carHireDeliveryLocation: 'Delivered directly to Precision Auto Body Sandton for instant vehicle swap on drop-off',
+      stage7_carHirePickupDate: '2026-09-04 08:30 AM',
+      stage7_carHireStatus: 'active_rental',
+
+      // Stage 8: Weekly repair updates pushed
+      stage8_repairProgressPercent: 75,
+      stage8_weeklyUpdates: [
+        { week: 'Week 1 (04 Sep)', stage: 'Vehicle Ingest & Stripping', details: 'Vehicle checked in at 08:00. Damaged tailgate & bumper stripped. OEM Mercedes parts delivered.', date: '2026-09-04', status: 'completed' },
+        { week: 'Week 2 (05 Sep)', stage: 'Panel Beating & Metal Alignment', details: 'Tailgate skin aligned on electronic jig. Anti-corrosion primer applied and oven-cured.', date: '2026-09-05', status: 'completed' },
+        { week: 'Week 3 (06 Sep)', stage: 'Spray Booth & Clear Coat', details: 'Computerized robotic color match applied in downdraft spray booth. High-gloss baked clear coat completed.', date: '2026-09-06', status: 'completed' },
+        { week: 'Week 4 (11 Sep)', stage: 'Assembly & 50-Point Quality Detailing', details: 'Reassembly of radar parking sensors, computerized diagnostics, wheel alignment check & executive valet polish.', date: '2026-09-11', status: 'in_progress' }
+      ],
+
+      // Stage 9: Collection & car hire return
+      stage9_readyForCollectionDate: '2026-09-11 15:00',
+      stage9_collectionLocation: 'Precision Auto Body, 5 Daisy St, Sandown, Sandton',
+      stage9_carHireReturnLocation: 'Handed back at Precision Auto Body during vehicle collection',
+      stage9_qualityCertificate: 'SAMBRA Golden Shield 3-Year Repair Warranty Certificate #GS-88192',
+
+      // Stage 10: Client review & closeout
+      stage10_rating: 0,
+      stage10_reviewComment: '',
+      stage10_claimClosed: false,
+
+      created_at: '2026-08-28T14:20:00Z',
+      updated_at: now()
+    };
+
+    const timestamp = now();
+    await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(demoClaim.id, 'claims', user.clientId, JSON.stringify(demoClaim), timestamp, timestamp).run();
+    claims = [demoClaim];
+  }
+
+  return c.json({ success: true, message: 'Claims retrieved', data: claims });
+});
+
+app.get('/api/claims/:id', async c => {
+  const claimId = c.req.param('id');
+  const record = await c.env.DB.prepare('SELECT id, client_id, data, created_at, updated_at FROM records WHERE id = ? AND collection = ?').bind(claimId, 'claims').first<{ id: string; client_id: string; data: string; created_at: string; updated_at: string }>();
+  if (!record) return c.json({ success: false, error: 'Claim not found' }, 404);
+  return c.json({ success: true, message: 'Claim retrieved', data: { id: record.id, ...JSON.parse(record.data), created_at: record.created_at, updated_at: record.updated_at } });
+});
+
 app.post('/api/claims', async c => {
   const user = c.get('user');
   if (!user.clientId) return c.json({ success: false, error: 'A client account is required' }, 403);
-  const body = await c.req.json<Record<string, unknown>>();
-  if (!body.type || !body.description) return c.json({ success: false, error: 'Claim type and description are required' }, 400);
-  const record = { id: id('clm'), reference: `CLM-${crypto.randomUUID()}`, status: 'submitted', ...body, client_id: user.clientId };
+  const body = await c.req.json<Record<string, any>>();
+  if (!body.type && !body.claimType) return c.json({ success: false, error: 'Claim type is required' }, 400);
+
+  const claimNumber = `SAN-CLM-${Math.floor(100000 + Math.random() * 900000)}`;
+  const claimRef = `CLM-SAN-2026-${Math.floor(10000 + Math.random() * 90000)}`;
   const timestamp = now();
-  await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').bind(record.id, 'claims', user.clientId, JSON.stringify(record), timestamp, timestamp).run();
-  return c.json({ success: true, message: 'Claim submitted', data: record }, 201);
+
+  const newClaim = {
+    id: id('clm'),
+    reference: claimRef,
+    insurer: body.insurer || 'Santam Insurance',
+    policyNumber: body.policyNumber || 'POL-SAN-48820',
+    type: body.type || body.claimType || 'Comprehensive Motor Vehicle Claim',
+    claimType: body.claimType || body.type || 'Motor — Collision & Accident',
+    vehicle: body.vehicle || 'Insured Motor Vehicle',
+    incidentDate: body.incidentDate || new Date().toISOString().split('T')[0],
+    incidentDescription: body.description || body.incidentDescription || 'Motor incident logged via digital portal.',
+    amount: body.amount || 'R 35,000.00 (Est)',
+    currentStageIndex: 1,
+    status: 'handler_assigned',
+    client_id: user.clientId,
+
+    // Stage 1: Insurer returns claim number and claims handler
+    stage1_insurerClaimNumber: claimNumber,
+    stage1_claimsHandlerName: 'Lindiwe Khumalo',
+    stage1_claimsHandlerEmail: 'lindiwe.khumalo@santam.co.za',
+    stage1_claimsHandlerPhone: '+27 11 928 4000 (Ext. 4821)',
+    stage1_assignedAt: timestamp,
+    stage1_notes: 'Claim registered and verified with insurer claims desk. Assessor allocated.',
+
+    // Stage 2: Assessment center
+    stage2_assessmentCentre: 'Santam Drive-In Assessment Centre, 14 Sandton Dr, Sandhurst',
+    stage2_assessmentDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    stage2_assessmentTime: '10:00 AM',
+    stage2_assessmentStatus: 'booked',
+    stage2_assessorName: 'Johan Van Der Merwe',
+
+    // Stage 3
+    stage3_assessmentReportUrl: '',
+    stage3_damageAssessedAmount: '',
+    stage3_damageScope: '',
+    stage3_structuralDamage: '',
+    stage3_assessedAt: '',
+
+    // Stage 4
+    stage4_quotes: [],
+    stage4_selectedRepairer: '',
+    stage4_quotesSubmittedAt: '',
+
+    // Stage 5
+    stage5_repairAuthorisationNumber: '',
+    stage5_authorisedAmount: '',
+    stage5_excessAmount: 'R 3,500.00',
+    stage5_excessStatus: 'pending',
+    stage5_authorisedAt: '',
+    stage5_notes: '',
+
+    // Stage 6
+    stage6_dropOffDate: '',
+    stage6_dropOffTime: '',
+    stage6_repairerAddress: '',
+    stage6_dropOffConfirmed: false,
+
+    // Stage 7
+    stage7_carHireCompany: 'Avis Rent a Car',
+    stage7_carHireClass: 'Group B — VW Polo Vivo / Corolla Quest',
+    stage7_carHireVoucher: '',
+    stage7_carHireDeliveryLocation: 'Delivered to repairer on drop-off',
+    stage7_carHirePickupDate: '',
+    stage7_carHireStatus: 'pending_dropoff',
+
+    // Stage 8
+    stage8_repairProgressPercent: 10,
+    stage8_weeklyUpdates: [
+      { week: 'Week 1', stage: 'Claim Lodged & Handler Assigned', details: 'Claim logged successfully. Handler Lindiwe Khumalo assigned.', date: new Date().toISOString().split('T')[0], status: 'completed' }
+    ],
+
+    // Stage 9
+    stage9_readyForCollectionDate: '',
+    stage9_collectionLocation: '',
+    stage9_carHireReturnLocation: '',
+    stage9_qualityCertificate: '',
+
+    // Stage 10
+    stage10_rating: 0,
+    stage10_reviewComment: '',
+    stage10_claimClosed: false,
+
+    ...body,
+    created_at: timestamp,
+    updated_at: timestamp
+  };
+
+  await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(newClaim.id, 'claims', user.clientId, JSON.stringify(newClaim), timestamp, timestamp).run();
+
+  // Create notification for user
+  const notifId = id('notif');
+  const notifData = {
+    id: notifId,
+    title: 'Claim Lodged & Handler Assigned',
+    message: `Your claim ${claimRef} has been registered with ${newClaim.insurer}. Claims Handler: ${newClaim.stage1_claimsHandlerName} (${newClaim.stage1_insurerClaimNumber}).`,
+    category: 'claim',
+    priority: 'high',
+    read: false,
+    created_at: timestamp
+  };
+  await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(notifId, 'notifications', user.clientId, JSON.stringify(notifData), timestamp, timestamp).run();
+
+  return c.json({ success: true, message: 'Claim submitted successfully. Insurer claim number and handler assigned.', data: newClaim }, 201);
+});
+
+app.put('/api/claims/:id/stage', async c => {
+  const user = c.get('user');
+  const claimId = c.req.param('id');
+  const body = await c.req.json<Record<string, any>>();
+
+  const record = await c.env.DB.prepare('SELECT id, client_id, data FROM records WHERE id = ? AND collection = ?').bind(claimId, 'claims').first<{ id: string; client_id: string; data: string }>();
+  if (!record) return c.json({ success: false, error: 'Claim not found' }, 404);
+
+  const prevClaim = JSON.parse(record.data);
+  const updatedClaim = {
+    ...prevClaim,
+    ...body,
+    updated_at: now()
+  };
+
+  // If stage update transitions currentStageIndex or status
+  if (body.currentStageIndex !== undefined) {
+    updatedClaim.currentStageIndex = body.currentStageIndex;
+  }
+
+  await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ? AND collection = ?')
+    .bind(JSON.stringify(updatedClaim), updatedClaim.updated_at, record.id, 'claims').run();
+
+  // Notify client if stage progressed
+  if (record.client_id && body.stageUpdateTitle) {
+    const notifId = id('notif');
+    const notifData = {
+      id: notifId,
+      title: body.stageUpdateTitle || 'Claim Lifecycle Update',
+      message: body.stageUpdateMessage || `Claim ${prevClaim.reference} progressed to Stage ${updatedClaim.currentStageIndex}.`,
+      category: 'claim',
+      priority: 'high',
+      read: false,
+      created_at: now()
+    };
+    await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(notifId, 'notifications', record.client_id, JSON.stringify(notifData), now(), now()).run();
+  }
+
+  await writeAudit(c.env, user, 'update_claim_stage', 'claims', record.id, prevClaim, updatedClaim, c.req.raw);
+  return c.json({ success: true, message: 'Claim stage updated successfully', data: updatedClaim });
+});
+
+app.post('/api/claims/:id/review', async c => {
+  const user = c.get('user');
+  const claimId = c.req.param('id');
+  const body = await c.req.json<{ rating: number; reviewComment: string }>();
+
+  const record = await c.env.DB.prepare('SELECT id, client_id, data FROM records WHERE id = ? AND collection = ?').bind(claimId, 'claims').first<{ id: string; client_id: string; data: string }>();
+  if (!record) return c.json({ success: false, error: 'Claim not found' }, 404);
+
+  const prevClaim = JSON.parse(record.data);
+  const timestamp = now();
+
+  const updatedClaim = {
+    ...prevClaim,
+    currentStageIndex: 10,
+    status: 'settled_closed',
+    stage10_rating: body.rating || 5,
+    stage10_reviewComment: body.reviewComment || 'Transaction completed satisfactorily.',
+    stage10_reviewedAt: timestamp,
+    stage10_claimClosed: true,
+    stage10_closedAt: timestamp,
+    updated_at: timestamp
+  };
+
+  await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ? AND collection = ?')
+    .bind(JSON.stringify(updatedClaim), timestamp, record.id, 'claims').run();
+
+  // Create notification
+  if (record.client_id) {
+    const notifId = id('notif');
+    const notifData = {
+      id: notifId,
+      title: 'Claim Successfully Closed',
+      message: `Thank you for your feedback! Claim ${prevClaim.reference} is now fully closed and archived with Royal Square Financial Services.`,
+      category: 'claim',
+      priority: 'normal',
+      read: false,
+      created_at: timestamp
+    };
+    await c.env.DB.prepare('INSERT INTO records (id, collection, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(notifId, 'notifications', record.client_id, JSON.stringify(notifData), timestamp, timestamp).run();
+  }
+
+  await writeAudit(c.env, user, 'close_claim_with_review', 'claims', record.id, prevClaim, updatedClaim, c.req.raw);
+  return c.json({ success: true, message: 'Review submitted and claim transaction closed successfully.', data: updatedClaim });
 });
 
 app.put('/api/claims/:id/status', async c => {
   const user = c.get('user');
   if (!roleAllowed(user, ['SUPER_ADMIN', 'ADMIN', 'ADVISER'])) return c.json({ success: false, error: 'Insufficient permissions' }, 403);
-  const allowed = ['submitted', 'acknowledged', 'under_assessment', 'approved', 'rejected', 'settled', 'closed', 'reopened'];
+  const allowed = ['submitted', 'acknowledged', 'under_assessment', 'approved', 'rejected', 'settled', 'closed', 'reopened', 'in_repairs', 'handler_assigned', 'ready_for_collection', 'settled_closed'];
   const body = await c.req.json<{ status?: string }>();
   if (!body.status || !allowed.includes(body.status)) return c.json({ success: false, error: 'Invalid claim status' }, 400);
   const record = await c.env.DB.prepare('SELECT id, data FROM records WHERE id = ? AND collection = ?').bind(c.req.param('id'), 'claims').first<{ id: string; data: string }>();

@@ -74,7 +74,7 @@ export interface Claim {
   type: string;
   client: string;
   insurer: string;
-  status: 'Submitted' | 'In Progress' | 'Settled' | 'Action Required';
+  status: 'Submitted' | 'In Progress' | 'Settled' | 'Action Required' | string;
   amount: string;
   statusColor: string;
   incidentDate?: string;
@@ -83,6 +83,34 @@ export interface Claim {
   description?: string;
   checkedItems?: string[];
   documents?: string[];
+  currentStageIndex?: number;
+  reference?: string;
+  vehicle?: string;
+  stage1_insurerClaimNumber?: string;
+  stage1_claimsHandlerName?: string;
+  stage1_claimsHandlerPhone?: string;
+  stage1_claimsHandlerEmail?: string;
+  stage2_assessmentCentre?: string;
+  stage2_assessmentDate?: string;
+  stage2_assessmentTime?: string;
+  stage2_assessmentStatus?: string;
+  stage3_damageAssessedAmount?: string;
+  stage3_damageScope?: string;
+  stage5_repairAuthorisationNumber?: string;
+  stage5_authorisedAmount?: string;
+  stage5_excessAmount?: string;
+  stage6_dropOffDate?: string;
+  stage6_dropOffTime?: string;
+  stage6_dropOffConfirmed?: boolean;
+  stage7_carHireCompany?: string;
+  stage7_carHireVoucher?: string;
+  stage7_carHireStatus?: string;
+  stage8_repairProgressPercent?: number;
+  stage8_weeklyUpdates?: any[];
+  stage9_readyForCollectionDate?: string;
+  stage10_rating?: number;
+  stage10_reviewComment?: string;
+  stage10_claimClosed?: boolean;
 }
 
 export interface Reminder {
