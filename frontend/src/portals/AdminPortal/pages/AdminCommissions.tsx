@@ -146,9 +146,9 @@ export const AdminCommissions = () => {
       const matchesPeriod = selectedPeriod === 'all' || rec.period === selectedPeriod;
       const matchesInsurer = selectedInsurer === 'all' || rec.insurer === selectedInsurer;
       const matchesSearch =
-        rec.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rec.policyRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rec.productType.toLowerCase().includes(searchQuery.toLowerCase());
+        (rec.clientName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (rec.policyRef || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (rec.productType || '').toLowerCase().includes((searchQuery || '').toLowerCase());
       return matchesPeriod && matchesInsurer && matchesSearch;
     });
   }, [selectedPeriod, selectedInsurer, searchQuery]);

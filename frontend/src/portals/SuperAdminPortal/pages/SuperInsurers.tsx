@@ -96,8 +96,8 @@ export const SuperInsurers = () => {
     }
     return combined.filter(
       ins =>
-        ins.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ins.code.toLowerCase().includes(searchQuery.toLowerCase())
+        (ins.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (ins.code || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     );
   }, [apiInsurers, searchQuery]);
 

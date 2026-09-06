@@ -114,13 +114,14 @@ export const AdminPolicies = () => {
   };
 
   const filteredPolicies = useMemo(() => {
-    return policies.filter(p => {
-      const q = searchQuery.toLowerCase().trim();
+    return (policies || []).filter(p => {
+      if (!p) return false;
+      const q = (searchQuery || '').toLowerCase().trim();
       const matchSearch = !q || (
-        p.policyNumber.toLowerCase().includes(q) ||
-        p.provider.toLowerCase().includes(q) ||
-        p.type.toLowerCase().includes(q) ||
-        (p.clientName && p.clientName.toLowerCase().includes(q))
+        (p.policyNumber || '').toLowerCase().includes(q) ||
+        (p.provider || '').toLowerCase().includes(q) ||
+        (p.type || '').toLowerCase().includes(q) ||
+        ((p.clientName || '').toLowerCase().includes(q))
       );
       const matchStatus = statusFilter === 'all' || p.status === statusFilter;
       const matchType = typeFilter === 'all' || p.type === typeFilter;

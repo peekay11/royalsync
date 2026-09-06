@@ -133,13 +133,14 @@ export const ClientInsurance = () => {
   const filteredPolicies = useMemo(() => {
     if (!policies) return [];
     return policies.filter(p => {
-      const q = searchQuery.toLowerCase().trim();
+      if (!p) return false;
+      const q = (searchQuery || '').toLowerCase().trim();
       const matchSearch = !q || (
-        p.policyNumber.toLowerCase().includes(q) ||
-        p.type.toLowerCase().includes(q) ||
-        p.provider.toLowerCase().includes(q)
+        (p.policyNumber || '').toLowerCase().includes(q) ||
+        (p.type || '').toLowerCase().includes(q) ||
+        (p.provider || '').toLowerCase().includes(q)
       );
-      const matchCat = categoryFilter === 'all' || p.type.toLowerCase().includes(categoryFilter.toLowerCase());
+      const matchCat = categoryFilter === 'all' || (p.type || '').toLowerCase().includes((categoryFilter || '').toLowerCase());
       return matchSearch && matchCat;
     });
   }, [policies, searchQuery, categoryFilter]);

@@ -453,14 +453,15 @@ export const AdminClients = () => {
 
   // Filtered clients
   const filteredClients = useMemo(() => {
-    return clients.filter(c => {
-      const q = searchQuery.toLowerCase().trim();
+    return (clients || []).filter(c => {
+      if (!c) return false;
+      const q = (searchQuery || '').toLowerCase().trim();
       const matchSearch = !q || (
-        c.firstName.toLowerCase().includes(q) ||
-        c.lastName.toLowerCase().includes(q) ||
-        (c.email && c.email.toLowerCase().includes(q)) ||
-        c.mobile.includes(q) ||
-        (c.idNumber && c.idNumber.includes(q))
+        (c.firstName || '').toLowerCase().includes(q) ||
+        (c.lastName || '').toLowerCase().includes(q) ||
+        (c.email && (c.email || '').toLowerCase().includes(q)) ||
+        (c.mobile && (c.mobile || '').includes(q)) ||
+        (c.idNumber && (c.idNumber || '').includes(q))
       );
       const matchKyc = kycFilter === 'all' || c.kycStatus === kycFilter;
       const matchRisk = riskFilter === 'all' || c.riskProfile === riskFilter;

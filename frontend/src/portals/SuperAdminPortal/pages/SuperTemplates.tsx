@@ -81,8 +81,8 @@ export const SuperTemplates = () => {
     }
     return combined.filter(
       t =>
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (t.category || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     );
   }, [apiTemplates, searchQuery]);
 

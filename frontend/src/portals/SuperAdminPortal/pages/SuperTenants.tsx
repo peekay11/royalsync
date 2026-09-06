@@ -68,9 +68,9 @@ export const SuperTenants = () => {
     }
     return combined.filter(
       t =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.fspNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.primaryContact.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (t.fspNumber || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (t.primaryContact || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     );
   }, [apiTenants, searchQuery]);
 

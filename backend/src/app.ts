@@ -166,11 +166,16 @@ export const createApp = () => {
   app.put('/api/claims/:id/status', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), claims.updateClaimStatus);
   app.put('/api/claims/:id', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), claims.updateClaimStatus);
 
-  // ─── Tasks ────────────────────────────────────────────────────────────────
+  // ─── Tasks & Service Requests ─────────────────────────────────────────────
   app.get('/api/workflow/tasks', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), tasks.getTasks);
   app.post('/api/workflow/tasks', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER', 'CLIENT'), tasks.createTask);
   app.put('/api/workflow/tasks/:id/toggle', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), tasks.toggleTask);
   app.put('/api/workflow/tasks/:id', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), tasks.updateTask);
+
+  app.get('/api/service-requests', tasks.getServiceRequests);
+  app.get('/api/service-requests/financial-statement', tasks.getFinancialStatement);
+  app.post('/api/service-requests', tasks.createServiceRequest);
+  app.put('/api/service-requests/:id/status', tasks.updateServiceRequestStatus);
 
   // ─── Claim notes ──────────────────────────────────────────────────────────
   app.post('/api/claims/:id/notes', requireRole('SUPER_ADMIN', 'ADMIN', 'ADVISER'), async (req: AuthRequest, res) => {

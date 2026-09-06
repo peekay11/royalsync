@@ -84,8 +84,8 @@ export const SuperCompliance = () => {
       const matchesFramework = selectedFramework === 'all' || item.framework === selectedFramework;
       const matchesFlag = !showFlaggedOnly || item.pepFlag || item.ficaStatus === 'pending';
       const matchesSearch =
-        item.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.idNumber.includes(searchQuery);
+        (item.clientName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (item.idNumber || '').includes(searchQuery || '');
       return matchesFramework && matchesFlag && matchesSearch;
     });
   }, [selectedFramework, showFlaggedOnly, searchQuery]);
