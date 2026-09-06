@@ -1,4 +1,4 @@
-const DEFAULT_ONLINE_API = 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
+const DEFAULT_ONLINE_API = 'https://royalsync.onrender.com/api';
 const LOCAL_API_ENDPOINTS = [
   'http://localhost:5000/api',
   'http://127.0.0.1:5000/api',

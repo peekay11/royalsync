@@ -2,7 +2,7 @@ import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User,
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const DEFAULT_ONLINE_API = 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
+const DEFAULT_ONLINE_API = 'https://royalsync.onrender.com/api';
 const LOCAL_API_ENDPOINTS = [
   'http://localhost:5000/api',
   'http://172.20.7.102:5000/api',
