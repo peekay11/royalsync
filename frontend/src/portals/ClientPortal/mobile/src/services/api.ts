@@ -290,6 +290,33 @@ export const ApiService = {
       return null;
     }
   },
+
+  async updatePrivacyFramework(payload: { framework: 'POPIA' | 'GDPR' | 'HYBRID_EU'; crossBorderTransferOptIn?: boolean; euCountry?: string }): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/privacy-framework`, {
+        method: 'PUT',
+        headers: await getHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to update privacy policy');
+      }
+      return await res.json();
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async getLegalFrameworks(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/legal/frameworks`, { headers: await getHeaders() });
+      if (!res.ok) throw new Error('Failed to fetch legal frameworks');
+      return unwrap(await res.json());
+    } catch {
+      return null;
+    }
+  },
 };
 
 export const api = ApiService;

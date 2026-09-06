@@ -19,6 +19,7 @@ import {
   UserIcon,
   CheckmarkIcon,
 } from '../components/GrommetIcons';
+import { MobileLegalPrivacyModal } from '../components/MobileLegalPrivacyModal';
 
 interface RegisterScreenProps {
   onDone: () => void;
@@ -41,6 +42,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
   const [agreed, setAgreed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
 
   const updateField = (field: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -57,7 +60,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
     try {
       await ApiService.register({
         ...form,
-        mobile: form.phone
+        mobile: form.phone,
+        privacyFramework: privacyPolicy
       });
       setLoading(false);
       onLogin(); // Auto-login handles redirect inside App.tsx usually, or they login with OTP next
@@ -80,6 +84,19 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
       </View>
 
       <View style={styles.formContent}>
+        {/* Visible Legal & Privacy Switcher Badge */}
+        <TouchableOpacity
+          style={[styles.legalPolicyPill, { backgroundColor: isDark ? '#1e1a20' : '#f8fafc', borderColor: colors.divider }]}
+          onPress={() => setLegalModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <ShieldIcon color={colors.primary} size={14} />
+          <Text style={[styles.legalPolicyText, { color: colors.text }]}>
+            Data Policy: <Text style={{ fontWeight: '800', color: colors.primary }}>{privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}</Text>
+          </Text>
+          <Text style={[styles.legalPolicyChange, { color: colors.primary }]}>· Switch to EU ▾</Text>
+        </TouchableOpacity>
+
         <Text style={[styles.stepSubtitle, { color: colors.textMuted }]}>Personal details</Text>
 
           <View style={styles.rowInputs}>
@@ -160,6 +177,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onDone, onLogin 
           <Text style={[styles.loginLink, { color: colors.primary }]}>Sign In</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Interactive Mobile Legal Policy Modal */}
+      <MobileLegalPrivacyModal
+        visible={legalModalVisible}
+        onClose={() => setLegalModalVisible(false)}
+        currentFramework={privacyPolicy}
+        onUpdated={setPrivacyPolicy}
+      />
     </ScrollView>
   );
 };
@@ -209,9 +234,29 @@ const styles = StyleSheet.create({
   formContent: {
     flex: 1,
   },
+  legalPolicyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 14,
+    alignSelf: 'flex-start',
+  },
+  legalPolicyText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  legalPolicyChange: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
   stepSubtitle: {
     fontSize: 13,
-    marginBottom: 16,
+    fontWeight: '700',
+    marginBottom: 14,
   },
   rowInputs: {
     flexDirection: 'row',
@@ -227,7 +272,8 @@ const styles = StyleSheet.create({
   roleGrid: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
+    marginTop: 6,
+    marginBottom: 14,
   },
   roleCard: {
     flex: 1,

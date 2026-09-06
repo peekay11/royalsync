@@ -18,6 +18,7 @@ import {
   FiArrowRight,
   FiLock,
 } from 'react-icons/fi';
+import { LegalPrivacyModal } from './components/legal/LegalPrivacyModal';
 
 const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
 
   const handleSendOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -78,6 +81,22 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome to {portal}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Sign in securely using your South African ID & OTP</p>
+          
+          {/* Prominent Legal Policy Switcher Pill */}
+          <button
+            type="button"
+            onClick={() => setLegalModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 hover:bg-red-50 dark:bg-zinc-800 dark:hover:bg-red-950/40 border border-gray-200 dark:border-zinc-700 text-[11px] font-semibold text-gray-700 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 transition-colors cursor-pointer mt-1"
+          >
+            <FiShield size={12} className="text-red-600 shrink-0" />
+            <span>
+              Data Protection:{' '}
+              <strong className="text-gray-900 dark:text-white">
+                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}
+              </strong>
+            </span>
+            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch to EU ▾</span>
+          </button>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -177,6 +196,14 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
             </div>
           )}
         </form>
+
+        {/* Legal Privacy Modal */}
+        <LegalPrivacyModal
+          isOpen={legalModalOpen}
+          onClose={() => setLegalModalOpen(false)}
+          currentFramework={privacyPolicy}
+          onFrameworkUpdated={setPrivacyPolicy}
+        />
       </div>
     </div>
   );
@@ -190,6 +217,8 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
   const [idNumber, setIdNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -198,7 +227,7 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
     try {
       const result = await apiRequest<{ token: string; user: any }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ firstName, lastName, mobile, idNumber, role: defaultRole })
+        body: JSON.stringify({ firstName, lastName, mobile, idNumber, role: defaultRole, privacyFramework: privacyPolicy })
       });
       localStorage.setItem('royalsync_token', result.token);
       localStorage.setItem('royalsync_user', JSON.stringify(result.user));
@@ -220,6 +249,22 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create Account</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Register your policyholder profile with {portal}</p>
+
+          {/* Prominent Legal Policy Switcher Pill */}
+          <button
+            type="button"
+            onClick={() => setLegalModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 hover:bg-red-50 dark:bg-zinc-800 dark:hover:bg-red-950/40 border border-gray-200 dark:border-zinc-700 text-[11px] font-semibold text-gray-700 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 transition-colors cursor-pointer mt-1"
+          >
+            <FiShield size={12} className="text-red-600 shrink-0" />
+            <span>
+              Data Protection:{' '}
+              <strong className="text-gray-900 dark:text-white">
+                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}
+              </strong>
+            </span>
+            <span className="text-[10px] text-red-600 font-bold ml-0.5">· Switch to EU ▾</span>
+          </button>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -336,6 +381,14 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
             </p>
           </div>
         </form>
+
+        {/* Legal Privacy Modal */}
+        <LegalPrivacyModal
+          isOpen={legalModalOpen}
+          onClose={() => setLegalModalOpen(false)}
+          currentFramework={privacyPolicy}
+          onFrameworkUpdated={setPrivacyPolicy}
+        />
       </div>
     </div>
   );

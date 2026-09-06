@@ -5,6 +5,7 @@ import { ApiService } from '../services/api';
 import { useTheme } from '../theme/ThemeContext';
 import { LockIcon, ShieldIcon, AlertIcon } from '../components/GrommetIcons';
 import { RoyalSquareLogo } from '../components/RoyalSquareLogo';
+import { MobileLegalPrivacyModal } from '../components/MobileLegalPrivacyModal';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -21,6 +22,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
 
   const handleSignIn = async () => {
     if (!idNumber || !otp) {
@@ -66,6 +69,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
         </View>
         <Text style={[styles.title, { color: colors.text }]}>Policyholder Sign In</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter your ID number and one-time PIN to access your portfolio</Text>
+        
+        {/* Visible Legal & Privacy Switcher Badge at Top of Login */}
+        <TouchableOpacity
+          style={[styles.legalPolicyPill, { backgroundColor: isDark ? '#1e1a20' : '#f8fafc', borderColor: colors.divider }]}
+          onPress={() => setLegalModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <ShieldIcon color={colors.primary} size={14} />
+          <Text style={[styles.legalPolicyText, { color: colors.text }]}>
+            Data Policy: <Text style={{ fontWeight: '800', color: colors.primary }}>{privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR (EU)' : (privacyPolicy === 'HYBRID_EU' ? '🌍 Dual Accord' : '🇿🇦 POPIA (SA)')}</Text>
+          </Text>
+          <Text style={[styles.legalPolicyChange, { color: colors.primary }]}>· Switch to EU ▾</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formArea}>
@@ -140,17 +156,43 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
           <Text style={[styles.registerLink, { color: colors.primary }]}>Register</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Interactive Mobile Legal Policy Modal */}
+      <MobileLegalPrivacyModal
+        visible={legalModalVisible}
+        onClose={() => setLegalModalVisible(false)}
+        currentFramework={privacyPolicy}
+        onUpdated={setPrivacyPolicy}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 60, paddingBottom: 24, justifyContent: 'space-between' },
-  header: { alignItems: 'center', marginBottom: 20 },
-  logoWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  scrollContainer: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 50, paddingBottom: 24, justifyContent: 'space-between' },
+  header: { alignItems: 'center', marginBottom: 16 },
+  logoWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   title: { fontSize: 22, fontWeight: '800' },
-  subtitle: { fontSize: 13, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
-  formArea: { flex: 1, marginTop: 8 },
+  subtitle: { fontSize: 13, marginTop: 4, textAlign: 'center', paddingHorizontal: 20 },
+  legalPolicyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  legalPolicyText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  legalPolicyChange: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  formArea: { flex: 1, marginTop: 4 },
   errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, padding: 12, marginBottom: 14, borderWidth: 1 },
   errorText: { flex: 1, fontSize: 13, fontWeight: '600' },
   submitButton: { borderRadius: 16, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 14 },
@@ -164,3 +206,4 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 14 },
   registerLink: { fontSize: 14, fontWeight: '700' },
 });
+

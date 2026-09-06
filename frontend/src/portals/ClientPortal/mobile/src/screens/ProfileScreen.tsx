@@ -27,6 +27,7 @@ import { NoticeOfAppointmentModal } from '../components/NoticeOfAppointmentModal
 import { ClientServiceAgreementModal } from '../components/ClientServiceAgreementModal';
 import { DocumentExpiryNotificationModal } from '../components/DocumentExpiryNotificationModal';
 import { UpdateProfileModal } from '../components/UpdateProfileModal';
+import { MobileLegalPrivacyModal } from '../components/MobileLegalPrivacyModal';
 
 interface ProfileScreenProps {
   onSignOut: () => void;
@@ -40,6 +41,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
   const [agreementVisible, setAgreementVisible] = useState(false);
   const [expiryModalVisible, setExpiryModalVisible] = useState(false);
   const [updateProfileVisible, setUpdateProfileVisible] = useState(false);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [privacyPolicy, setPrivacyPolicy] = useState<'POPIA' | 'GDPR' | 'HYBRID_EU'>('POPIA');
 
   const fetchProfile = async () => {
     try {
@@ -303,6 +306,40 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
         <Text style={[styles.viewMandateArrow, { color: colors.primary }]}>→</Text>
       </TouchableOpacity>
 
+      {/* 4. Legal & Privacy Policy Framework (POPIA / EU GDPR Accord) */}
+      <TouchableOpacity
+        style={[
+          styles.appointmentBanner,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.primary,
+          },
+        ]}
+        onPress={() => setLegalModalVisible(true)}
+        activeOpacity={0.85}
+      >
+        <View style={[styles.appointmentIconBox, { backgroundColor: colors.primaryAlpha }]}>
+          <GlobeIcon color={colors.primary} size={22} />
+        </View>
+        <View style={styles.appointmentInfo}>
+          <View style={styles.appointmentTitleRow}>
+            <Text style={[styles.appointmentTitle, { color: colors.text }]}>Legal & Data Privacy Policy</Text>
+            <View style={[styles.digitalActivePill, { backgroundColor: colors.successAlpha }]}>
+              <Text style={[styles.digitalActiveText, { color: colors.success }]}>
+                {privacyPolicy === 'GDPR' ? '🇪🇺 EU GDPR' : (privacyPolicy === 'HYBRID_EU' ? '🌍 DUAL ACCORD' : '🇿🇦 POPIA ACTIVE')}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.appointmentDate, { color: colors.textSecondary }]}>
+            Click to switch or update data protection framework (POPIA ⟷ EU GDPR)
+          </Text>
+          <Text style={[styles.appointmentFee, { color: colors.primary }]}>
+            Accompany EU Residents · Cross-Border Standard Contractual Clauses (SCC)
+          </Text>
+        </View>
+        <Text style={[styles.viewMandateArrow, { color: colors.primary }]}>→</Text>
+      </TouchableOpacity>
+
       {/* Theme / Appearance Selection Section */}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APPEARANCE & THEME</Text>
@@ -464,6 +501,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSignOut }) => {
         clientName={profile?.name}
         clientPhone={profile?.phone}
         clientEmail={profile?.email}
+      />
+
+      {/* Legal & Privacy Framework Modal */}
+      <MobileLegalPrivacyModal
+        visible={legalModalVisible}
+        onClose={() => setLegalModalVisible(false)}
+        currentFramework={privacyPolicy}
+        onUpdated={setPrivacyPolicy}
       />
     </ScrollView>
   );
