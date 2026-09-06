@@ -3,72 +3,13 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 const DEFAULT_ONLINE_API = 'https://royalsync.onrender.com/api';
-const LOCAL_API_ENDPOINTS = [
-  'http://localhost:5000/api',
-  'http://172.20.7.102:5000/api',
-  'http://10.0.2.2:5000/api', // Android emulator localhost alias
-  'http://127.0.0.1:5000/api',
-];
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || (
-  Platform.OS === 'web'
-    ? 'http://localhost:5000/api'
-    : 'http://172.20.7.102:5000/api'
-);
-
-const API_CANDIDATES = [
-  API_BASE_URL,
-  ...(Platform.OS === 'android' ? ['http://10.0.2.2:5000/api', 'http://172.20.7.102:5000/api'] : []),
-  ...LOCAL_API_ENDPOINTS.filter(url => url !== API_BASE_URL)
-];
-
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_ONLINE_API;
 let activeApiBase = API_BASE_URL;
 
 export const fetchWithFallback = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-
-  const attemptFetch = async (baseUrl: string): Promise<Response> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-    try {
-      const response = await fetch(`${baseUrl}${normalizedEndpoint}`, {
-        ...options,
-        signal: options.signal || controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (err) {
-      clearTimeout(timeoutId);
-      throw err;
-    }
-  };
-
-  try {
-    const res = await attemptFetch(activeApiBase);
-    if (res.status >= 502 && res.status <= 504 && !activeApiBase.includes('localhost') && !activeApiBase.includes('10.0.2.2')) {
-      throw new Error(`Online API returned status ${res.status}`);
-    }
-    return res;
-  } catch {
-    // Failover
-  }
-
-  const remaining = API_CANDIDATES.filter(u => u !== activeApiBase);
-  let lastErr: any = null;
-
-  for (const candidate of remaining) {
-    try {
-      const res = await attemptFetch(candidate);
-      if (res.status < 500 || candidate.includes('localhost') || candidate.includes('10.0.2.2')) {
-        activeApiBase = candidate;
-        return res;
-      }
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-
-  throw lastErr || new Error('All API endpoints are unreachable');
+  return fetch(`${activeApiBase}${normalizedEndpoint}`, options);
 };
 
 let authToken: string | null = null;
