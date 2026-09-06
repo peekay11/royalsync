@@ -20,6 +20,7 @@ import {
   CalendarIcon,
 } from './GrommetIcons';
 import { CompanyLogo } from './CompanyLogo';
+import { fetchWithFallback } from '../services/api';
 
 interface ClaimLifecycleModalProps {
   visible: boolean;
@@ -71,8 +72,7 @@ export const ClaimLifecycleModal: React.FC<ClaimLifecycleModalProps> = ({
   const handleUpdateStage = async (targetStage: number, extraPayload: any, successTitle: string) => {
     setSubmitting(true);
     try {
-      const BASE_URL = 'https://royalsync-api.pasekamabitsela22.workers.dev/api';
-      const res = await fetch(`${BASE_URL}/claims/${claim.id}/stage`, {
+      const res = await fetchWithFallback(`/claims/${claim.id}/stage`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -94,8 +94,7 @@ export const ClaimLifecycleModal: React.FC<ClaimLifecycleModalProps> = ({
   const handleCloseClaim = async () => {
     setSubmitting(true);
     try {
-      const BASE_URL = 'https://royalsync-api.pasekamabitsela22.workers.dev/api';
-      const res = await fetch(`${BASE_URL}/claims/${claim.id}/review`, {
+      const res = await fetchWithFallback(`/claims/${claim.id}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

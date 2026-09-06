@@ -2,7 +2,70 @@ import type { Policy, Goal, Claim, Reminder, UserProfile, AssignedAdvisor, User,
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
+const DEFAULT_ONLINE_API = 'https://royalsync-api-production.pasekamabitsela22.workers.dev/api';
+const LOCAL_API_ENDPOINTS = [
+  'http://localhost:5000/api',
+  'http://10.0.2.2:5000/api', // Android emulator localhost alias
+  'http://127.0.0.1:5000/api',
+  'http://localhost:8787/api',
+  'http://127.0.0.1:8787/api'
+];
+
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_ONLINE_API;
+
+const API_CANDIDATES = [
+  API_BASE_URL,
+  ...LOCAL_API_ENDPOINTS.filter(url => url !== API_BASE_URL)
+];
+
+let activeApiBase = API_BASE_URL;
+
+export const fetchWithFallback = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  const attemptFetch = async (baseUrl: string): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    try {
+      const response = await fetch(`${baseUrl}${normalizedEndpoint}`, {
+        ...options,
+        signal: options.signal || controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+
+  try {
+    const res = await attemptFetch(activeApiBase);
+    if (res.status >= 502 && res.status <= 504 && !activeApiBase.includes('localhost') && !activeApiBase.includes('10.0.2.2')) {
+      throw new Error(`Online API returned status ${res.status}`);
+    }
+    return res;
+  } catch {
+    // Failover
+  }
+
+  const remaining = API_CANDIDATES.filter(u => u !== activeApiBase);
+  let lastErr: any = null;
+
+  for (const candidate of remaining) {
+    try {
+      const res = await attemptFetch(candidate);
+      if (res.status < 500 || candidate.includes('localhost') || candidate.includes('10.0.2.2')) {
+        activeApiBase = candidate;
+        return res;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error('All API endpoints are unreachable');
+};
 
 let authToken: string | null = null;
 let tokenLoaded = false;
@@ -48,7 +111,7 @@ const unwrap = <T,>(payload: { data?: T } | T): T => (payload && typeof payload 
 export const ApiService = {
   async login(email: string, password: string): Promise<{ token: string; user: User }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const res = await fetchWithFallback('/auth/login', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify({ email, password }),
@@ -64,7 +127,7 @@ export const ApiService = {
 
   async sendOtp(idNumber: string): Promise<{ message: string }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+      const res = await fetchWithFallback('/auth/send-otp', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify({ idNumber }),
@@ -84,7 +147,7 @@ export const ApiService = {
     code: string;
   }): Promise<{ token: string; user: User }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login-id`, {
+      const res = await fetchWithFallback('/auth/login-id', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify(params),
@@ -100,7 +163,7 @@ export const ApiService = {
 
   async sendLoginOtp(idNumber: string): Promise<{ success: boolean; maskedPhone: string; maskedEmail: string }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+      const res = await fetchWithFallback('/auth/send-otp', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify({ idNumber }),
@@ -114,7 +177,7 @@ export const ApiService = {
 
   async register(form: any): Promise<{ token: string; user: User }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      const res = await fetchWithFallback('/auth/register', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify(form),
@@ -130,7 +193,7 @@ export const ApiService = {
 
   async getUserProfile(): Promise<UserProfile> {
     try {
-      const res = await fetch(`${API_BASE_URL}/user/profile`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/user/profile', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch profile');
       return unwrap(await res.json());
     } catch (e) {
@@ -140,7 +203,7 @@ export const ApiService = {
 
   async updateUserProfile(payload: Record<string, any>): Promise<UserProfile> {
     try {
-      const res = await fetch(`${API_BASE_URL}/user/profile`, {
+      const res = await fetchWithFallback('/user/profile', {
         method: 'PUT',
         headers: await getHeaders(),
         body: JSON.stringify(payload),
@@ -157,10 +220,10 @@ export const ApiService = {
 
   async getPolicies(category?: string): Promise<Policy[]> {
     try {
-      const url = category && category !== 'All'
-        ? `${API_BASE_URL}/policies?category=${encodeURIComponent(category)}`
-        : `${API_BASE_URL}/policies`;
-      const res = await fetch(url, { headers: await getHeaders() });
+      const endpoint = category && category !== 'All'
+        ? `/policies?category=${encodeURIComponent(category)}`
+        : '/policies';
+      const res = await fetchWithFallback(endpoint, { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch policies');
       const data = unwrap<Policy[]>(await res.json());
       return data;
@@ -171,7 +234,7 @@ export const ApiService = {
 
   async getGoals(): Promise<{ goals: Goal[]; summary: any }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/goals`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/goals', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch goals');
       return unwrap(await res.json());
     } catch (e) {
@@ -181,7 +244,7 @@ export const ApiService = {
 
   async getClaims(): Promise<Claim[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/claims`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/claims', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch claims');
       const data = unwrap<Claim[]>(await res.json());
       return data;
@@ -192,7 +255,7 @@ export const ApiService = {
 
   async submitClaim(claimData: Partial<Claim>): Promise<Claim> {
     try {
-      const res = await fetch(`${API_BASE_URL}/claims`, {
+      const res = await fetchWithFallback('/claims', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify(claimData),
@@ -206,7 +269,7 @@ export const ApiService = {
 
   async getReminders(): Promise<Reminder[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/reminders`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/reminders', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch reminders');
       return unwrap(await res.json());
     } catch (e) {
@@ -216,7 +279,7 @@ export const ApiService = {
 
   async getAdvisorProfile(): Promise<AssignedAdvisor> {
     try {
-      const res = await fetch(`${API_BASE_URL}/user/advisor`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/user/advisor', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch advisor');
       return unwrap(await res.json());
     } catch (e) {
@@ -226,7 +289,7 @@ export const ApiService = {
 
   async getNotifications(): Promise<AppNotification[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/notifications', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch notifications');
       const data = unwrap<any[]>(await res.json());
       return (data || []).map((item, idx) => ({
@@ -247,7 +310,7 @@ export const ApiService = {
 
   async markNotificationAsRead(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      await fetchWithFallback(`/notifications/${id}/read`, {
         method: 'PUT',
         headers: await getHeaders(),
       });
@@ -256,7 +319,7 @@ export const ApiService = {
 
   async getServiceRequests(): Promise<any[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/service-requests`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/service-requests', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch service requests');
       return unwrap(await res.json());
     } catch {
@@ -266,7 +329,7 @@ export const ApiService = {
 
   async createServiceRequest(payload: any): Promise<any> {
     try {
-      const res = await fetch(`${API_BASE_URL}/service-requests`, {
+      const res = await fetchWithFallback('/service-requests', {
         method: 'POST',
         headers: await getHeaders(),
         body: JSON.stringify(payload),
@@ -283,7 +346,7 @@ export const ApiService = {
 
   async getFinancialStatement(): Promise<any> {
     try {
-      const res = await fetch(`${API_BASE_URL}/service-requests/financial-statement`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/service-requests/financial-statement', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch financial statement');
       return unwrap(await res.json());
     } catch {
@@ -293,7 +356,7 @@ export const ApiService = {
 
   async updatePrivacyFramework(payload: { framework: 'POPIA' | 'GDPR' | 'HYBRID_EU'; crossBorderTransferOptIn?: boolean; euCountry?: string }): Promise<any> {
     try {
-      const res = await fetch(`${API_BASE_URL}/user/privacy-framework`, {
+      const res = await fetchWithFallback('/user/privacy-framework', {
         method: 'PUT',
         headers: await getHeaders(),
         body: JSON.stringify(payload),
@@ -310,7 +373,7 @@ export const ApiService = {
 
   async getLegalFrameworks(): Promise<any> {
     try {
-      const res = await fetch(`${API_BASE_URL}/legal/frameworks`, { headers: await getHeaders() });
+      const res = await fetchWithFallback('/legal/frameworks', { headers: await getHeaders() });
       if (!res.ok) throw new Error('Failed to fetch legal frameworks');
       return unwrap(await res.json());
     } catch {
