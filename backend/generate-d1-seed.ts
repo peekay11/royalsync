@@ -28,8 +28,10 @@ async function main() {
   let idCounter = 1;
   const now = new Date().toISOString();
 
-  // Insert a tenant
-  sql += `INSERT INTO tenants (id, name, created_at, updated_at) VALUES ('tenant_1', 'RoyalSync Core', '${now}', '${now}');\n`;
+  const tenantData = JSON.stringify({ name: 'RoyalSync Core', slug: 'royalsync-core', plan: 'enterprise', status: 'active' });
+  const tenantData2 = JSON.stringify({ name: 'Acacia Financial', slug: 'acacia-financial', plan: 'professional', status: 'active' });
+  sql += `INSERT INTO records (id, collection, data, created_at, updated_at) VALUES ('tenant_1', 'tenants', '${tenantData}', '${now}', '${now}');\n`;
+  sql += `INSERT INTO records (id, collection, data, created_at, updated_at) VALUES ('tenant_2', 'tenants', '${tenantData2}', '${now}', '${now}');\n`;
 
   for (const u of users) {
     const hash = await hashPassword(u.pass);

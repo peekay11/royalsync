@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { cors } from 'hono/cors';
 import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
 
 interface Env {
@@ -102,16 +103,18 @@ const writeAudit = async (env: Env, user: User, action: string, resourceType: st
     .bind(id('audit'), user.id, user.role, user.tenantId || null, action, resourceType, resourceId, beforeState ? JSON.stringify(beforeState) : null, afterState ? JSON.stringify(afterState) : null, request.headers.get('CF-Connecting-IP'), now()).run();
 };
 
-app.use('*', secureHeaders());
-app.use('/api/*', async (c, next) => {
-  const origin = c.req.header('origin');
-  const allowed = (c.env.CORS_ORIGINS || '').split(',').map(value => value.trim());
-  if (origin && (allowed.includes('*') || allowed.includes(origin) || origin.endsWith('.royalsync-frontend.pages.dev'))) c.header('Access-Control-Allow-Origin', origin);
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Bootstrap-Token');
-  c.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  if (c.req.method === 'OPTIONS') return c.body(null, 204);
-  return next();
-});
+app.use('*', secureHeaders({ crossOriginResourcePolicy: false }));
+app.use('/api/*', cors({
+  origin: (origin, c) => {
+    const allowed = (c.env.CORS_ORIGINS || '').split(',').map((value: string) => value.trim());
+    if (!origin || allowed.includes('*') || allowed.includes(origin) || origin.endsWith('.royalsync-frontend.pages.dev')) {
+      return origin || '*';
+    }
+    return undefined;
+  },
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Bootstrap-Token'],
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+}));
 
 app.use('/api/*', async (c, next) => {
   const publicPath = ['/api/auth/login', '/api/auth/register', '/api/auth/bootstrap-admin', '/api/auth/send-otp', '/api/auth/login-id'].includes(new URL(c.req.url).pathname);
@@ -356,6 +359,20 @@ const genericDelete = (path: string, collection: string, roles?: Role[]) => app.
   await c.env.DB.prepare('DELETE FROM records WHERE id = ? AND collection = ?').bind(record.id, collection).run();
   await writeAudit(c.env, user, 'delete', collection, record.id, JSON.parse(record.data), null, c.req.raw);
   return c.json({ success: true, message: `${collection} deleted`, data: { id: record.id } });
+});
+
+app.get('/api/tenants', async c => {
+  const user = c.get('user');
+  if (!roleAllowed(user, ['SUPER_ADMIN', 'ADMIN'])) return c.json({ success: false, error: 'Insufficient permissions' }, 403);
+  const records = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? ORDER BY created_at DESC').bind('tenants').all<{ id: string; data: string }>();
+  const tenants = await Promise.all(records.results.map(async r => {
+    const data = JSON.parse(r.data);
+    const usersCount = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE tenant_id = ?').bind(r.id).first<{count: number}>();
+    const clientsCount = await c.env.DB.prepare('SELECT COUNT(*) as count FROM clients WHERE tenant_id = ?').bind(r.id).first<{count: number}>();
+    const policiesCount = await c.env.DB.prepare('SELECT COUNT(*) as count FROM records WHERE collection = ? AND tenant_id = ?').bind('policies', r.id).first<{count: number}>();
+    return { id: r.id, ...data, userCount: usersCount?.count || 0, clientCount: clientsCount?.count || 0, policyCount: policiesCount?.count || 0 };
+  }));
+  return c.json({ success: true, message: 'Tenants retrieved', data: tenants });
 });
 
 for (const [path, collection] of Object.entries(collectionForPath)) {

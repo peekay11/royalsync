@@ -14,7 +14,7 @@ export const SuperTenants = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      await apiRequest('/tenants', { method: 'POST', body: JSON.stringify(form) });
+      await apiRequest('/tenants', { method: 'POST', body: JSON.stringify({ ...form, status: 'active' }) });
       toast.success('Tenant created');
       setShowForm(false);
       setForm({ name: '', slug: '', plan: 'professional' });
