@@ -25,9 +25,13 @@ import {
   HeartIcon,
   HomeIcon,
   PhoneIcon,
+  TimerIcon,
+  MicrophoneIcon,
 } from '../components/GrommetIcons';
 import { CompanyLogo } from '../components/CompanyLogo';
 import { ClaimLifecycleModal } from '../components/ClaimLifecycleModal';
+import { ClaimVoiceRecorder, VoiceRecordingData } from '../components/ClaimVoiceRecorder';
+import { ClaimSlaTimer } from '../components/ClaimSlaTimer';
 
 export interface UploadedFile {
   id: string;
@@ -399,6 +403,7 @@ export const ClaimsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedClaimForLifecycle, setSelectedClaimForLifecycle] = useState<any>(null);
   const [lifecycleModalVisible, setLifecycleModalVisible] = useState(false);
+  const [voiceStatement, setVoiceStatement] = useState<VoiceRecordingData | null>(null);
 
   // File preview modal
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
@@ -548,6 +553,13 @@ export const ClaimsScreen: React.FC = () => {
         combinedDescription += `\n${itemObj?.label || key}: ${val.trim()}`;
       }
     });
+
+    if (voiceStatement) {
+      combinedDescription += `\n[Voice Incident Statement]: ${voiceStatement.filename} (${voiceStatement.durationFormatted}) - ${voiceStatement.transcriptionSnippet || 'Audio recorded on file'}`;
+      if (voiceStatement.uri) {
+        allUploadedFileNames.push(voiceStatement.filename);
+      }
+    }
 
     try {
       const newClaim = await ApiService.submitClaim({
@@ -818,6 +830,15 @@ export const ClaimsScreen: React.FC = () => {
                     </View>
                   </View>
 
+                  {/* 48-Hour SLA Countdown Pill */}
+                  <View style={{ marginTop: 8, marginBottom: 4 }}>
+                    <ClaimSlaTimer
+                      submissionDate={c.incidentDate || c.createdAt}
+                      isSettled={isSettled}
+                      compact
+                    />
+                  </View>
+
                   {/* Lifecycle 10-Stage Mini Visual Bar */}
                   <View style={[styles.claimProgressBox, { backgroundColor: isDark ? '#171717' : '#f9fafb' }]}>
                     <View style={styles.claimProgressTop}>
@@ -976,6 +997,14 @@ export const ClaimsScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
+
+            {/* Voice Incident Audio Statement Recorder */}
+            <ClaimVoiceRecorder
+              onRecordingComplete={setVoiceStatement}
+              onRemoveRecording={() => setVoiceStatement(null)}
+              existingRecording={voiceStatement}
+              categoryTitle={selectedCategory.title}
+            />
 
             {/* Checklist Items */}
             <View style={styles.checklistContainer}>
@@ -1204,6 +1233,27 @@ export const ClaimsScreen: React.FC = () => {
               </Text>
             </View>
 
+            {/* 48-Hour Priority SLA Guarantee Assurance Card */}
+            <View style={[styles.slaAssuranceCard, { backgroundColor: isDark ? '#111827' : '#f0f9ff', borderColor: isDark ? '#1e3a5f' : '#bae6fd' }]}>
+              <View style={styles.slaAssuranceHeader}>
+                <TimerIcon color="#0284c7" size={18} />
+                <Text style={[styles.slaAssuranceTitle, { color: isDark ? '#38bdf8' : '#0369a1' }]}>
+                  48-Hour Fast-Track SLA Guarantee
+                </Text>
+              </View>
+              <Text style={[styles.slaAssuranceText, { color: colors.textSecondary }]}>
+                Under our underwriter agreement, {selectedInsurer} guarantees an initial assessment review within 48 hours of submission.
+              </Text>
+              {voiceStatement && (
+                <View style={[styles.slaVoiceAttachedBadge, { backgroundColor: isDark ? '#1e293b' : '#ffffff' }]}>
+                  <MicrophoneIcon color="#10b981" size={13} />
+                  <Text style={[styles.slaVoiceAttachedText, { color: colors.text }]}>
+                    Voice Statement Attached ({voiceStatement.durationFormatted})
+                  </Text>
+                </View>
+              )}
+            </View>
+
             {/* Date Input */}
             <View style={styles.inputGroup}>
               <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>DATE OF INCIDENT / LOSS</Text>
@@ -1279,11 +1329,20 @@ export const ClaimsScreen: React.FC = () => {
               Your {selectedCategory.title} claim has been transmitted to {selectedInsurer} claims desk and your broker adviser.
             </Text>
 
+            {/* Done Confirmation Details */}
             <View style={[styles.refBox, { backgroundColor: colors.card, borderColor: isDark ? '#262626' : '#f0f0f0' }]}>
               <CompanyLogo name={selectedInsurer} size={36} style={{ marginBottom: 6 }} />
               <Text style={[styles.refLabel, { color: colors.textMuted }]}>OFFICIAL CLAIM TRACKING REF</Text>
               <Text style={styles.doneIdText}>{submittedId}</Text>
               <Text style={styles.refStatus}>● In Review by {selectedInsurer} Assessor</Text>
+            </View>
+
+            {/* Live 48-Hour SLA Digital Countdown */}
+            <View style={{ width: '100%', marginVertical: 12 }}>
+              <ClaimSlaTimer
+                submissionDate={new Date().toISOString()}
+                isSettled={false}
+              />
             </View>
 
             <Text style={[styles.doneNote, { color: colors.textMuted }]}>
@@ -2185,6 +2244,41 @@ const styles = StyleSheet.create({
   previewDoneBtnText: {
     color: '#ffffff',
     fontSize: 13,
+    fontWeight: '700',
+  },
+  slaAssuranceCard: {
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  slaAssuranceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  slaAssuranceTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  slaAssuranceText: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  slaVoiceAttachedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  slaVoiceAttachedText: {
+    fontSize: 11,
     fontWeight: '700',
   },
 });

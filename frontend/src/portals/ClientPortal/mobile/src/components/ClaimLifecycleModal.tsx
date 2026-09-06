@@ -21,6 +21,7 @@ import {
 } from './GrommetIcons';
 import { CompanyLogo } from './CompanyLogo';
 import { fetchWithFallback } from '../services/api';
+import { ClaimSlaTimer } from './ClaimSlaTimer';
 
 interface ClaimLifecycleModalProps {
   visible: boolean;
@@ -136,6 +137,14 @@ export const ClaimLifecycleModal: React.FC<ClaimLifecycleModalProps> = ({
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Text style={[styles.closeBtnText, { color: colors.primary }]}>✕</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* 48-Hour Fast-Track SLA Guarantee Countdown */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+            <ClaimSlaTimer
+              submissionDate={claim.incidentDate || claim.createdAt}
+              isSettled={isClosed}
+            />
           </View>
 
           {/* Stepper Horizontal Scroll */}

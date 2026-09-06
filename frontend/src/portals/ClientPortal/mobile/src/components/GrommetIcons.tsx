@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Circle, Rect, Polyline, Line } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Polyline, Line, Polygon } from 'react-native-svg';
 
 export interface IconProps {
   color?: string;
@@ -266,4 +266,49 @@ export const HeartIcon: React.FC<IconProps> = ({ color = defaultProps.color, siz
     <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </Svg>
 );
+
+export const MicrophoneIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+    <Path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <Line x1="12" y1="19" x2="12" y2="23" />
+    <Line x1="8" y1="23" x2="16" y2="23" />
+  </Svg>
+);
+
+export const PlayIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M5 3l14 9-14 9V3z" />
+  </Svg>
+);
+
+export const StopIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Rect x="4" y="4" width="16" height="16" rx="2" />
+  </Svg>
+);
+
+export const TrashIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Polyline points="3 6 5 6 21 6" />
+    <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <Line x1="10" y1="11" x2="10" y2="17" />
+    <Line x1="14" y1="11" x2="14" y2="17" />
+  </Svg>
+);
+
+export const TimerIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Circle cx="12" cy="12" r="10" />
+    <Polyline points="12 6 12 12 16 14" />
+  </Svg>
+);
+
+export const VolumeIcon: React.FC<IconProps> = ({ color = defaultProps.color, size = defaultProps.size, strokeWidth = defaultProps.strokeWidth }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill={color} />
+    <Path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  </Svg>
+);
+
 
