@@ -112,9 +112,15 @@ export const ClientDocuments = () => {
     const name = window.prompt('What document do you require from your adviser?');
     if (!name?.trim()) return;
     try {
-      await apiRequest('/notifications', {
+      await apiRequest('/workflow/tasks', {
         method: 'POST',
-        body: JSON.stringify({ event: 'document_request', message: name.trim() })
+        body: JSON.stringify({
+          title: `Document Request: ${name.trim()}`,
+          category: 'Document Request',
+          priority: 'normal',
+          status: 'open',
+          details: `Client submitted request for: ${name.trim()}`
+        })
       });
       toast.success('Document request submitted to your adviser');
     } catch {

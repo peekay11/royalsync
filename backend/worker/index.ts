@@ -388,9 +388,11 @@ const genericDelete = (path: string, collection: string, roles?: Role[]) => app.
 
 for (const [path, collection] of Object.entries(collectionForPath)) {
   genericGet(`/api/${path}`, collection, path === 'audit' ? ['SUPER_ADMIN'] : undefined);
-  if (['notifications', 'insurers', 'tenants', 'templates', 'settings'].includes(collection)) genericPost(`/api/${path}`, collection);
+  if (['insurers', 'tenants', 'templates', 'settings'].includes(collection)) genericPost(`/api/${path}`, collection);
+  if (collection === 'notifications') genericPost(`/api/${path}`, collection, ['SUPER_ADMIN', 'ADMIN', 'ADVISER']);
   if (collection !== 'auditLog') genericPut(`/api/${path}/:id`, collection);
-  if (['documents', 'notifications', 'settings'].includes(collection)) genericDelete(`/api/${path}/:id`, collection);
+  if (['documents', 'settings'].includes(collection)) genericDelete(`/api/${path}/:id`, collection);
+  if (collection === 'notifications') genericDelete(`/api/${path}/:id`, collection, ['SUPER_ADMIN', 'ADMIN', 'ADVISER']);
 }
 
 genericGet('/api/user/advisor', 'advisor');
