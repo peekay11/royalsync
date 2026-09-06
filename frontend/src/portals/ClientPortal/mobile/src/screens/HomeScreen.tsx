@@ -51,6 +51,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [expiryModalVisible, setExpiryModalVisible] = useState(false);
   const [seniorHelpModalVisible, setSeniorHelpModalVisible] = useState(false);
+  const [expandedWealth, setExpandedWealth] = useState(false);
 
   const chartBars = [65, 72, 68, 78, 74, 82, 79, 86, 83, 91, 88, 100];
 
@@ -216,47 +217,221 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </View>
       </HoverableCard>
 
-      {/* Net Worth & Portfolio Hero Card */}
+      {/* Net Worth & Portfolio Hero Card (Click to Expand Breakdown) */}
       <View
         style={[
           styles.aumCard,
           {
             backgroundColor: colors.card,
+            borderColor: colors.cardBorder,
+            borderWidth: 1,
           },
         ]}
       >
-        <Text style={[styles.aumLabel, { color: colors.textMuted, fontSize: scaleFont(10) }]}>TOTAL PORTFOLIO & WEALTH VALUE</Text>
-        <Text style={[styles.aumValue, { color: colors.text, fontSize: scaleFont(30) }]}>{profile?.totalNetWorthFormatted || 'R 2.84M'}</Text>
-
-        <View style={styles.aumBadgeRow}>
-          <View style={[styles.growthBadge, { backgroundColor: colors.successAlpha }]}>
-            <Text style={[styles.growthText, { color: colors.success, fontSize: scaleFont(11) }]}>+4.2% YTD</Text>
-          </View>
-          <Text style={[styles.clientsCountText, { color: colors.textSecondary, fontSize: scaleFont(11) }]}>
-            {policies.length} Active Policies · {profile?.totalMonthlyPremium || 'R 6,450'}/mo
-          </Text>
-        </View>
-
-        {/* 12-month performance sparkline */}
-        <View style={styles.sparklineContainer}>
-          {chartBars.map((h, i) => (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => setExpandedWealth(prev => !prev)}
+          style={styles.aumHeaderTouchable}
+        >
+          <View style={styles.aumTitleRow}>
+            <Text style={[styles.aumLabel, { color: colors.textMuted, fontSize: scaleFont(10) }]}>
+              TOTAL PORTFOLIO & WEALTH VALUE
+            </Text>
             <View
-              key={i}
               style={[
-                styles.sparkBar,
+                styles.expandPillBadge,
                 {
-                  height: `${h}%`,
-                  backgroundColor: i === chartBars.length - 1 ? colors.primary : isDark ? '#262626' : '#e2e6ea',
+                  backgroundColor: expandedWealth ? colors.primary : colors.primaryAlpha,
+                  borderColor: colors.primaryBorder,
                 },
               ]}
-            />
-          ))}
-        </View>
+            >
+              <Text
+                style={[
+                  styles.expandPillText,
+                  {
+                    color: expandedWealth ? '#ffffff' : colors.primary,
+                    fontSize: scaleFont(10),
+                  },
+                ]}
+              >
+                {expandedWealth ? 'Hide Breakdown ✕' : 'Click to expand breakdown ↓'}
+              </Text>
+            </View>
+          </View>
 
-        <View style={styles.sparkLabels}>
-          <Text style={[styles.sparkLabelText, { color: colors.textSubtle, fontSize: scaleFont(10) }]}>Jan</Text>
-          <Text style={[styles.sparkLabelText, { color: colors.primary, fontWeight: '700', fontSize: scaleFont(10) }]}>Dec (Current)</Text>
-        </View>
+          <Text style={[styles.aumValue, { color: colors.text, fontSize: scaleFont(30) }]}>
+            {profile?.totalNetWorthFormatted || 'R 2.84M'}
+          </Text>
+
+          <View style={styles.aumBadgeRow}>
+            <View style={[styles.growthBadge, { backgroundColor: colors.successAlpha }]}>
+              <Text style={[styles.growthText, { color: colors.success, fontSize: scaleFont(11) }]}>
+                +4.2% YTD
+              </Text>
+            </View>
+            <Text style={[styles.clientsCountText, { color: colors.textSecondary, fontSize: scaleFont(11) }]}>
+              {policies.length} Active Policies · {profile?.totalMonthlyPremium || 'R 6,450'}/mo
+            </Text>
+          </View>
+
+          {/* 12-month performance sparkline */}
+          <View style={styles.sparklineContainer}>
+            {chartBars.map((h, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.sparkBar,
+                  {
+                    height: `${h}%`,
+                    backgroundColor: i === chartBars.length - 1 ? colors.primary : isDark ? '#262626' : '#e2e6ea',
+                  },
+                ]}
+              />
+            ))}
+          </View>
+
+          <View style={styles.sparkLabels}>
+            <Text style={[styles.sparkLabelText, { color: colors.textSubtle, fontSize: scaleFont(10) }]}>Jan</Text>
+            <Text style={[styles.sparkLabelText, { color: colors.primary, fontWeight: '700', fontSize: scaleFont(10) }]}>
+              Dec (Current)
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* EXPANDED BREAKDOWN ACCORDION */}
+        {expandedWealth && (
+          <View style={[styles.wealthBreakdownContainer, { borderTopColor: colors.divider }]}>
+            <View style={styles.breakdownHeaderRow}>
+              <Text style={[styles.breakdownHeading, { color: colors.text }]}>
+                WHAT MAKES UP THIS VALUATION
+              </Text>
+              <Text style={[styles.breakdownSubhead, { color: colors.gold }]}>
+                Verified FAIS 29370
+              </Text>
+            </View>
+
+            {/* Asset Allocation Multi-Bar */}
+            <View style={styles.allocationSection}>
+              <Text style={[styles.allocationTitle, { color: colors.textSecondary, fontSize: scaleFont(10) }]}>
+                ASSET CLASS ALLOCATION
+              </Text>
+              <View style={styles.multiProgressBar}>
+                <View style={[styles.progressSegment, { width: '42%', backgroundColor: '#e11d48' }]} />
+                <View style={[styles.progressSegment, { width: '30%', backgroundColor: '#f59e0b' }]} />
+                <View style={[styles.progressSegment, { width: '15%', backgroundColor: '#10b981' }]} />
+                <View style={[styles.progressSegment, { width: '13%', backgroundColor: '#6366f1' }]} />
+              </View>
+              <View style={styles.allocationLegendRow}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#e11d48' }]} />
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Equities 42%</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Fixed Income 30%</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Property 15%</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#6366f1' }]} />
+                  <Text style={[styles.legendText, { color: colors.textMuted }]}>Cash 13%</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Constituents Group 1: Retirement */}
+            <View style={[styles.breakdownGroupCard, { backgroundColor: colors.hoverBackground, borderColor: colors.cardBorder }]}>
+              <View style={styles.groupHeaderRow}>
+                <Text style={[styles.groupTitle, { color: colors.text }]}>1. Retirement & Preservation</Text>
+                <Text style={[styles.groupVal, { color: colors.gold }]}>R 1,390,000 (48.9%)</Text>
+              </View>
+              <View style={styles.groupItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Sanlam Glacier Retirement Annuity</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Ref: RA-781920 · Section 10C Shielded</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 850,000</Text>
+              </View>
+              <View style={[styles.groupItemRow, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Old Mutual SuperFund Preservation</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Ref: PRF-449102 · Vested Capital</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 540,000</Text>
+              </View>
+            </View>
+
+            {/* Constituents Group 2: Unit Trusts & Money Market */}
+            <View style={[styles.breakdownGroupCard, { backgroundColor: colors.hoverBackground, borderColor: colors.cardBorder }]}>
+              <View style={styles.groupHeaderRow}>
+                <Text style={[styles.groupTitle, { color: colors.text }]}>2. Liquid Investments & Funds</Text>
+                <Text style={[styles.groupVal, { color: colors.gold }]}>R 1,100,000 (38.7%)</Text>
+              </View>
+              <View style={styles.groupItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Ninety One High Income Fund</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Ref: UT-901844 · Monthly Yield</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 680,000</Text>
+              </View>
+              <View style={[styles.groupItemRow, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Allan Gray Money Market Fund</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Ref: MM-339102 · T+1 Immediate</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 420,000</Text>
+              </View>
+            </View>
+
+            {/* Constituents Group 3: Offshore */}
+            <View style={[styles.breakdownGroupCard, { backgroundColor: colors.hoverBackground, borderColor: colors.cardBorder }]}>
+              <View style={styles.groupHeaderRow}>
+                <Text style={[styles.groupTitle, { color: colors.text }]}>3. Offshore & Global Capital</Text>
+                <Text style={[styles.groupVal, { color: colors.gold }]}>R 350,000 (12.4%)</Text>
+              </View>
+              <View style={styles.groupItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Coronation Global Optimum Growth</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Ref: OFF-110294 · Hard Currency</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 350,000</Text>
+              </View>
+            </View>
+
+            {/* Constituents Group 4: Risk Protection & Cover */}
+            <View style={[styles.breakdownGroupCard, { backgroundColor: colors.primaryAlpha, borderColor: colors.primaryBorder }]}>
+              <View style={styles.groupHeaderRow}>
+                <Text style={[styles.groupTitle, { color: colors.primary }]}>4. Insured Protection Assets</Text>
+                <Text style={[styles.groupVal, { color: colors.primary }]}>R 3,350,000 Total Cover</Text>
+              </View>
+              <View style={styles.groupItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Discovery Life Comprehensive</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Life & Disability · R 3,200/mo</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 2,500,000</Text>
+              </View>
+              <View style={[styles.groupItemRow, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.groupItemName, { color: colors.text }]}>Santam Comprehensive Asset Cover</Text>
+                  <Text style={[styles.groupItemRef, { color: colors.textMuted }]}>Vehicle & Home · R 1,850/mo</Text>
+                </View>
+                <Text style={[styles.groupItemVal, { color: colors.text }]}>R 850,000</Text>
+              </View>
+            </View>
+
+            {/* Collapse button */}
+            <TouchableOpacity
+              onPress={() => setExpandedWealth(false)}
+              style={[styles.collapseBtn, { backgroundColor: colors.primaryAlpha, borderColor: colors.primaryBorder }]}
+            >
+              <Text style={[styles.collapseBtnText, { color: colors.primary }]}>▲ Close Portfolio Breakdown</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Quick Actions (Hoverable Soft Red Glow) */}
@@ -539,6 +714,135 @@ const styles = StyleSheet.create({
   },
   sparkLabelText: {
     fontSize: 10,
+  },
+  aumHeaderTouchable: {
+    width: '100%',
+  },
+  aumTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  expandPillBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  expandPillText: {
+    fontWeight: '700',
+  },
+  wealthBreakdownContainer: {
+    marginTop: 18,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    gap: 12,
+  },
+  breakdownHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  breakdownHeading: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  breakdownSubhead: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  allocationSection: {
+    marginBottom: 6,
+  },
+  allocationTitle: {
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  },
+  multiProgressBar: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressSegment: {
+    height: '100%',
+  },
+  allocationLegendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  legendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  legendText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  breakdownGroupCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 12,
+    gap: 8,
+  },
+  groupHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150,150,150,0.15)',
+    paddingBottom: 6,
+  },
+  groupTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  groupVal: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  groupItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  groupItemName: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  groupItemRef: {
+    fontSize: 9,
+    marginTop: 1,
+  },
+  groupItemVal: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  collapseBtn: {
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  collapseBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   section: {
     marginBottom: 24,

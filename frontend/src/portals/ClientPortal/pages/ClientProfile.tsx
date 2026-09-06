@@ -101,6 +101,7 @@ export const ClientProfile = () => {
   const [activeTab, setActiveTab] = useState<'personal' | 'address' | 'banking' | 'emergency' | 'employment' | 'preferences'>('personal');
   const [saving, setSaving] = useState(false);
   const [darkMode, setDarkMode] = useState(localStorage.getItem('royalsync_web_theme') === 'dark');
+  const [showWealthBreakdown, setShowWealthBreakdown] = useState(false);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -291,10 +292,131 @@ export const ClientProfile = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-700">
-              <StatCard label="Total Portfolio Value" value={profile?.totalNetWorthFormatted || 'R 450,000.00'} />
+              <button
+                type="button"
+                onClick={() => setShowWealthBreakdown(prev => !prev)}
+                className="rounded-xl border border-red-200/80 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/20 p-3.5 text-center hover:bg-red-50 dark:hover:bg-red-950/40 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-0.5">
+                  <span>{showWealthBreakdown ? 'Hide Breakdown ▲' : 'Click to expand breakdown ▼'}</span>
+                </div>
+                <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                  {profile?.totalNetWorthFormatted || 'R 2,840,000.00'}
+                </div>
+                <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  Total Portfolio & Wealth Value
+                </div>
+              </button>
+
               <StatCard label="Active Policies" value={String(profile?.activePoliciesCount || 2)} />
               <StatCard label="Financial Goals Met" value={`${profile?.goalCompletionRate || 68}%`} />
             </div>
+
+            {/* Expanded Wealth Breakdown */}
+            {showWealthBreakdown && (
+              <div className="mt-5 p-5 rounded-2xl bg-gray-900 text-white border border-gray-700/80 space-y-4 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-700/60">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-red-400">
+                      Constituent Portfolio & Wealth Breakdown
+                    </h4>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      Statutory asset distribution registered under FAIS licence 29370
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/40 border border-emerald-800/60 px-2 py-0.5 rounded">
+                    +4.2% YTD Growth
+                  </span>
+                </div>
+
+                {/* Asset Allocation Multi-Bar */}
+                <div>
+                  <div className="flex justify-between text-[11px] text-gray-300 font-medium mb-1.5">
+                    <span>Asset Class Allocation</span>
+                    <span className="text-gray-400">Moderate Growth Allocation</span>
+                  </div>
+                  <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-gray-700">
+                    <div style={{ width: '42%' }} className="bg-red-500 h-full" title="Equities 42%" />
+                    <div style={{ width: '30%' }} className="bg-amber-500 h-full" title="Fixed Income 30%" />
+                    <div style={{ width: '15%' }} className="bg-emerald-500 h-full" title="Property 15%" />
+                    <div style={{ width: '13%' }} className="bg-indigo-500 h-full" title="Cash 13%" />
+                  </div>
+                  <div className="flex flex-wrap gap-3 mt-2 text-[10px] text-gray-300">
+                    <span><strong className="text-red-400">●</strong> Equities: 42%</span>
+                    <span><strong className="text-amber-400">●</strong> Fixed Income: 30%</span>
+                    <span><strong className="text-emerald-400">●</strong> Property: 15%</span>
+                    <span><strong className="text-indigo-400">●</strong> Cash & Liquidity: 13%</span>
+                  </div>
+                </div>
+
+                {/* Holdings Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <div className="p-3 rounded-xl bg-gray-800/80 border border-gray-700/60 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-200">1. Retirement & Preservation</span>
+                      <span className="text-amber-400">R 1,390,000</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Sanlam Glacier RA (Sec 10C)</span>
+                        <span className="text-white font-medium">R 850,000</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Old Mutual SuperFund Preservation</span>
+                        <span className="text-white font-medium">R 540,000</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-gray-800/80 border border-gray-700/60 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-200">2. Liquid & Money Market</span>
+                      <span className="text-amber-400">R 1,100,000</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Ninety One High Income Fund</span>
+                        <span className="text-white font-medium">R 680,000</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Allan Gray Money Market</span>
+                        <span className="text-white font-medium">R 420,000</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-gray-800/80 border border-gray-700/60 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-200">3. Offshore Capital</span>
+                      <span className="text-amber-400">R 350,000</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400">
+                      <div className="flex justify-between">
+                        <span>Coronation Global Optimum Growth</span>
+                        <span className="text-white font-medium">R 350,000</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-red-950/30 border border-red-900/50 space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-red-300">4. Insured Protection</span>
+                      <span className="text-red-300">R 3,350,000 Cover</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Discovery Life Comprehensive</span>
+                        <span className="text-white font-medium">R 2,500,000</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Santam Comprehensive Asset Cover</span>
+                        <span className="text-white font-medium">R 850,000</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
