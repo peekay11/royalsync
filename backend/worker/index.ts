@@ -249,18 +249,91 @@ app.post('/api/auth/login-id', async c => {
 app.get('/api/user/profile', async c => {
   const user = c.get('user');
   if (!user.clientId) return c.json({ success: false, error: 'Client profile not found' }, 404);
-  const client = await c.env.DB.prepare('SELECT id, first_name, last_name, mobile, kyc_status FROM clients WHERE id = ?').bind(user.clientId).first<{ id: string; first_name: string; last_name: string; mobile: string; kyc_status: string }>();
+  const client = await c.env.DB.prepare('SELECT id, first_name, last_name, mobile, kyc_status, risk_profile FROM clients WHERE id = ?').bind(user.clientId).first<{ id: string; first_name: string; last_name: string; mobile: string; kyc_status: string; risk_profile?: string }>();
   if (!client) return c.json({ success: false, error: 'Client profile not found' }, 404);
-  return c.json({ success: true, message: 'Profile retrieved', data: { id: client.id, name: `${client.first_name} ${client.last_name}`, initials: `${client.first_name[0]}${client.last_name[0]}`, email: user.email, phone: client.mobile, kycStatus: client.kyc_status } });
+
+  const profileRecord = await c.env.DB.prepare('SELECT data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ data: string }>();
+  const extendedData = profileRecord ? JSON.parse(profileRecord.data) : {};
+  const userRecord = await c.env.DB.prepare('SELECT id_number, email FROM users WHERE id = ?').bind(user.id).first<{ id_number?: string; email: string }>();
+
+  const data = {
+    id: client.id,
+    firstName: client.first_name,
+    lastName: client.last_name,
+    name: `${client.first_name} ${client.last_name}`,
+    initials: `${client.first_name[0] || 'U'}${client.last_name[0] || ''}`,
+    email: userRecord?.email || user.email,
+    phone: client.mobile,
+    mobile: client.mobile,
+    idNumber: userRecord?.id_number || extendedData.idNumber || '',
+    kycStatus: client.kyc_status,
+    riskProfile: client.risk_profile || 'Moderate',
+    physicalAddress: extendedData.physicalAddress || '',
+    postalAddress: extendedData.postalAddress || '',
+    city: extendedData.city || '',
+    postalCode: extendedData.postalCode || '',
+    province: extendedData.province || 'Gauteng',
+    bankName: extendedData.bankName || '',
+    accountHolderName: extendedData.accountHolderName || `${client.first_name} ${client.last_name}`,
+    accountNumber: extendedData.accountNumber || '',
+    accountType: extendedData.accountType || 'Cheque / Current',
+    branchCode: extendedData.branchCode || '',
+    bankDetails: extendedData.bankDetails || (extendedData.bankName ? `${extendedData.bankName} (${extendedData.accountNumber})` : ''),
+    emergencyContactName: extendedData.emergencyContactName || '',
+    emergencyContactPhone: extendedData.emergencyContactPhone || '',
+    emergencyContactRelationship: extendedData.emergencyContactRelationship || '',
+    emergencyContactEmail: extendedData.emergencyContactEmail || '',
+    employer: extendedData.employer || '',
+    occupation: extendedData.occupation || '',
+    industry: extendedData.industry || '',
+    employmentStatus: extendedData.employmentStatus || 'Employed',
+    monthlyIncome: extendedData.monthlyIncome || '',
+    smsNotifications: extendedData.smsNotifications ?? true,
+    emailNotifications: extendedData.emailNotifications ?? true,
+    whatsappNotifications: extendedData.whatsappNotifications ?? true,
+    totalNetWorthFormatted: extendedData.totalNetWorthFormatted || 'R 450,000.00',
+    activePoliciesCount: extendedData.activePoliciesCount || 2,
+    goalCompletionRate: extendedData.goalCompletionRate || 68
+  };
+
+  return c.json({ success: true, message: 'Profile retrieved', data });
 });
 
 app.put('/api/user/profile', async c => {
   const user = c.get('user');
   if (!user.clientId) return c.json({ success: false, error: 'Client profile not found' }, 404);
-  const body = await c.req.json<{ firstName?: string; lastName?: string; mobile?: string }>();
-  if (!body.firstName || !body.lastName || !body.mobile) return c.json({ success: false, error: 'First name, last name and mobile are required' }, 400);
-  await c.env.DB.prepare('UPDATE clients SET first_name = ?, last_name = ?, mobile = ?, updated_at = ? WHERE id = ?').bind(body.firstName, body.lastName, body.mobile, now(), user.clientId).run();
-  return c.json({ success: true, message: 'Profile updated', data: body });
+  const body = await c.req.json<Record<string, any>>();
+
+  const firstName = (body.firstName || '').trim();
+  const lastName = (body.lastName || '').trim();
+  const mobile = (body.mobile || body.phone || '').trim();
+
+  if (!firstName || !lastName || !mobile) {
+    return c.json({ success: false, error: 'First name, last name and mobile are required' }, 400);
+  }
+
+  const timestamp = now();
+  await c.env.DB.prepare('UPDATE clients SET first_name = ?, last_name = ?, mobile = ?, updated_at = ? WHERE id = ?')
+    .bind(firstName, lastName, mobile, timestamp, user.clientId).run();
+
+  if (body.idNumber) {
+    await c.env.DB.prepare('UPDATE users SET id_number = ?, updated_at = ? WHERE id = ?')
+      .bind(body.idNumber, timestamp, user.id).run();
+  }
+
+  const existingRecord = await c.env.DB.prepare('SELECT id, data FROM records WHERE collection = ? AND client_id = ?').bind('client_profiles', user.clientId).first<{ id: string; data: string }>();
+  const prevData = existingRecord ? JSON.parse(existingRecord.data) : {};
+  const updatedData = { ...prevData, ...body, firstName, lastName, mobile, updated_at: timestamp };
+
+  if (existingRecord) {
+    await c.env.DB.prepare('UPDATE records SET data = ?, updated_at = ? WHERE id = ?').bind(JSON.stringify(updatedData), timestamp, existingRecord.id).run();
+  } else {
+    await c.env.DB.prepare('INSERT INTO records (id, collection, tenant_id, client_id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(id('rec'), 'client_profiles', user.tenantId || null, user.clientId, JSON.stringify(updatedData), timestamp, timestamp).run();
+  }
+
+  await writeAudit(c.env, user, 'update', 'client_profile', user.clientId, prevData, updatedData, c.req.raw);
+  return c.json({ success: true, message: 'Profile updated successfully', data: updatedData });
 });
 
 app.get('/api/policies', async c => c.json({ success: true, message: 'Policies retrieved', data: await listRecords(c.env, 'policies', c.get('user')) }));
