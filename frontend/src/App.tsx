@@ -8,6 +8,17 @@ import { AdminPortal } from './portals/AdminPortal/AdminPortal';
 import { SuperAdminPortal } from './portals/SuperAdminPortal/SuperAdminPortal';
 import { PartnerPortal } from './portals/PartnerPortal';
 
+import {
+  FiCreditCard,
+  FiShield,
+  FiUser,
+  FiPhone,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiArrowRight,
+  FiLock,
+} from 'react-icons/fi';
+
 const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, defaultRole: string, allowRegister?: boolean }) => {
   const navigate = useNavigate();
   const [idNumber, setIdNumber] = useState('');
@@ -19,7 +30,7 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
 
   const handleSendOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!idNumber) return setError('Please enter your ID Number');
+    if (!idNumber) return setError('Please enter your 13-digit ID Number');
     setError('');
     setSuccessMsg('');
     setLoading(true);
@@ -29,7 +40,7 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
         body: JSON.stringify({ idNumber })
       });
       setOtpSent(true);
-      setSuccessMsg(res.message || 'OTP sent successfully!');
+      setSuccessMsg(res.message || 'OTP sent successfully to your registered mobile!');
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP');
     } finally {
@@ -58,36 +69,115 @@ const AuthScreen = ({ portal, defaultRole, allowRegister }: { portal: string, de
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
-        <p className="text-center text-gray-500 text-sm mb-4">Sign in to continue</p>
-        
-        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
-        
-        {otpSent && (
-          <input required type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="OTP Code (Hint: 123456)" className="w-full border rounded-lg p-3" />
-        )}
-        
-        {!otpSent && (
-          <button type="button" onClick={handleSendOtp} disabled={loading} className="w-full border border-red-600 text-red-600 rounded-lg p-3 hover:bg-red-50 disabled:opacity-50">
-            {loading ? 'Sending...' : 'Send OTP via SMS'}
-          </button>
-        )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-10">
+      <div className="bg-white dark:bg-zinc-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-200/80 dark:border-zinc-800 max-w-md w-full space-y-6">
+        {/* Brand Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/10 text-red-600 mb-2 border border-red-600/20">
+            <FiShield size={28} />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome to {portal}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Sign in securely using your South African ID & OTP</p>
+        </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {successMsg && <p className="text-sm text-green-600">{successMsg}</p>}
-        
-        {otpSent && (
-          <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign in'}</button>
-        )}
+        <form onSubmit={submit} className="space-y-4">
+          {/* RSA ID Number Input */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
+              <span>South African ID Number</span>
+              <span className="text-[10px] text-gray-400 font-normal">13 Digits</span>
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                <FiCreditCard size={18} />
+              </span>
+              <input
+                required
+                type="text"
+                value={idNumber}
+                onChange={e => setIdNumber(e.target.value)}
+                placeholder="e.g. 9001015009087"
+                maxLength={13}
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+              />
+            </div>
+          </div>
 
-        {allowRegister && (
-          <p className="text-center text-sm mt-4">
-            Don't have an account? <Link to={`/${defaultRole.toLowerCase().replace('_', '-')}/register`} className="text-red-600 hover:underline">Register here</Link>
-          </p>
-        )}
-      </form>
+          {/* OTP Code Input (Conditional) */}
+          {otpSent && (
+            <div className="space-y-1.5 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                <span>One-Time PIN (OTP)</span>
+                <span className="text-[10px] text-red-500 font-semibold">Demo PIN: 123456</span>
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  <FiLock size={18} />
+                </span>
+                <input
+                  required
+                  type="text"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="Enter 6-digit OTP code"
+                  maxLength={6}
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 tracking-widest focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Feedback Messages */}
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-center gap-2.5 text-xs text-red-600 dark:text-red-400">
+              <FiAlertTriangle className="shrink-0" size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+          {successMsg && (
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400">
+              <FiCheckCircle className="shrink-0" size={16} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {!otpSent ? (
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={loading}
+              className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md shadow-red-600/20 hover:shadow-lg hover:shadow-red-600/30 transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
+            >
+              {loading ? 'Sending OTP SMS...' : 'Send OTP via SMS'}
+              <FiArrowRight size={16} />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md shadow-red-600/20 hover:shadow-lg hover:shadow-red-600/30 transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
+            >
+              {loading ? 'Authenticating...' : 'Sign In'}
+              <FiArrowRight size={16} />
+            </button>
+          )}
+
+          {allowRegister && (
+            <div className="pt-2 text-center border-t border-gray-100 dark:border-zinc-800">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Don't have an account?{' '}
+                <Link
+                  to={`/${defaultRole.toLowerCase().replace('_', '-')}/register`}
+                  className="font-semibold text-red-600 dark:text-red-400 hover:underline inline-flex items-center gap-1"
+                >
+                  Register here
+                </Link>
+              </p>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
 };
@@ -121,22 +211,132 @@ const RegisterScreen = ({ portal, defaultRole }: { portal: string, defaultRole: 
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-normal text-gray-800 text-center">Welcome to {portal}</h1>
-        <p className="text-center text-gray-500 text-sm mb-4">Create your account to continue</p>
-        <div className="grid grid-cols-2 gap-4">
-          <input required type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full border rounded-lg p-3" />
-          <input required type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full border rounded-lg p-3" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-12">
+      <div className="bg-white dark:bg-zinc-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-200/80 dark:border-zinc-800 max-w-md w-full space-y-6">
+        {/* Brand Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/10 text-red-600 mb-2 border border-red-600/20">
+            <FiShield size={28} />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create Account</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Register your policyholder profile with {portal}</p>
         </div>
-        <input required type="text" value={idNumber} onChange={e => setIdNumber(e.target.value)} placeholder="13-digit ID Number" className="w-full border rounded-lg p-3" />
-        <input required type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile Number" className="w-full border rounded-lg p-3" />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button disabled={loading} className="w-full bg-red-600 text-white rounded-lg p-3 disabled:opacity-50">{loading ? 'Registering...' : 'Register'}</button>
-        <p className="text-center text-sm mt-4">
-          Already have an account? <Link to={`/${defaultRole.toLowerCase().replace('_', '-')}/login`} className="text-red-600 hover:underline">Sign in here</Link>
-        </p>
-      </form>
+
+        <form onSubmit={submit} className="space-y-4">
+          {/* Name Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+                First Name
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  <FiUser size={16} />
+                </span>
+                <input
+                  required
+                  type="text"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  placeholder="e.g. Sipho"
+                  className="w-full pl-10 pr-3.5 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+                Last Name
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                  <FiUser size={16} />
+                </span>
+                <input
+                  required
+                  type="text"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  placeholder="e.g. Dlamini"
+                  className="w-full pl-10 pr-3.5 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* RSA ID Number */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center justify-between">
+              <span>South African ID Number</span>
+              <span className="text-[10px] text-gray-400 font-normal">13 Digits</span>
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                <FiCreditCard size={18} />
+              </span>
+              <input
+                required
+                type="text"
+                value={idNumber}
+                onChange={e => setIdNumber(e.target.value)}
+                placeholder="e.g. 9001015009087"
+                maxLength={13}
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Mobile Number */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+              Mobile Contact Number
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-gray-400 dark:text-zinc-500 pointer-events-none">
+                <FiPhone size={18} />
+              </span>
+              <input
+                required
+                type="tel"
+                value={mobile}
+                onChange={e => setMobile(e.target.value)}
+                placeholder="e.g. 071 234 5678"
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-center gap-2.5 text-xs text-red-600 dark:text-red-400">
+              <FiAlertTriangle className="shrink-0" size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md shadow-red-600/20 hover:shadow-lg hover:shadow-red-600/30 transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer mt-2"
+          >
+            {loading ? 'Creating Profile...' : 'Complete Registration'}
+            <FiArrowRight size={16} />
+          </button>
+
+          <div className="pt-2 text-center border-t border-gray-100 dark:border-zinc-800">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Already registered?{' '}
+              <Link
+                to={`/${defaultRole.toLowerCase().replace('_', '-')}/login`}
+                className="font-semibold text-red-600 dark:text-red-400 hover:underline inline-flex items-center gap-1"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
