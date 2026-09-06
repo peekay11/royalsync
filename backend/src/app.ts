@@ -20,6 +20,7 @@ import { InsurerController } from './controllers/ai_partners/InsurerController';
 import { KycController } from './controllers/compliance/KycController';
 import { MessagingController } from './controllers/messaging/MessagingController';
 import { TemplateController } from './controllers/TemplateController';
+import { DocumentController, uploadMiddleware } from './controllers/DocumentController';
 import { requireAuth, requireRole } from './middleware/auth';
 import { prisma } from './lib/prisma';
 import type { AuthRequest } from './types/auth';
@@ -67,6 +68,7 @@ export const createApp = () => {
 
   const messaging = new MessagingController();
   const templates = new TemplateController();
+  const docCtrl = new DocumentController();
 
   // ─── Health ───────────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'royalsync-api', db: 'mongodb' }));
@@ -80,6 +82,14 @@ export const createApp = () => {
 
   // ─── Authenticated routes ─────────────────────────────────────────────────
   app.use('/api', requireAuth);
+
+  // ─── Documents (Upload, Scan, List, Download, Delete) ─────────────────────
+  app.get('/api/workflow/documents', docCtrl.list);
+  app.get('/api/documents', docCtrl.list);
+  app.post('/api/documents/scan', uploadMiddleware, docCtrl.scan);
+  app.post('/api/documents/upload', uploadMiddleware, docCtrl.upload);
+  app.get('/api/documents/:id/download', docCtrl.download);
+  app.delete('/api/documents/:id', docCtrl.delete);
 
   // ─── Dashboards ───────────────────────────────────────────────────────────
   app.get('/api/dashboard/super', requireRole('SUPER_ADMIN'), dashboard.superDashboard);
@@ -222,7 +232,6 @@ export const createApp = () => {
   app.put('/api/goals/:id', clientData.updateGoal);
   app.get('/api/reminders', clientData.getReminders);
   app.get('/api/user/advisor', clientData.getAdvisor);
-  app.get('/api/workflow/documents', clientData.getDocuments);
   app.get('/api/finance/payments', clientData.getPayments);
 
   // ─── Reports & Commissions ────────────────────────────────────────────────
